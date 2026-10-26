@@ -1,9 +1,142 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("[*] Buffer alocado na Stack: 64 bytes.")
-inp = input("[?] Digite sua entrada para o buffer: ")
-if len(inp) > 64:
-    print(f"[!] Buffer overflow detectado ({len(inp)} bytes recebidos)! Stack corrompida!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print(f"[*] Entrada recebida ({len(inp)} bytes). O buffer nao estourou.")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: BINARY EXPLOITATION LABS
+"""
+
+BUFFER_SIZE = 64
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def show_lesson():
+    print(f"""
+================================================================================
+  [!] AULA DIDÁTICA: ANATOMIA DA PILHA (STACK) & BUFFER OVERFLOW CRASH
+================================================================================
+No diagnóstico do ciclo 2026.2, 100% da Cyberguard acertou que strcpy é perigoso,
+mas ninguém compreendia como a memória da CPU é corrompida na prática.
+
+1. ANATOMIA DE UM STACK FRAME (QUADRO DE PILHA x86_64):
+   A pilha cresce para BAIXO (dos endereços altos em direção aos baixos), mas
+   quando você escreve em um buffer de string, a escrita ocorre para CIMA!
+   
+   [ ENDEREÇOS ALTOS DE MEMÓRIA ]
+   +--------------------------------------------------------------+
+   | DADOS DO CHAMADOR (Caller Frame)                             |
+   +--------------------------------------------------------------+
+   | SAVED RIP (Endereço de Retorno - 8 bytes)  <--- ALVO CRÍTICO |
+   +--------------------------------------------------------------+
+   | SAVED RBP (Base Pointer Anterior - 8 bytes)                  |
+   +--------------------------------------------------------------+
+   | char buffer[64] (Espaço alocado para variáveis locais)       |
+   |                                            <--- RSP aponta   |
+   +--------------------------------------------------------------+
+   [ ENDEREÇOS BAIXOS DE MEMÓRIA ]
+
+2. A MECÂNICA DO ESTOURO (BUFFER OVERFLOW):
+   * O buffer foi dimensionado para comportar no máximo {BUFFER_SIZE} bytes.
+   * Ao fornecer uma entrada maior que {BUFFER_SIZE} bytes (ex: 80 bytes):
+     - Bytes 0 a 63: preenchem o array 'buffer'.
+     - Bytes 64 a 71: sobrescrevem o 'Saved RBP'.
+     - Bytes 72 a 79: sobrescrevem o 'SAVED RIP'!
+   * Quando a função termina e executa a instrução 'ret' (equivalente a 'pop rip'),
+     a CPU retira o valor corrompido do topo da pilha e tenta executá-lo.
+   * Se o endereço for lixo (como 0x4141414141414141 gerado por 'AAAAAAAA'),
+     o sistema operacional intercepta a falha de página e aborta o processo com:
+     SIGSEGV (Segmentation Fault / Falha de Segmentação).
+
+3. MEDINDO O OFFSET COM PWNTOOLS:
+   Em vez de chutar o tamanho do payload:
+   $ python3 -c "from pwn import *; print(cyclic(100))" > payload.txt
+   $ gdb ./binario
+   (gdb) run < payload.txt
+   Program received signal SIGSEGV, Segmentation fault at 0x6161616a
+   $ python3 -c "from pwn import *; print(cyclic_find(0x6161616a))"
+   -> Offset exato calculado!
+
+COMO CONCLUIR A MISSÃO:
+Envie uma carga com mais de {BUFFER_SIZE} bytes (ex: 72 ou 80 caracteres 'A')
+para provocar o transbordamento do buffer e acionar a corrupção de memória.
+================================================================================
+""")
+
+def main():
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO PWN-01] ANATOMIA DA PILHA: INDUÇÃO DE CRASH (BUFFER OVERFLOW)")
+    print("================================================================================")
+    print(f" Ambiente de Teste de Estresse: Alocado buffer estático de {BUFFER_SIZE} bytes.")
+    print(" Função vulnerável simulada: gets(buffer) / strcpy(buffer, input).")
+    print(" Missão: Transbordar a pilha e demonstrar a quebra do limite de memória.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_data = None
+    if len(args) > 0:
+        user_data = args[0]
+    elif not sys.stdin.isatty():
+        try:
+            user_data = sys.stdin.read().rstrip("\r\n")
+        except Exception:
+            pass
+    else:
+        try:
+            user_data = input(f"[Cyberguard-PWN] Digite sua entrada para o buffer ({BUFFER_SIZE}B): ")
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if user_data is None or len(user_data) == 0:
+        print("[!] Nenhuma entrada fornecida.")
+        show_lesson()
+        sys.exit(1)
+
+    byte_count = len(user_data)
+    print(f"[*] Dados recebidos: {byte_count} bytes.")
+
+    if byte_count > BUFFER_SIZE:
+        overflow_bytes = byte_count - BUFFER_SIZE
+        print("\n" + "="*80)
+        print(" [!] ALERTA CRÍTICO DE SEGURANÇA: FALHA DE SEGMENTAÇÃO INDUZIDA (SIGSEGV)")
+        print("="*80)
+        print(f" [+] BUFFER OVERFLOW DETECTADO!")
+        print(f"     Tamanho do buffer alocado: {BUFFER_SIZE} bytes")
+        print(f"     Tamanho da entrada enviada: {byte_count} bytes")
+        print(f"     Bytes excedentes na pilha: {overflow_bytes} bytes")
+        print(" [+] O array transbordou a memória local, esmagou o Saved RBP e atingiu o Saved RIP!")
+        print(" [+] Ao tentar executar a instrução 'ret', a CPU detectou corrupção de fluxo.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] O buffer não estourou ({byte_count} <= {BUFFER_SIZE} bytes).")
+        print(f"[!] Espaço restante no buffer: {BUFFER_SIZE - byte_count} bytes.")
+        print("    A memória do processo permaneceu íntegra e nenhum registrador foi corrompido.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

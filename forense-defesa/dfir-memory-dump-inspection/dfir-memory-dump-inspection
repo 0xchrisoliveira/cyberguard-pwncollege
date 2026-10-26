@@ -1,10 +1,133 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-key = "MEM_KEY_AES_256_CYBERGUARD_LIVE"
-os.environ["PROCESS_LIVE_SECRET"] = key
-resp = input("[?] Digite a chave volatil em memoria: ").strip()
-if resp == key:
-    print("[+] Chave de memoria recuperada com sucesso!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print(f"[X] Incorreto. Dica: A chave e '{key}'.")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: DEFENSE & FORENSICS LABS
+"""
+
+SECRET_KEY = "MEM_KEY_AES_256_CYBERGUARD_LIVE"
+DUMP_PATH = "/tmp/cyberguard_ram_dump.raw"
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def setup_simulated_dump():
+    # Garante que haja um artefato de despejo de memória volátil em /tmp para o aluno inspecionar
+    try:
+        if not os.path.exists(DUMP_PATH):
+            content = (
+                b"\x00" * 512 +
+                b"[KERNEL_TASK_STRUCT pid=1337 comm=kworker_crypt]\n" +
+                b"PROCESS_NAME: rev_tunnel.elf\n" +
+                b"SOCKET_ESTABLISHED: 192.168.10.45:4444 -> 10.0.0.1:8443\n" +
+                b"ENVIRONMENT_BLOCK: USER=root PATH=/bin:/usr/bin\n" +
+                b"CRITICAL_VOLATILE_ARTIFACT: " + SECRET_KEY.encode() + b"\n" +
+                b"VAD_PROTECTION: PAGE_EXECUTE_READWRITE\n" +
+                b"\x00" * 1024
+            )
+            with open(DUMP_PATH, "wb") as f:
+                f.write(content)
+            os.chmod(DUMP_PATH, 0o644)
+    except Exception:
+        pass
+
+def show_lesson():
+    print(f"""
+================================================================================
+  [!] AULA DIDÁTICA: ANÁLISE FORENSE DE MEMÓRIA RAM & VOLATILITY 3
+================================================================================
+A memória RAM é a testemunha ocular do sistema operacional. Mesmo que o malware
+apague seus arquivos em disco e limpe o histórico do bash (.bash_history), a RAM
+armazena a verdade factual sobre a execução naquele instante.
+
+1. O QUE PROCURAMOS EM UM DUMP DE MEMÓRIA?
+   * Processos Ocultos e Injeções: Processos com nomes legítimos que não possuem
+     arquivo em disco ou com permissões RWX (Read-Write-Execute) na árvore VAD.
+   * Conexões de Rede Vivas: Sockets TCP/UDP estabelecidos com infraestrutura de C2.
+   * Chaves Simétricas e Tokens de Acesso: Ransomwares geram chaves simétricas
+     (AES-128/256, ChaCha20) e as utilizam a partir de buffers na memória do processo.
+     Recuperar essa chave antes do desligamento viabiliza a decifração dos dados!
+
+2. COMANDOS FORENSES PARA INSPEÇÃO:
+   * Inspeção rápida de strings no dump de memória:
+     $ strings -a -t x {DUMP_PATH} | grep -i KEY
+     $ grep -ao "MEM_KEY_[A-Z0-9_]*" {DUMP_PATH}
+   * Análise estruturada com Volatility 3:
+     $ vol -f {DUMP_PATH} linux.pslist
+     $ vol -f {DUMP_PATH} linux.netscan
+     $ vol -f {DUMP_PATH} linux.bash
+
+3. COMO RESOLVER:
+   Inspecione o arquivo de despejo de memória gerado em:
+   {DUMP_PATH}
+   Localize a chave que começa com 'MEM_KEY_' e informe-a para validação.
+================================================================================
+""")
+
+def main():
+    setup_simulated_dump()
+    os.environ["PROCESS_LIVE_SECRET"] = SECRET_KEY
+
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO DFIR-02] ANÁLISE DE IMAGEM DE MEMÓRIA COM VOLATILITY")
+    print("================================================================================")
+    print(" O CSIRT da Cyberguard concluiu a aquisição física da memória do servidor atacado.")
+    print(f" Imagem de memória volátil preservada em: {DUMP_PATH}")
+    print(" O malware em memória utilizava uma chave AES-256 volátil para cifrar a comunicação.")
+    print(" Sua missão é extrair a chave da imagem de memória antes que o processo termine.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_input = None
+    if len(args) > 0:
+        user_input = args[0].strip()
+    else:
+        print("[*] Dica: Inspecione o dump de memória em segundo plano com 'strings' ou 'grep'.")
+        print("    Ou use '--help' para a aula de Volatility e análise forense de RAM.")
+        try:
+            user_input = input("[Cyberguard-DFIR] Digite a chave volátil encontrada em memória: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada pelo analista.")
+            sys.exit(1)
+
+    if user_input == SECRET_KEY:
+        print("\n" + "="*80)
+        print(" [+] DEBRIEFING TÉCNICO: CHAVE AES-256 RECUPERADA DA MEMÓRIA VOLÁTIL!")
+        print("="*80)
+        print(f" Chave identificada com sucesso: {SECRET_KEY}")
+        print(" Ao analisar o buffer do processo na imagem de memória, você comprovou que")
+        print(" artefatos voláteis residem intactos na RAM e revelam segredos criptográficos")
+        print(" que jamais foram salvos em arquivos no disco rígido.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Chave incorreta: '{user_input}'")
+        print("[!] ERRO: A chave informada não corresponde ao artefato volátil em memória.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

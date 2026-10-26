@@ -1,8 +1,132 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-ans = input("[?] Decodifique a string Base64 'ZmxhZ3t0ZXN0ZX0=': ").strip()
-if ans == "flag{teste}":
-    print("[+] Correto! Base64 identificado e decodificado com sucesso.")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto. Dica: echo 'ZmxhZ3t0ZXN0ZX0=' | base64 -d")
+# -*- coding: utf-8 -*-
+"""
+Cyberguard Security Research & Operational Dojo
+Desafio: crypto-encodings-pipeline (Decodificando Encodings em Cascata & Base64)
+Módulo 5: Criptografia Aplicada & Fundamentos CTF
+"""
+import sys
+import os
+import base64
+
+BANNER = r"""
+  ____      _                                     _ 
+ / ___|   _| |__   ___ _ __ __ _ _   _  __ _ _ __| |
+| |  | | | | '_ \ / _ \ '__/ _` | | | |/ _` | '__| |
+| |__| |_| | |_) |  __/ | | (_| | |_| | (_| | |  |_|
+ \____\__, |_.__/ \___|_|  \__, |\__,_|\__,_|_|  (_)
+      |___/                |___/                    
+ [ CYBERGUARD HIGH-PERFORMANCE SECURITY TRAINING LAB ]
+"""
+
+AULA_DIDATICA = r"""
+================================================================================
+       AULA DIDÁTICA: ANATOMIA DO BASE64 & ENCODINGS VS CRIPTOGRAFIA
+================================================================================
+
+1. O ERRO DO DIAGNÓSTICO (Q20):
+   No teste diagnóstico da Cyberguard, a string 'ZmxhZ3t0ZXN0ZX0=' foi apresentada
+   e respondentes chegaram a confundi-la com um Hash MD5. Vamos desfazer essa
+   confusão com fundamentos matemáticos:
+
+2. POR QUE É IMPOSSÍVEL ESSA STRING SER UM HASH MD5?
+   a) Tamanho e Caracteres:
+      - MD5: Comprimento fixo de exatamente 32 caracteres HEXADECIMAIS (0-9, a-f).
+      - Base64: Comprimento variável, mistura maiúsculas/minúsculas (A-Z, a-z, 0-9, +, /).
+   b) A Assinatura Definitiva: O PADDING '='
+      - MD5 NUNCA possui o caractere '='!
+      - Viu caracteres alfanuméricos terminando com '=' ou '=='? É BASE64!
+
+3. COMO FUNCIONA O BASE64 (A MECÂNICA DOS 24 BITS):
+   O Base64 agrupa blocos de 3 bytes (3 x 8 bits = 24 bits) e os redistribui em
+   4 blocos de 6 bits (4 x 6 bits = 24 bits). Cada bloco de 6 bits (0 a 63)
+   aponta para um símbolo da tabela Base64:
+
+   [ Byte 1 (8b) ] [ Byte 2 (8b) ] [ Byte 3 (8b) ] -> 24 bits totais
+   [ Char 1 (6b) ] [ Char 2 (6b) ] [ Char 3 (6b) ] [ Char 4 (6b) ]
+
+   Se o dado original não tiver um número de bytes divisível por 3:
+   - Se sobrar 1 byte: gera 2 caracteres Base64 + '==' (dois paddings).
+   - Se sobrarem 2 bytes: gera 3 caracteres Base64 + '=' (um padding).
+
+4. COMANDOS DE TERMINAL PARA DECODIFICAR:
+   * No Linux Shell (utilitário nativo base64):
+     $ echo -n "ZmxhZ3t0ZXN0ZX0=" | base64 -d
+     # Saída: flag{teste}
+
+   * Em Python:
+     $ python3 -c "import base64; print(base64.b64decode('ZmxhZ3t0ZXN0ZX0=').decode())"
+
+   * Cadeias em Cascata (Hexadecimal -> Base64):
+     $ echo -n "5a6d78685a3374305a584e305a58303d" | xxd -r -p | base64 -d
+
+================================================================================
+"""
+
+TARGET_ENCODED = "ZmxhZ3t0ZXN0ZX0="
+EXPECTED_PLAINTEXT = "flag{teste}"
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler {flag_path}: {e}")
+    print("pwn.college{cyberguard_base64_decoding_pipeline_flag}")
+
+def main():
+    print(BANNER)
+    print("[*] OPERAÇÃO TURING CASCADE // CYBERGUARD CRYPTO RESEARCH")
+    print("[*] Missão: Identificar formato de codificação e recuperar a mensagem original.")
+    print(f"[*] Payload Interceptado: {TARGET_ENCODED}\n")
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        sys.exit(0)
+
+    if len(sys.argv) >= 2:
+        resposta = sys.argv[1].strip()
+        print(f"[*] Resposta submetida via CLI: '{resposta}'")
+    else:
+        try:
+            print(f"[?] Decodifique a string '{TARGET_ENCODED}' e informe o texto original:")
+            resposta = input(">> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação abortada.")
+            sys.exit(1)
+
+    if not resposta or resposta in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        print(f"[!] Dica: utilize: echo -n '{TARGET_ENCODED}' | base64 -d")
+        sys.exit(1)
+
+    if resposta == EXPECTED_PLAINTEXT or resposta == f"'{EXPECTED_PLAINTEXT}'":
+        print("\n" + "="*80)
+        print("[+] [DECODIFICAÇÃO CONFIRMADA] Mensagem em texto claro recuperada com perfeição!")
+        print(f"[+] Plaintext: {EXPECTED_PLAINTEXT}")
+        print("="*80)
+        print("\n[*] DEBRIEFING TÉCNICO:")
+        print("    Você identificou corretamente a presença de codificação Base64 analisando")
+        print("    a composição alfanumérica e a assinatura do padding terminal '='.")
+        print("    Lembre-se: Encoding NÃO é criptografia! Encodings servem apenas para")
+        print("    compatibilidade de transporte e não oferecem confidencialidade alguma.\n")
+        print("[*] FLAG DE CONCLUSÃO:")
+        print_flag()
+    elif "md5" in resposta.lower():
+        print("\n[X] [ERRO GRAVE DE CONCEITO] Essa string NÃO é um hash MD5!")
+        print("    O MD5 é hexadecimal (0-9, a-f), tem 32 caracteres e NUNCA usa '='.")
+        print("[*] Leia a explicação detalhada na aula abaixo:\n")
+        print(AULA_DIDATICA)
+        sys.exit(1)
+    else:
+        print(f"\n[X] [RESPOSTA INCORRETA] O valor '{resposta}' não corresponde ao texto decodificado.")
+        print("[*] Consulte a metodologia de resolução na aula didática abaixo:\n")
+        print(AULA_DIDATICA)
+        print(f"[*] COMANDO EXATO PARA RESOLVER: echo -n '{TARGET_ENCODED}' | base64 -d")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,11 +1,148 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("Qual configuracao aumenta a seguranca do SSH?")
-print("1) PermitRootLogin yes")
-print("2) PermitRootLogin no e PasswordAuthentication no (usando chaves criptograficas)")
-ans = input("Opcao: ").strip()
-if ans == "2":
-    print("[+] Hardening correto!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto.")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: DEFENSE & FORENSICS LABS
+"""
+
+AUDIT_CONF = "/tmp/sshd_config_audit"
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def setup_audit_file():
+    try:
+        content = """# CYBERGUARD AUDIT TEMPLATE: /etc/ssh/sshd_config
+# [ALERTA DE VULNERABILIDADE]: Configuracoes padrao encontradas em auditoria
+Port 22
+PermitRootLogin yes
+PasswordAuthentication yes
+X11Forwarding yes
+MaxAuthTries 10
+ClientAliveInterval 0
+"""
+        with open(AUDIT_CONF, "w") as f:
+            f.write(content)
+        os.chmod(AUDIT_CONF, 0o644)
+    except Exception:
+        pass
+
+def show_lesson():
+    print(f"""
+================================================================================
+  [!] AULA DIDÁTICA: HARDENING DE SERVIDORES LINUX & SERVIÇO SSH
+================================================================================
+No diagnóstico do ciclo 2026.2, 50% dos membros da Cyberguard apresentaram
+dúvidas quanto às medidas fundamentais de Hardening de Sistemas Operacionais.
+
+1. O QUE É HARDENING?
+   Hardening é o processo metódico de redução da superfície de ataque de um sistema,
+   desativando serviços desnecessários, removendo softwares supérfluos, restringindo
+   privilégios e aplicando configurações defensivas em serviços de rede críticos.
+
+2. POR QUE O SSH É O ALVO NÚMERO 1 EM SERVIDORES LINUX?
+   O SSH (porta 22) é a porta de entrada para administração remota. Se exposto
+   com configurações padrão na Internet, ele sofre centenas de ataques de força
+   bruta e dicionário por minuto por botnets automatizadas.
+
+3. AS DUAS DIRETRIZES DE OURO DO /etc/ssh/sshd_config:
+   +--------------------------------------------------------------------------+
+   | DIRETRIZ               | VALOR SEGURO | IMPACTO NA DEFESA                |
+   +------------------------+--------------+----------------------------------+
+   | PermitRootLogin        | no           | Bloqueia autenticação direta de  |
+   |                        |              | root. Força o invasor a adivinhar|
+   |                        |              | um nome de usuário antes de tudo.|
+   | PasswordAuthentication | no           | Desativa login por senha. Exige  |
+   |                        |              | chave criptográfica assimétrica  |
+   |                        |              | (Ed25519 ou RSA 4096 bits).      |
+   +------------------------+--------------+----------------------------------+
+   Outras diretrizes recomendadas pelos CIS Benchmarks:
+   * MaxAuthTries 3 (derruba tentativas excessivas de força bruta)
+   * X11Forwarding no (impede desvio gráfico de janelas)
+   * AllowUsers admin_operador (restringe estritamente quem pode autenticar)
+
+4. COMANDOS OPERACIONAIS DE VALIDAÇÃO:
+   * Testar a sintaxe do arquivo de configuração antes de reiniciar o daemon:
+     $ sudo sshd -t
+   * Listar todas as diretrizes ativas consolidadas pelo servidor:
+     $ sudo sshd -T | grep -E "(permitrootlogin|passwordauthentication)"
+   * Recarregar o serviço sem derrubar sessões ativas:
+     $ sudo systemctl reload sshd
+
+Para responder, informe a alternativa que implementa a postura segura de hardening:
+  '2' ou 'B'
+================================================================================
+""")
+
+def main():
+    setup_audit_file()
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO DFIR-03] AUDITORIA E HARDENING DE BASTION HOST (SSH)")
+    print("================================================================================")
+    print(" O Bastion Host da Cyberguard está sob varredura agressiva na porta SSH (22).")
+    print(f" Arquivo de auditoria extraído do servidor disponível em: {AUDIT_CONF}")
+    print(" Como analista de defesa, identifique a configuração que mitiga o risco de")
+    print(" intrusão e aplica conformidade com o padrão CIS Benchmark.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_input = None
+    if len(args) > 0:
+        user_input = " ".join(args).strip()
+    else:
+        print("[?] Qual conjunto de diretrizes no /etc/ssh/sshd_config eleva substancialmente")
+        print("    a segurança do host e impede ataques de força bruta automatizados?")
+        print("    1) PermitRootLogin yes e PasswordAuthentication yes")
+        print("    2) PermitRootLogin no e PasswordAuthentication no (exigindo chaves criptográficas)")
+        print("    3) MaxAuthTries 100 e PermitEmptyPasswords yes")
+        print("    4) Port 22 sem qualquer restrição de usuário ou chave")
+        print("")
+        try:
+            user_input = input("[Cyberguard-DFIR] Digite sua opção (1, 2, 3 ou 4): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    normalized = user_input.upper()
+    if normalized in ["2", "OPÇÃO 2", "OPCAO 2", "B", "OPÇÃO B", "OPCAO B"]:
+        print("\n" + "="*80)
+        print(" [+] DEBRIEFING TÉCNICO: POLÍTICA DE HARDENING SSH CONFIRMADA!")
+        print("="*80)
+        print(" Configuração validada com sucesso! Ao aplicar:")
+        print("   - PermitRootLogin no: o superusuário root não pode sofrer força bruta remota.")
+        print("   - PasswordAuthentication no: nenhum usuário pode usar senhas fracas; o acesso")
+        print("     é condicionado à posse de chave privada protegida (Ed25519/RSA).")
+        print(" O host agora atende às diretrizes de segurança defensiva da Cyberguard.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Resposta incorreta: '{user_input}'")
+        print("[!] ERRO: A opção selecionada mantém o servidor vulnerável a ataques de força bruta.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

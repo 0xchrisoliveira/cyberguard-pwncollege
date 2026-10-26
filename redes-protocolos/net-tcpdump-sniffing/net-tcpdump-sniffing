@@ -1,15 +1,153 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os, time, socket
-print("[*] Disparando pacotes contendo o token secreto na interface lo...")
-print("[*] Use 'tcpdump -i lo -A port 44444' para capturar.")
-time.sleep(1)
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-for i in range(5):
-    sock.sendto(b"CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026", ("127.0.0.1", 44444))
-    time.sleep(0.5)
-resp = input("[?] Digite o token capturado no trafego: ").strip()
-if resp == "tcpdump_mestre_2026":
-    print("[+] Captura realizada com sucesso!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Token incorreto.")
+import sys
+import os
+import time
+import socket
+import threading
+
+BANNER = r"""
+ ╔══════════════════════════════════════════════════════════════════════════════╗
+ ║   ______      __                                   __                        ║
+ ║  / ____/_  __/ /_  ___  _____ ____ ___  ______ _____/ /                        ║
+ ║ / /   / / / / __ \/ _ \/ ___// __ `/ / / / __ `/ ___/ /_                       ║
+ ║/ /___/ /_/ / /_/ /  __/ /   / /_/ / /_/ / /_/ / /  / __ \                      ║
+ ║\____/\__, /_.___/\___/_/    \__, /\__,_/\__,_/_/  /_/ /_/                      ║
+ ║     /____/                 /____/     CYBERGUARD OPERATIONAL PLATFORM 2026   ║
+ ╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r", encoding="utf-8") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler /flag: {e}")
+    print("pwn.college{cyberguard_tcpdump_sniffing_expert_2026}")
+
+def show_lesson(reason=None):
+    print(BANNER)
+    if reason:
+        print(f"[-] AVISO OPERACIONAL: {reason}\n")
+    print("=" * 80)
+    print("   AULA DIDÁTICA: SNIFFING DE PACOTES, MODO PROMÍSCUO E FILTROS BPF COM TCPDUMP")
+    print("=" * 80)
+    print("""
+1. O QUE É SNIFFING DE REDE?
+   Sniffing é o ato de interceptar e registrar o tráfego que trafega por uma interface
+   de rede. No Linux, isso é viabilizado pelo subsistema de raw sockets (AF_PACKET)
+   e pela biblioteca libpcap.
+
+2. A INTERFACE DE LOOPBACK (lo):
+   A interface 'lo' (127.0.0.1) é uma interface virtual puramente em memória utilizada
+   para comunicação interna entre processos da mesma máquina. Ela NÃO passa por placas
+   físicas de rede, mas pode ser monitorada normalmente pelo tcpdump!
+
+3. AS PRINCIPAIS FLAGS DO TCPDUMP:
+   * '-i <interface>' : Define a interface (ex: -i lo para loopback ou -i eth0)
+   * '-A'             : Imprime cada pacote em ASCII puro (ótimo para ler payloads e senhas)
+   * '-X'             : Imprime cada pacote em Hexadecimal e ASCII lado a lado
+   * '-nn'            : Desativa a resolução de nomes de domínio e de portas (acelera o scan)
+   * '-v' / '-vv'     : Modo verboso (exibe TTL, ID de IP e flags TCP)
+
+4. FILTROS BPF (BERKELEY PACKET FILTERS):
+   Em vez de capturar milhares de pacotes irrelevantes, usamos filtros BPF no final do comando:
+   * 'port 44444'        -> Filtra qualquer tráfego na porta 44444
+   * 'udp port 44444'    -> Restringe estritamente ao protocolo UDP
+   * 'src host 127.0.0.1'-> Apenas pacotes originados no loopback
+
+5. PASSO A PASSO PARA RESOLVER ESTE DESAFIO:
+   Passo 1: Abra um terminal e inicie o sniffer escutando a porta UDP 44444:
+            $ sudo tcpdump -i lo -A -nn udp port 44444
+            (ou com permissões de aluno no container pwn.college)
+   Passo 2: Em outro terminal, execute este binário:
+            $ /challenge/net-tcpdump-sniffing
+   Passo 3: Observe no terminal do tcpdump o pacote sendo transmitido:
+            CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026
+   Passo 4: Digite o token capturado ('tcpdump_mestre_2026') no prompt deste desafio.
+""")
+    print("=" * 80)
+
+def packet_emitter(stop_event, secret_token):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    payload = f"CYBERGUARD_SNIFF_SECRET={secret_token}".encode("utf-8")
+    while not stop_event.is_set():
+        try:
+            sock.sendto(payload, ("127.0.0.1", 44444))
+        except Exception:
+            pass
+        time.sleep(0.8)
+    sock.close()
+
+def main():
+    secret_token = "tcpdump_mestre_2026"
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help", "help"):
+        show_lesson("Manual de ajuda solicitado pelo operador.")
+        sys.exit(0)
+
+    # Se a resposta foi passada como argumento de linha de comando:
+    if len(sys.argv) > 1:
+        user_input = sys.argv[1].strip()
+        if user_input == secret_token:
+            print(BANNER)
+            print("[+] MISSÃO OPERACIONAL CUMPRIDA COM SUCESSO!")
+            print(f"[+] Token '{user_input}' validado contra o stream de tráfego UDP.")
+            print("[*] DEBRIEFING TÉCNICO:")
+            print("    Você capturou e decodificou com sucesso dados transmitidos em texto")
+            print("    claro na interface de rede. Em auditorias e investigações de SOC,")
+            print("    a análise de pacotes com tcpdump revela credenciais em protocolos")
+            print("    desprotegidos (como HTTP, FTP, Telnet) e exfiltrações maliciosas.")
+            print("[+] FLAG DE ACESSO AUTORIZADO LIBERADA:")
+            print("-" * 60)
+            print_flag()
+            print("-" * 60)
+            return
+        else:
+            show_lesson(f"Token incorreto fornecido via argumento: '{user_input}'.")
+            sys.exit(1)
+
+    print(BANNER)
+    print("=" * 80)
+    print("   OPERAÇÃO DEEP PACKET INSPECT — INTERCEPTAÇÃO EM TEMPO REAL")
+    print("=" * 80)
+    print("[*] Status: TRANSMISSÃO CONTÍNUA ATIVA na interface 'lo' (127.0.0.1:44444 / UDP).")
+    print("[*] Para capturar o tráfego em outro terminal, execute:")
+    print("    tcpdump -i lo -A -nn udp port 44444")
+    print("    (ou 'tshark -i lo -f \"udp port 44444\" -x')")
+    print("-" * 80)
+
+    stop_event = threading.Event()
+    emitter = threading.Thread(target=packet_emitter, args=(stop_event, secret_token), daemon=True)
+    emitter.start()
+
+    try:
+        user_resp = input("[?] Digite o token secreto capturado no tráfego: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        stop_event.set()
+        print("\n[*] Interrompido pelo operador.")
+        sys.exit(0)
+    finally:
+        stop_event.set()
+
+    if user_resp == secret_token:
+        print("\n" + BANNER)
+        print("[+] MISSÃO OPERACIONAL CUMPRIDA COM SUCESSO!")
+        print(f"[+] Token '{user_resp}' validado contra o stream de tráfego UDP.")
+        print("[*] DEBRIEFING TÉCNICO:")
+        print("    Você capturou e decodificou com sucesso dados transmitidos em texto")
+        print("    claro na interface de rede. Em auditorias e investigações de SOC,")
+        print("    a análise de pacotes com tcpdump revela credenciais em protocolos")
+        print("    desprotegidos (como HTTP, FTP, Telnet) e exfiltrações maliciosas.")
+        print("[+] FLAG DE ACESSO AUTORIZADO LIBERADA:")
+        print("-" * 60)
+        print_flag()
+        print("-" * 60)
+    else:
+        show_lesson(f"Token informado incorreto: '{user_resp}'. Capture o tráfego na porta UDP 44444.")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

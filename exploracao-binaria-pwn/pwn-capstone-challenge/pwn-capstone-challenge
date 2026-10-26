@@ -1,11 +1,149 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-lema = "Nenhum operador fica para trás"
-inp = input("[?] Digite o lema da Cyberguard: ").strip()
-if inp.lower() == lema.lower():
-    print("="*60)
-    print("PARABENS OPERADOR! Voce concluiu o Dojo da Cyberguard!")
-    print("="*60)
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print(f"[X] Dica: '{lema}'")
+import sys
+import os
+import unicodedata
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: DEFENSE & LOW-LEVEL LABS
+"""
+
+CYBERGUARD_MOTTO = "Nenhum operador fica para trás"
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def normalize_text(text):
+    text = text.strip().lower()
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    )
+
+def show_lesson():
+    print("""
+================================================================================
+  [!] AULA DIDÁTICA INTEGRAL: O MANIFESTO TÉCNICO CAPSTONE CYBERGUARD
+================================================================================
+Parabéns pela jornada até aqui. O desafio Capstone consolida a superação das
+maiores lacunas diagnosticadas no ciclo 2026.2.
+
+1. RESUMO DOS PILARES DE BAIXO NÍVEL, FORENSE E DEFESA:
+   +--------------------------------------------------------------------------+
+   | DOMÍNIO          | CONCEITO FUNDAMENTAL CONSOLIDADO                      |
+   +--------------------------------------------------------------------------+
+   | Forense & DFIR   | RFC 3227: Ordem de Volatilidade. A memória RAM SEMPRE |
+   |                  | é adquirida antes do disco (fileless malware, chaves  |
+   |                  | de criptografia AES-256 e sockets ativos perecem ao   |
+   |                  | desligar o host).                                     |
+   +--------------------------------------------------------------------------+
+   | Arquitetura CPU  | RIP / EIP é exclusivamente o Instruction Pointer:     |
+   |                  | aponta para a PRÓXIMA instrução a ser executada no    |
+   |                  | ciclo Fetch-Decode-Execute. NÃO armazena flags (essas |
+   |                  | pertencem ao registrador RFLAGS/EFLAGS).              |
+   +--------------------------------------------------------------------------+
+   | Engenharia       | Análise Estática (Ghidra, objdump, strings) estuda o  |
+   | Reversa          | código sem executá-lo (100% segura contra malwares);  |
+   |                  | Análise Dinâmica (GDB) monitora registradores e fluxo |
+   |                  | durante a execução ativa do binário.                  |
+   +--------------------------------------------------------------------------+
+   | Anatomia da      | A pilha cresce para BAIXO, mas arrays preenchem para  |
+   | Pilha & Overflow | CIMA. Funções inseguras como 'strcpy' e 'gets' não    |
+   |                  | checam limites e transbordam buffers de memória.      |
+   +--------------------------------------------------------------------------+
+   | Sequestro de RIP | O transbordo esmaga Saved RBP e Saved RIP. No comando |
+   | & Shellcode      | 'ret', a CPU lê o endereço do topo da pilha e salta   |
+   |                  | cegamente para funções 'win()' ou NOP Sled com shell. |
+   +--------------------------------------------------------------------------+
+
+2. A DOUTRINA CYBERGUARD:
+   A evolução técnica do time baseia-se na mentoria mútua e na coesão operacional.
+   Os operadores experientes apoiam os novatos, e o conhecimento flui livremente.
+   
+   O lema oficial e inegociável da equipe é:
+   "Nenhum operador fica para trás"
+
+COMO CONCLUIR A MISSÃO FINAL:
+Digite o lema da Cyberguard ou confirme via argumento para abrir o cofre da fortaleza.
+================================================================================
+""")
+
+def main():
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO PWN-04 / CAPSTONE] A CHAVE DA FORTALEZA CYBERGUARD")
+    print("================================================================================")
+    print(" O desafio final integrador: você navegou pelos 9 módulos fundamentais,")
+    print(" dominou a Ordem de Volatilidade da RFC 3227, esclareceu o registrador RIP,")
+    print(" reverteu instruções em Assembly x86_64 e dissecou a pilha em exploits de Pwn.")
+    print(" Para abrir o cofre definitivo da Cyberguard, confirme o lema da equipe.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_input = None
+    if len(args) > 0:
+        user_input = " ".join(args).strip()
+    elif not sys.stdin.isatty():
+        try:
+            user_input = sys.stdin.read().strip()
+        except Exception:
+            pass
+    else:
+        try:
+            user_input = input("[Cyberguard-Capstone] Digite o lema da Cyberguard: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if not user_input:
+        print("[!] Nenhuma entrada informada.")
+        show_lesson()
+        sys.exit(1)
+
+    normalized_input = normalize_text(user_input)
+    normalized_motto = normalize_text(CYBERGUARD_MOTTO)
+
+    if normalized_input == normalized_motto or "nenhum operador" in normalized_input:
+        print("\n" + "="*80)
+        print(" [★] MISSÃO CUMPRIDA: CAPSTONE CONCLUÍDO COM DISTINÇÃO E HONRA! [★]")
+        print("="*80)
+        print(f" LEMA CONFIRMADO: \"{CYBERGUARD_MOTTO}\"")
+        print("")
+        print(" OPERADOR DE BAIXO NÍVEL, ENGENHARIA REVERSA & FORENSE HOMOLOGADO!")
+        print(" Você superou o abismo técnico do Ciclo 2026.2:")
+        print("   ✓ RFC 3227 & Volatilidade da Memória RAM dominadas.")
+        print("   ✓ Registrador RIP e ciclo de processadores x86_64 perfeitamente fixados.")
+        print("   ✓ Análise Estática (Ghidra/objdump) e Dinâmica (GDB) articuladas.")
+        print("   ✓ Anatomia da Pilha, strcpy Buffer Overflow e Shellcode conquistados.")
+        print("")
+        print(" A Cyberguard avança como uma unidade coesa e de altíssima letalidade técnica.")
+        print("-" * 80)
+        print("[FLAG DE CONQUISTA MÁXIMA CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Lema incorreto: '{user_input}'")
+        print(f"[!] Dica: O lema oficial da equipe é '{CYBERGUARD_MOTTO}'.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

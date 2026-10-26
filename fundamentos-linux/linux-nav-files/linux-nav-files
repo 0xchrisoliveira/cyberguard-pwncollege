@@ -1,12 +1,117 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-target = "/challenge/.segredo_cyberguard"
-if not os.path.exists(target):
-    with open(target, "w") as f:
-        f.write("cyberguard_linux_fhs_2026")
-if len(sys.argv) < 2 or sys.argv[1].strip() != "cyberguard_linux_fhs_2026":
-    print("[X] Uso incorreto: /challenge/linux-nav-files <chave_secreta>")
-    print("[*] Dica: Inspecione arquivos ocultos no diretorio /challenge usando 'ls -la'")
-    sys.exit(1)
-print("[+] Chave validada com sucesso! Voce dominou navegacao e arquivos ocultos.")
-print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+import sys
+import os
+
+BANNER = r"""
+ ╔══════════════════════════════════════════════════════════════════════════════╗
+ ║   ______      __                                   __                        ║
+ ║  / ____/_  __/ /_  ___  _____ ____ ___  ______ _____/ /                        ║
+ ║ / /   / / / / __ \/ _ \/ ___// __ `/ / / / __ `/ ___/ /_                       ║
+ ║/ /___/ /_/ / /_/ /  __/ /   / /_/ / /_/ / /_/ / /  / __ \                      ║
+ ║\____/\__, /_.___/\___/_/    \__, /\__,_/\__,_/_/  /_/ /_/                      ║
+ ║     /____/                 /____/     CYBERGUARD OPERATIONAL PLATFORM 2026   ║
+ ╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r", encoding="utf-8") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro de leitura em /flag: {e}")
+    print("pwn.college{cyberguard_linux_nav_files_complete_2026}")
+
+def show_lesson(reason=None):
+    print(BANNER)
+    if reason:
+        print(f"[-] FALHA OPERACIONAL: {reason}\n")
+    print("=" * 80)
+    print("   AULA DIDÁTICA: NAVEGAÇÃO NO SISTEMA DE ARQUIVOS E ARQUIVOS OCULTOS (FHS)")
+    print("=" * 80)
+    print("""
+1. O QUE SÃO ARQUIVOS OCULTOS NO LINUX?
+   No padrão POSIX/Linux, qualquer arquivo ou diretório cujo nome comece com
+   um ponto (.) é considerado oculto. O utilitário padrão 'ls' filtra e oculta
+   essas entradas por padrão.
+   
+   Exemplos reais de arquivos ocultos críticos:
+   * ~/.bash_history   -> Histórico de comandos digitados pelo usuário (senhas vazadas)
+   * ~/.ssh/id_rsa     -> Chaves privadas SSH de acesso a servidores
+   * ~/.env ou .env    -> Tokens de API, credenciais de banco e chaves secretas
+   * .git/config       -> URLs de repositórios privados com tokens embutidos
+
+2. COMO INSPECIONAR E REVELAR ARQUIVOS OCULTOS:
+   O comando 'ls' exige o parâmetro '-a' (all) ou '-la' (long format + all):
+   
+   $ ls               # Não exibe arquivos iniciados por '.'
+   $ ls -a            # Exibe todos os arquivos, inclusive ocultos
+   $ ls -la /challenge # Exibe permissões, donos, tamanho e nomes de todos os arquivos
+
+3. COMO LER O CONTEÚDO DO ARQUIVO:
+   Depois de identificar o arquivo oculto, use um visualizador como 'cat':
+   $ cat /challenge/.segredo_cyberguard
+
+4. SINTAXE DESTE DESAFIO:
+   Após descobrir a chave contida no arquivo oculto, execute este binário passando
+   a chave como primeiro argumento:
+   
+   $ /challenge/linux-nav-files <chave_secreta>
+
+5. EXEMPLO PRÁTICO PASSO A PASSO:
+   Passo 1: Inspecione o diretório:
+            ls -la /challenge
+   Passo 2: Leia o segredo revelado:
+            cat /challenge/.segredo_cyberguard
+   Passo 3: Execute passando a chave:
+            /challenge/linux-nav-files $(cat /challenge/.segredo_cyberguard)
+""")
+    print("=" * 80)
+
+def main():
+    target = "/challenge/.segredo_cyberguard"
+    secret_value = "cyberguard_linux_fhs_2026"
+
+    # Garantir que o segredo existe no ambiente
+    if not os.path.exists(target):
+        try:
+            with open(target, "w", encoding="utf-8") as f:
+                f.write(secret_value)
+        except OSError:
+            # Fallback para ambiente local se /challenge não tiver permissão de escrita
+            fallback_target = "./.segredo_cyberguard"
+            if not os.path.exists(fallback_target):
+                try:
+                    with open(fallback_target, "w", encoding="utf-8") as f:
+                        f.write(secret_value)
+                except OSError:
+                    pass
+
+    # Verificação de flags de ajuda
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help", "help"):
+        show_lesson("Nenhum argumento fornecido ou pedido de ajuda acionado.")
+        sys.exit(1)
+
+    user_input = sys.argv[1].strip()
+
+    if user_input != secret_value:
+        show_lesson(f"Chave incorreta fornecida: '{user_input}'. O segredo deve coincidir com o arquivo oculto.")
+        sys.exit(1)
+
+    print(BANNER)
+    print("[+] MISSÃO OPERACIONAL CUMPRIDA COM SUCESSO!")
+    print("[+] Validação de Reconhecimento no Sistema de Arquivos (FHS) concluída.")
+    print("[*] DEBRIEFING TÉCNICO:")
+    print("    Você dominou o uso de 'ls -la' e compreendeu a mecânica de arquivos")
+    print("    ocultos no Linux. Em operações de Red Team e Blue Team, a análise de")
+    print("    arquivos com prefixo '.' é indispensável para auditoria de credenciais,")
+    print("    chaves SSH (.ssh) e históricos (.bash_history).")
+    print("[+] FLAG DE ACESSO AUTORIZADO LIBERADA:")
+    print("-" * 60)
+    print_flag()
+    print("-" * 60)
+
+if __name__ == "__main__":
+    main()

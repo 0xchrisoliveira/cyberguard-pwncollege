@@ -1,11 +1,133 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("Qual a funcao de um Domain Controller (DC)?")
-print("A) Apenas rotear pacotes TCP")
-print("B) Autenticar usuarios e centralizar a base de dados de seguranca do dominio (NTDS.dit)")
-ans = input("Opcao: ").strip().upper()
-if ans == "B":
-    print("[+] Correto! O DC gerencia a seguranca centralizada do dominio.")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto.")
+# -*- coding: utf-8 -*-
+"""
+Cyberguard Security Research & Operational Dojo
+Desafio: ad-ldap-enumeration (Enumeração de Objetos via LDAP & Arquitetura do Domain Controller)
+Módulo 7: Infraestrutura Corporativa & Active Directory
+"""
+import sys
+import os
+
+BANNER = r"""
+  ____      _                                     _ 
+ / ___|   _| |__   ___ _ __ __ _ _   _  __ _ _ __| |
+| |  | | | | '_ \ / _ \ '__/ _` | | | |/ _` | '__| |
+| |__| |_| | |_) |  __/ | | (_| | |_| | (_| | |  |_|
+ \____\__, |_.__/ \___|_|  \__, |\__,_|\__,_|_|  (_)
+      |___/                |___/                    
+ [ CYBERGUARD HIGH-PERFORMANCE SECURITY TRAINING LAB ]
+"""
+
+AULA_DIDATICA = r"""
+================================================================================
+     AULA DIDÁTICA: ARQUITETURA DO DOMAIN CONTROLLER (DC) & ENUMERAÇÃO LDAP
+================================================================================
+
+1. O ERRO DO DIAGNÓSTICO (Q06):
+   Na avaliação diagnóstica da Cyberguard, 62,5% da equipe errou a função de um
+   Domain Controller (DC), com respondentes reduzindo seu papel a 'apenas rotear
+   pacotes TCP na rede'. Vamos dissecar a real importância do DC:
+
+2. O PAPEL CRÍTICO DO DOMAIN CONTROLLER (DC):
+   O Domain Controller é o núcleo absoluto de segurança de uma rede Windows:
+   a) Autenticação Centralizada: Executa o serviço Kerberos KDC (porta 88) e NTLM.
+   b) A Base Mestra NTDS.dit:
+      O arquivo 'C:\Windows\NTDS\NTDS.dit' é o banco de dados do Active Directory.
+      Ele armazena TODOS os objetos do domínio, incluindo os hashes NTLM e chaves
+      Kerberos de todos os usuários corporativos e Administradores do Domínio!
+      Se um invasor extrai o NTDS.dit (ou executa um ataque de DCSync), ele obtém
+      comprometimento total e irreversível da empresa (Full Domain Compromise).
+   c) Serviço de Diretório LDAP (Portas 389 e 636 LDAPS):
+      Permite consultar e modificar a árvore de usuários, computadores e grupos.
+   d) Políticas de Grupo (GPO):
+      Distribui configurações de segurança e restrições para milhares de máquinas.
+
+3. SINTAXE E FILTROS LDAP ESSENCIAIS PARA RED & BLUE TEAMS:
+   * Buscar todas as contas de usuário com Service Principal Name (SPNs):
+     (&(objectCategory=person)(objectClass=user)(servicePrincipalName=*))
+
+   * Buscar contas com privilégios administrativos (adminCount = 1):
+     (&(objectCategory=person)(adminCount=1))
+
+   * Contas vulneráveis a AS-REP Roasting (pré-autenticação desabilitada):
+     (userAccountControl:1.2.840.113556.1.4.803:=4194304)
+
+4. COMANDOS DE TERMINAL PARA CONSULTA:
+   * Via ldapsearch no Linux:
+     $ ldapsearch -x -H ldap://dc01.corp.cyberguard.local \
+       -b "DC=corp,DC=cyberguard,DC=local" \
+       "(&(objectClass=user)(servicePrincipalName=*))" cn servicePrincipalName
+
+   * Via PowerShell / PowerView no Windows:
+     PS> Get-DomainUser -SPN | Select-Object samaccountname, serviceprincipalname
+
+================================================================================
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler {flag_path}: {e}")
+    print("pwn.college{cyberguard_ad_domain_controller_ldap_flag}")
+
+def main():
+    print(BANNER)
+    print("[*] OPERAÇÃO LDAP RECON // CYBERGUARD ACTIVE DIRECTORY RESEARCH")
+    print("[*] Alvo: Controlador de Domínio 'DC01.corp.cyberguard.local'")
+    print("[*] Missão: Compreender a arquitetura de governança e autenticação do Active Directory.\n")
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        sys.exit(0)
+
+    print("--- [ CONSULTA DE ARQUITETURA DE REDE CORPORATIVA ] ---")
+    print("Qual é a função primordial de um Domain Controller (DC) no Active Directory?")
+    print("\nOpções:")
+    print("  [A] Funcionar meramente como um roteador de pacotes TCP e comutador de nível 3")
+    print("  [B] Autenticar usuários/serviços e centralizar a base mestra de segurança do domínio (NTDS.dit)")
+    print("  [C] Substituir switches de borda e acelerar conexões Wi-Fi sem criptografia")
+    print("  [D] Converter endereços IPv4 em IPv6 através de NAT de camada de enlace")
+
+    if len(sys.argv) >= 2 and sys.argv[1] not in ("--help", "-h"):
+        escolha = sys.argv[1].strip()
+        print(f"\n[*] Resposta enviada via CLI: {escolha}")
+    else:
+        try:
+            escolha = input("\n[?] Selecione a opção tecnicamente correta [A/B/C/D]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    escolha_clean = escolha.upper()
+
+    if escolha_clean in ("B", "[B]"):
+        print("\n" + "="*80)
+        print("[+] [RESPOSTA HOMOLOGADA] Excelente! Função do Domain Controller compreendida.")
+        print("="*80)
+        print("\n[*] DEBRIEFING TÉCNICO:")
+        print("    O Domain Controller é a âncora de confiança da organização. Ele gerencia o")
+        print("    banco NTDS.dit com todos os segredos criptográficos corporativos, distribui")
+        print("    políticas de grupo (GPOs) e opera o Key Distribution Center (KDC Kerberos).")
+        print("    A proteção de Domain Controllers (Tier 0) é a prioridade máxima em Blue Team.\n")
+        print("[*] FLAG DE CONCLUSÃO:")
+        print_flag()
+    elif escolha_clean in ("A", "[A]"):
+        print("\n[X] [ERRO DO DIAGNÓSTICO DETECTADO] Você marcou a alternativa 'apenas roteador TCP'.")
+        print("    O DC NÃO é um roteador! Ele é o servidor mestre de autenticação e identidade.")
+        print("[*] Estude os detalhes do Domain Controller na aula técnica abaixo:\n")
+        print(AULA_DIDATICA)
+        sys.exit(1)
+    else:
+        print(f"\n[X] [OPÇÃO INCORRETA] Opção '{escolha}' incorreta.")
+        print("[*] Consulte os fundamentos de Active Directory na aula técnica abaixo:\n")
+        print(AULA_DIDATICA)
+        print("[*] DICA: A alternativa correta é a [B] (Autenticação centralizada e NTDS.dit).")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,8 +1,130 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-pwd = input("[?] Digite a senha que gerou o hash e10adc3949ba59abbe56e057f20f883e: ").strip()
-if pwd == "123456":
-    print("[+] Hash quebrado com sucesso!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Senha incorreta.")
+# -*- coding: utf-8 -*-
+"""
+Cyberguard Security Research & Operational Dojo
+Desafio: crypto-john-cracking (Quebra de Hashes com John the Ripper & Hashcat)
+Módulo 5: Criptografia Aplicada & Fundamentos CTF
+"""
+import sys
+import os
+import hashlib
+
+BANNER = r"""
+  ____      _                                     _ 
+ / ___|   _| |__   ___ _ __ __ _ _   _  __ _ _ __| |
+| |  | | | | '_ \ / _ \ '__/ _` | | | |/ _` | '__| |
+| |__| |_| | |_) |  __/ | | (_| | |_| | (_| | |  |_|
+ \____\__, |_.__/ \___|_|  \__, |\__,_|\__,_|_|  (_)
+      |___/                |___/                    
+ [ CYBERGUARD HIGH-PERFORMANCE SECURITY TRAINING LAB ]
+"""
+
+TARGET_HASH = "e10adc3949ba59abbe56e057f20f883e"
+EXPECTED_SECRET = "123456"
+
+AULA_DIDATICA = r"""
+================================================================================
+       AULA DIDÁTICA: QUEBRA OFFLINE DE HASHES COM JOHN & HASHCAT
+================================================================================
+
+1. COMO FUNCIONA O ATAQUE DE DICIONÁRIO (WORDLIST ATTACK):
+   Funções de hash são matemáticas unidirecionais (não existe operação inversa).
+   Portanto, para descobrir qual texto gerou um hash, realizamos um ataque de
+   força bruta ou dicionário offline:
+   
+   Wordlist ("rockyou.txt") -> Hash(candidato) -> Compara com Hash Alvo.
+   Se os dois resumos baterem, encontramos a senha em claro!
+
+2. JOHN THE RIPPER: SINTAXE E COMANDOS OPERACIONAIS:
+   Passo 1: Salve o hash alvo em um arquivo de texto:
+     $ echo "e10adc3949ba59abbe56e057f20f883e" > /tmp/hash.txt
+
+   Passo 2: Execute o John especificando o formato e a wordlist:
+     $ john --format=raw-md5 --wordlist=/usr/share/wordlists/rockyou.txt /tmp/hash.txt
+
+   Passo 3: Exiba a senha recuperada:
+     $ john --show --format=raw-md5 /tmp/hash.txt
+     # Saída: e10adc3949ba59abbe56e057f20f883e:123456
+
+3. HASHCAT: MODO E ACELERAÇÃO POR GPU:
+   * Modo MD5 puro no Hashcat é o número 0 (-m 0):
+     $ hashcat -m 0 -a 0 /tmp/hash.txt /usr/share/wordlists/rockyou.txt
+
+   * Outros modos populares no Hashcat:
+     -m 1000  : NTLM (Senhas do Windows Active Directory)
+     -m 1800  : SHA-512 crypt (Senhas do /etc/shadow no Linux)
+     -m 3200  : Bcrypt
+     -m 13100 : Kerberoasting (Tickets Kerberos TGS 5)
+
+4. O PERIGO DAS SENHAS TRIVIAIS:
+   O hash alvo 'e10adc3949ba59abbe56e057f20f883e' corresponde a '123456'.
+   Mesmo sem o John, qualquer ferramenta online de reversão reversa esse hash
+   em milissegundos devido à sua presença em todas as tabelas de senhas mundiais.
+
+================================================================================
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler {flag_path}: {e}")
+    print("pwn.college{cyberguard_john_the_ripper_cracked_md5}")
+
+def main():
+    print(BANNER)
+    print("[*] OPERAÇÃO CRACK THE CITADEL // CYBERGUARD CRYPTO RESEARCH")
+    print("[*] Alvo: Hash MD5 Descoberto em Dump de Autenticação Legado")
+    print(f"[*] Hash Alvo: {TARGET_HASH}\n")
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        sys.exit(0)
+
+    if len(sys.argv) >= 2:
+        tentativa = sys.argv[1].strip()
+        print(f"[*] Senha submetida via CLI: '{tentativa}'")
+    else:
+        try:
+            print(f"[?] Digite a senha em texto claro que gerou o hash {TARGET_HASH}:")
+            tentativa = input(">> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if not tentativa or tentativa in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        print("[!] Forneça a senha em texto claro correspondente ao hash MD5.")
+        sys.exit(1)
+
+    # Verifica se a senha confere
+    hash_candidato = hashlib.md5(tentativa.encode("utf-8")).hexdigest()
+
+    if hash_candidato == TARGET_HASH:
+        print("\n" + "="*80)
+        print("[+] [CRACK BEM-SUCEDIDO] Hash quebrado com sucesso!")
+        print(f"[+] Senha recuperada: {tentativa}")
+        print(f"[+] MD5 calculado:   {hash_candidato}")
+        print("="*80)
+        print("\n[*] DEBRIEFING TÉCNICO:")
+        print("    A senha fraca '123456' foi revertida instantaneamente por colisão em wordlist.")
+        print("    O uso de MD5 sem salt para proteção de credenciais é uma violação grave de")
+        print("    conformidade (PCI-DSS, ISO 27001 e LGPD).")
+        print("    Recomendação: Migrar para Argon2id com entropia mínima de senha de 12 caracteres.\n")
+        print("[*] FLAG DE CONCLUSÃO:")
+        print_flag()
+    else:
+        print(f"\n[X] [SENHA INCORRETA] O texto '{tentativa}' gerou o hash:")
+        print(f"    {hash_candidato}")
+        print(f"    Que não coincide com o hash alvo: {TARGET_HASH}")
+        print("[*] Consulte as instruções de quebra com John the Ripper na aula abaixo:\n")
+        print(AULA_DIDATICA)
+        print("[*] DICA OPERACIONAL: A senha é um clássico de 6 dígitos muito comum.")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

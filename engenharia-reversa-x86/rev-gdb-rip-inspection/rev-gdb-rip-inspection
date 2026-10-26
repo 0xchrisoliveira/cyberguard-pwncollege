@@ -1,12 +1,143 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("Em arquiteturas x86 e x86_64, qual a funcao do registrador EIP / RIP?")
-print("1) Armazena o resultado da ultima multiplicacao")
-print("2) Armazena o endereco da PROXIMA instrucao a ser executada pela CPU")
-print("3) Armazena as flags de comparacao (Zero Flag, Carry Flag)")
-ans = input("Opcao: ").strip()
-if ans == "2":
-    print("[+] EXCELENTE! 100% da equipe errou isso no diagnostico. Agora o conceito esta consolidado!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto. Lembre-se: RIP = Instruction Pointer (Ponteiro de Instrucao).")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: REVERSE ENGINEERING LABS
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def show_lesson():
+    print("""
+================================================================================
+  [!] AULA DIDÁTICA: O REGISTRADOR RIP/EIP NA ARQUITETURA x86_64
+================================================================================
+ATENÇÃO: No teste diagnóstico do ciclo 2026.2 da Cyberguard, 100% DA EQUIPE
+(8 de 8 integrantes) errou a função do registrador EIP/RIP. Sete membros
+marcaram 'Não sei' e um confundiu com o registrador EFLAGS!
+
+1. QUAL A FUNÇÃO ÚNICA E SOBERANA DO REGISTRADOR RIP / EIP?
+   +--------------------------------------------------------------------------+
+   |  O RIP (Register Instruction Pointer, ou EIP em 32 bits) armazena        |
+   |  o ENDEREÇO DE MEMÓRIA DA PRÓXIMA INSTRUÇÃO a ser executada pela CPU.     |
+   +--------------------------------------------------------------------------+
+   * A CPU opera no ciclo perpétuo:
+     1. Busca (Fetch): Lê os bytes da instrução apontada pelo RIP.
+     2. Incremento: Atualiza o RIP para o endereço da próxima instrução contígua.
+     3. Execução (Execute): Executa a instrução. Se for um salto (jmp/call/ret),
+        o RIP é sobrescrito com o endereço de destino.
+
+2. A CONFUSÃO CRÍTICA: RIP vs RFLAGS / EFLAGS:
+   +-----------------------+--------------------------------------------------+
+   | REGISTRADOR           | PAPEL REAL NA CPU                                |
+   +-----------------------+--------------------------------------------------+
+   | RIP / EIP             | PONTEIRO DE MEMÓRIA (ex: 0x0000000000401156).    |
+   |                       | Diz ONDE está a próxima instrução a rodar.       |
+   +-----------------------+--------------------------------------------------+
+   | RFLAGS / EFLAGS       | CONJUNTO DE BITS/FLAGS DE STATUS (0 ou 1).       |
+   |                       | Guarda o RESULTADO de comparações (cmp, test):   |
+   |                       | ZF (Zero Flag), CF (Carry Flag), SF (Sign Flag). |
+   +-----------------------+--------------------------------------------------+
+   | RAX / EAX             | Acumulador; guarda o VALOR DE RETORNO de funções.|
+   +-----------------------+--------------------------------------------------+
+   | RSP / ESP             | Stack Pointer; aponta para o TOPO DA PILHA.      |
+   +-----------------------+--------------------------------------------------+
+   | RBP / EBP             | Base Pointer; âncora da BASE DO QUADRO DE PILHA. |
+   +-----------------------+--------------------------------------------------+
+
+3. COMANDOS PRÁTICOS NO GDB (GNU Debugger):
+   * Iniciar depuração:
+     $ gdb ./binario
+   * Colocar breakpoint na função main e iniciar:
+     (gdb) break *main
+     (gdb) run
+   * Inspecionar o valor atual do RIP:
+     (gdb) info registers rip
+     (gdb) print/x $rip
+   * Desmontar a instrução apontada pelo RIP:
+     (gdb) x/i $rip
+   * Avançar uma única instrução de máquina e ver o RIP mudar:
+     (gdb) stepi
+     (gdb) info registers rip
+
+4. POR QUE CONTROLAR O RIP É O SANTO GRAAL DO EXPLOIT?
+   A CPU não faz juízo de valor. Se você provocar um buffer overflow e sobrescrever
+   o Saved RIP na pilha, no momento da instrução 'ret' a CPU carregará o seu
+   endereço no RIP e saltará cegamente para o seu código! Quem controla o RIP,
+   controla completamente o fluxo do processador.
+
+Para responder, selecione a alternativa correta:
+  '2' ou 'B'
+================================================================================
+""")
+
+def main():
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO REV-02] DEPURAÇÃO DINÂMICA COM GDB: INSPEÇÃO DO REGISTRADOR RIP")
+    print("================================================================================")
+    print(" Módulo de Alinhamento Baixo Nível: Superando a Maior Lacuna do Diagnóstico 2026.2.")
+    print(" Laboratório de Arquitetura x86_64 e Ciclo de Execução de Processadores.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_input = None
+    if len(args) > 0:
+        user_input = " ".join(args).strip()
+    else:
+        print("[?] Em processadores de arquitetura x86 e x86_64, qual é a função exata")
+        print("    do registrador EIP / RIP?")
+        print("    1) Armazenar o resultado de operações lógicas e de comparação (Zero Flag)")
+        print("    2) Armazenar o endereço de memória da PRÓXIMA instrução a ser executada pela CPU")
+        print("    3) Armazenar o valor retornado pela última chamada de função executada")
+        print("    4) Armazenar o endereço fixo da base do quadro de pilha (Stack Frame)")
+        print("")
+        try:
+            user_input = input("[Cyberguard-x86] Digite sua opção (1, 2, 3 ou 4): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    normalized = user_input.upper()
+    if normalized in ["2", "OPÇÃO 2", "OPCAO 2", "B", "OPÇÃO B", "OPCAO B", "PROXIMA INSTRUCAO", "PRÓXIMA INSTRUÇÃO"]:
+        print("\n" + "="*80)
+        print(" [+] DEBRIEFING TÉCNICO: CONCEITO DE RIP CONSOLIDADO COM PERFEIÇÃO!")
+        print("="*80)
+        print(" Parabéns, operador! Você acabou de erradicar a maior falha do diagnóstico.")
+        print(" O RIP (Instruction Pointer) é o leme da CPU. Ele contém o endereço de memória")
+        print(" da próxima instrução a ser buscada no ciclo Fetch-Decode-Execute.")
+        print(" Nunca mais o confunda com o RFLAGS (que guarda as flags de comparação)!")
+        print(" Com o entendimento de RIP, você está pronto para dominar a pilha e pwn.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Resposta incorreta: '{user_input}'")
+        print("[!] ERRO CONCEITUAL GRAVE: Essa foi a resposta que 100% da equipe errou.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

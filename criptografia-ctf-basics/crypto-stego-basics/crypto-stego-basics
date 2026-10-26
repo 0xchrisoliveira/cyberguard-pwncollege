@@ -1,11 +1,145 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-dummy = "/tmp/suspicious.bin"
-with open(dummy, "wb") as f:
-    f.write(b"\x7fELF\x02\x01\x01\x00" + b"A"*100 + b"FLAG_HIDDEN_STEGO_cyberguard2026" + b"B"*50)
-resp = input("[?] Use strings /tmp/suspicious.bin e informe a FLAG_HIDDEN_STEGO: ").strip()
-if resp == "cyberguard2026":
-    print("[+] Esteganografia resolvida!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto. Dica: strings /tmp/suspicious.bin | grep FLAG_HIDDEN_STEGO")
+# -*- coding: utf-8 -*-
+"""
+Cyberguard Security Research & Operational Dojo
+Desafio: crypto-stego-basics (Esteganografia e Análise de Metadados em Arquivos)
+Módulo 5: Criptografia Aplicada & Fundamentos CTF
+"""
+import sys
+import os
+
+BANNER = r"""
+  ____      _                                     _ 
+ / ___|   _| |__   ___ _ __ __ _ _   _  __ _ _ __| |
+| |  | | | | '_ \ / _ \ '__/ _` | | | |/ _` | '__| |
+| |__| |_| | |_) |  __/ | | (_| | |_| | (_| | |  |_|
+ \____\__, |_.__/ \___|_|  \__, |\__,_|\__,_|_|  (_)
+      |___/                |___/                    
+ [ CYBERGUARD HIGH-PERFORMANCE SECURITY TRAINING LAB ]
+"""
+
+CARRIER_PATH = "/tmp/suspicious.bin"
+STEGO_KEY = "cyberguard2026"
+FULL_STEGO_STRING = f"FLAG_HIDDEN_STEGO_{STEGO_KEY}"
+
+AULA_DIDATICA = r"""
+================================================================================
+     AULA DIDÁTICA: ESTEGANOGRAFIA & ANÁLISE FORENSE DE ARTEFATOS
+================================================================================
+
+1. CRIPTOGRAFIA VS ESTEGANOGRAFIA:
+   - Criptografia: Oculta o SIGNIFICADO da mensagem (o adversário sabe que a
+     mensagem existe, mas não consegue lê-la sem a chave).
+   - Esteganografia: Oculta a EXISTÊNCIA da própria comunicação (a mensagem viaja
+     camuflada dentro de outro arquivo aparentemente inofensivo, como fotos,
+     músicas ou executáveis).
+
+2. TÉCNICAS CLÁSSICAS DE ESTEGANOGRAFIA EM CTF:
+   a) Dados Anexados ao Final do Arquivo (Overlay / Appended Data):
+      Formatos como JPEG e PNG possuem marcadores formais de fim de arquivo (EOF):
+      - JPEG termina com os bytes \xFF\xD9.
+      - PNG termina com o chunk 'IEND' (\x49\x45\x4E\x44\xAE\x42\x60\x82).
+      Visualizadores de imagem ignoram quaisquer bytes adicionados após o EOF,
+      permitindo embutir zips, textos ou executáveis inteiros sem corromper a foto!
+   
+   b) Metadados e Tags EXIF:
+      Informações embutidas pelo software de criação (comentários, autor, modelo da
+      câmera ou geolocalização GPS). Podem conter senhas e flags ocultas.
+
+   c) Modificação do Bit Menos Significativo (LSB - Least Significant Bit):
+      Altera o último bit dos canais de cor RGB de cada pixel. A alteração no tom
+      de cor é imperceptível ao olho humano, mas armazena dados binários.
+
+3. CAIXA DE FERRAMENTAS DO OPERADOR (CLI LINUX):
+   * file: Identifica o tipo real do arquivo analisando os Magic Bytes:
+     $ file /tmp/suspicious.bin
+
+   * strings: Extrai cadeias de caracteres imprimíveis de arquivos binários:
+     $ strings /tmp/suspicious.bin | grep -i "flag"
+
+   * exiftool: Inspeciona e extrai todos os metadados do cabeçalho:
+     $ exiftool /tmp/suspicious.bin
+
+   * binwalk: Escaneia o arquivo em busca de assinaturas embutidas (ex: arquivos compactados):
+     $ binwalk /tmp/suspicious.bin
+     # Para extrair automaticamente artefatos ocultos:
+     $ binwalk -e /tmp/suspicious.bin
+
+================================================================================
+"""
+
+def generate_carrier_file():
+    """Gera o arquivo binário suspeito simulado em /tmp."""
+    try:
+        # Cria cabeçalho simulado PNG + padding + metadados + chave esteganografada
+        png_magic = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00\x08\x06\x00\x00\x00"
+        corpo = b"\x00" * 64 + b"[CYBERGUARD-STEGO-CARRIER-V1]" + b"\x00" * 32
+        payload = f"\n\n### METADATA_PAYLOAD: {FULL_STEGO_STRING} ###\n\n".encode("utf-8")
+        trailer = b"IEND\xaeB`\x82" + b"\x41" * 128
+        
+        with open(CARRIER_PATH, "wb") as f:
+            f.write(png_magic + corpo + payload + trailer)
+    except Exception as e:
+        print(f"[!] Aviso: falha ao escrever {CARRIER_PATH}: {e}")
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler {flag_path}: {e}")
+    print("pwn.college{cyberguard_stego_analysis_mastered}")
+
+def main():
+    print(BANNER)
+    print("[*] OPERAÇÃO INVISIBLE PAYLOAD // CYBERGUARD CRYPTO RESEARCH")
+    print(f"[*] Artefato Gerado para Inspeção: {CARRIER_PATH}")
+    print("[*] Missão: Inspecionar o artefato com utilitários Linux e extrair o segredo esteganografado.\n")
+
+    generate_carrier_file()
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        sys.exit(0)
+
+    if len(sys.argv) >= 2:
+        resposta = sys.argv[1].strip()
+        print(f"[*] Chave fornecida via CLI: '{resposta}'")
+    else:
+        try:
+            print(f"[?] Inspecione '{CARRIER_PATH}' com 'strings' e informe o valor de FLAG_HIDDEN_STEGO:")
+            resposta = input(">> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if not resposta or resposta in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        print(f"[!] Dica: execute no terminal: strings {CARRIER_PATH} | grep FLAG_HIDDEN_STEGO")
+        sys.exit(1)
+
+    # Aceita tanto 'cyberguard2026' quanto 'FLAG_HIDDEN_STEGO_cyberguard2026'
+    if resposta == STEGO_KEY or resposta == FULL_STEGO_STRING:
+        print("\n" + "="*80)
+        print("[+] [SEGREDO ESTEGANOGRAFADO EXTRAÍDO] Análise forense bem-sucedida!")
+        print(f"[+] Segredo Identificado: {STEGO_KEY}")
+        print("="*80)
+        print("\n[*] DEBRIEFING TÉCNICO:")
+        print("    Você utilizou a análise de strings e identificação de cabeçalhos de arquivos")
+        print("    para revelar uma carga embutida na estrutura de bytes do artefato.")
+        print("    Em investigações de ameaças persistentes avançadas (APTs), a esteganografia")
+        print("    é utilizada para exfiltração silenciosa de dados através de tráfego de imagens.\n")
+        print("[*] FLAG DE CONCLUSÃO:")
+        print_flag()
+    else:
+        print(f"\n[X] [CHAVE INCORRETA] O valor '{resposta}' não coincide com o segredo oculto.")
+        print(f"[*] Inspecione o arquivo gerado em {CARRIER_PATH} utilizando a metodologia abaixo:\n")
+        print(AULA_DIDATICA)
+        print(f"[*] COMANDO EXATO: strings {CARRIER_PATH} | grep FLAG_HIDDEN_STEGO")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

@@ -1,12 +1,131 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("Qual evidencia deve ser adquirida em primeiro lugar?")
-print("A) Disco Rigido e Logs salvos")
-print("B) Memoria RAM volátil")
-print("C) Fita de Backup externa")
-ans = input("Opcao: ").strip().upper()
-if ans == "B":
-    print("[+] Exato! Memoria RAM perde os dados ao desligar o equipamento.")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Errado. Lembra-se: RAM -> Processos -> Disco.")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: DEFENSE & FORENSICS LABS
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def show_lesson():
+    print("""
+================================================================================
+  [!] AULA DIDÁTICA: ORDEM DE VOLATILIDADE & RFC 3227 (DFIR)
+================================================================================
+No diagnóstico do ciclo 2026.2 da Cyberguard, 87,5% da equipe cometeu um erro
+crítico: priorizar arquivos e logs gravados em disco antes da memória RAM. Em um
+incidente real, essa conduta leva à perda irreversível das principais evidências!
+
+1. O QUE DETERMINA A RFC 3227?
+   A norma RFC 3227 (Guidelines for Evidence Collection and Archiving) institui
+   o princípio universal da computação forense:
+   
+   "COLETE SEMPRE DA EVIDÊNCIA MAIS VOLÁTIL PARA A MENOS VOLÁTIL."
+
+   Hierarquia Estrita de Volatilidade:
+   +--------------------------------------------------------------------------+
+   | 1. Registradores da CPU e memória cache (perdem-se em nanossegundos)     |
+   | 2. Tabelas de roteamento, cache ARP, conexões TCP ativas, tabela de proc |
+   | 3. Memória Principal (Memória RAM física)                                |
+   | 4. Sistemas de arquivos temporários (/tmp, swap, pagefile)               |
+   | 5. Discos locais não voláteis (HD, SSD, logs gravados em /var/log)       |
+   | 6. Logs remotos (SIEM, syslog externo) e tráfego de rede gravado         |
+   | 7. Mídias de backup de longo prazo (fitas magnéticas, storages a frio)   |
+   +--------------------------------------------------------------------------+
+
+2. POR QUE A MEMÓRIA RAM TEM PRIORIDADE ABSOLUTA SOBRE O DISCO?
+   * DRAM é volátil: ao desligar a máquina ou reiniciar, todo o conteúdo é
+     imediatamente destruído por falta de alimentação elétrica.
+   * Fileless Malware: malwares contemporâneos operam exclusivamente na RAM
+     através de injeções (Process Hollowing, reflective DLL loading), sem
+     jamais gravar o executável malicioso no disco rígido.
+   * Chaves e Credenciais: senhas em texto puro, hashes NTLM, tokens Kerberos
+     e chaves simétricas de ransomware (ex: AES-256) residem na memória do SO.
+   * Conexões C2: túneis reversos e sockets de rede abertos residem nas
+     estruturas de kernel da memória volátil.
+
+3. COMANDOS FORENSES PARA AQUISIÇÃO DE MEMÓRIA:
+   * Linux: Módulo LiME (Linux Memory Extractor)
+     $ insmod lime-$(uname -r).ko "path=/tmp/ram.lime format=raw"
+   * Windows: WinPmem / DumpIt
+     C:\\> winpmem.exe -o mem_dump.raw
+   * Hash de Integridade Imediato (Cadeia de Custódia):
+     $ sha256sum /tmp/ram.lime > /tmp/ram.lime.sha256
+
+Para responder, informe a alternativa que contém a evidência mais volátil:
+  'B' ou 'RAM'
+================================================================================
+""")
+
+def main():
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO DFIR-01] TRIAGE EMERGENCIAL: RESPEITANDO A ORDEM DA RFC 3227")
+    print("================================================================================")
+    print(" Alerta CSIRT Cyberguard: Host corporativo 'sec-srv-01' comprometido!")
+    print(" Sockets de conexão suspeita detectados. O adversário pode reiniciar o sistema.")
+    print(" Você foi despachado para a contenção imediata.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    user_input = None
+    if len(args) > 0:
+        user_input = " ".join(args).strip()
+    else:
+        print("[?] Diante de um servidor ativo sob ataque, qual evidência deve ser")
+        print("    adquirida EM PRIMEIRO LUGAR conforme a RFC 3227?")
+        print("    A) Disco Rígido e Logs salvos (/var/log/auth.log)")
+        print("    B) Memória RAM física volátil (processos vivos, chaves, sockets)")
+        print("    C) Fitas de Backup externo e imagens de restauração")
+        print("    D) Arquivos de configuração do sistema em /etc/")
+        print("")
+        try:
+            user_input = input("[Cyberguard-DFIR] Digite sua opção (A, B, C ou D): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada pelo usuário.")
+            sys.exit(1)
+
+    normalized = user_input.upper()
+    if normalized in ["B", "OPÇÃO B", "OPCAO B", "RAM", "MEMÓRIA RAM", "MEMORIA RAM", "2"]:
+        print("\n" + "="*80)
+        print(" [+] DEBRIEFING TÉCNICO: RESPOSTA EXATA! OPERAÇÃO BEM-SUCEDIDA.")
+        print("="*80)
+        print(" Excelente decisão operacional! A memória RAM física possui índice máximo")
+        print(" de volatilidade. Ao priorizar a RAM antes dos discos estáticos, você")
+        print(" preservou o processo malicioso ativo, a chave C2 em memória e as conexões")
+        print(" de rede vivas, evitando que um shutdown destruísse provas capitais.")
+        print(" Hash SHA-256 da imagem volátil calculado e anexado à Cadeia de Custódia.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Resposta incorreta: '{user_input}'")
+        print("[!] ERRO OPERACIONAL: A evidência selecionada tem menor volatilidade que a RAM.")
+        print("    Se a máquina desligar ou sofrer reboot, a memória volátil será apagada.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

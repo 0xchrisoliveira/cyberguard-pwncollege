@@ -1,8 +1,146 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-inp = sys.stdin.buffer.read()
-if b"\x90\x90\x90" in inp or b"PWN" in inp:
-    print("[+] Shellcode / NOP sled executado com sucesso!")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Envie NOPs ou payload via stdin.")
+import sys
+import os
+
+CYBERGUARD_BANNER = r"""
+   ______      __                                   __
+  / ____/_  __/ /_  ___  _________ ___  ______ _____/ /
+ / /   / / / / __ \/ _ \/ ___/ __ `/ / / / __ `/ __  / 
+/ /___/ /_/ / /_/ /  __/ /  / /_/ / /_/ / /_/ / /_/ /  
+\____/\__, /_.___/\___/_/   \__, /\__,_/\__,_/\__,_/   
+     /____/                 /____/                     
+  CYBERGUARD SECURITY DOJO :: BINARY EXPLOITATION LABS
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception:
+            pass
+    print("pwn.college{cyberguard_demo_flag}")
+
+def show_lesson():
+    print("""
+================================================================================
+  [!] AULA DIDÁTICA: INJEÇÃO DE SHELLCODE & NOP SLED EM x86_64
+================================================================================
+Quando um binário possui a pilha com permissão de execução (NX/DEP desabilitado),
+o invasor não precisa redirecionar para uma função existente (como win()):
+ele pode injetar seu próprio código de máquina diretamente na memória!
+
+1. O QUE É UM SHELLCODE?
+   É uma sequência de bytes representando instruções puras de máquina, escrita
+   para ser injetada e executada diretamente pelo processador.
+   * Objetivo Típico: Invocar a chamada de sistema (syscall) 'execve' para abrir
+     um shell (/bin/sh) com os privilégios do binário (root via SUID).
+
+2. A ANATOMIA DA SYSCALL EXECVE EM LINUX x86_64:
+   Para que a CPU execute '/bin/sh', os registradores devem ser preparados:
+   +--------------+-------------------+---------------------------------------+
+   | REGISTRADOR  | VALOR             | PAPEL NA SYSCALL                      |
+   +--------------+-------------------+---------------------------------------+
+   | RAX          | 59 (0x3b)         | Número da syscall 'sys_execve'        |
+   | RDI          | &"/bin/sh"        | Ponteiro para o caminho do executável |
+   | RSI          | 0 (NULL)          | Argumentos passados (argv)            |
+   | RDX          | 0 (NULL)          | Variáveis de ambiente (envp)          |
+   | SYSCALL      | 0x0f 0x05         | Instrução que transfere controle      |
+   +--------------+-------------------+---------------------------------------+
+
+3. O QUE É O 'NOP SLED' (PISTA DE ATERRISSAGEM \\x90)?
+   * A instrução NOP (No Operation, opcode 0x90 em x86) instrui a CPU a:
+     "Não faça nada, apenas incremente o RIP para o próximo byte".
+   * Por que usamos NOP Sled?
+     Em ambientes reais, prever o endereço exato do buffer na pilha com precisão
+     de 1 byte é difícil devido a pequenas variações de ambiente.
+   * Ao posicionar dezenas ou centenas de NOPs antes do Shellcode:
+     [ \\x90 \\x90 \\x90 \\x90 ... \\x90 ] [ SHELLCODE EXECVE ]
+     Se o registrador RIP aterrissar em QUALQUER um dos bytes NOP, a CPU
+     desliza sem falhas pela rampa até atingir e detonar o Shellcode!
+
+4. GERANDO SHELLCODE COM PWNTOOLS:
+   ```python
+   from pwn import *
+   context.arch = 'amd64'
+   
+   # Gera o shellcode de /bin/sh em assembly puro:
+   sc = asm(shellcraft.sh())
+   
+   # Monta o payload com NOP sled de 64 bytes:
+   nop_sled = b"\\x90" * 64
+   payload = nop_sled + sc
+   ```
+
+COMO CONCLUIR A MISSÃO:
+Envie uma carga útil contendo a instrução NOP sled (repetição de \\x90) ou
+a palavra 'PWN' via stdin ou linha de comando.
+================================================================================
+""")
+
+def main():
+    print(CYBERGUARD_BANNER)
+    print("================================================================================")
+    print(" [MISSÃO PWN-03] INJEÇÃO DE SHELLCODE & NOP SLED NO PWNTOOLS")
+    print("================================================================================")
+    print(" O alvo é um serviço de rede executando em buffer com proteção NX desabilitada.")
+    print(" A memória da pilha possui permissão de leitura, escrita e execução (RWX).")
+    print(" Missão: Enviar um payload contendo NOP sled (\\x90) ou payload de injeção.")
+    print("--------------------------------------------------------------------------------")
+
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args or "help" in args:
+        show_lesson()
+        sys.exit(0)
+
+    raw_data = b""
+    if len(args) > 0:
+        raw_data = " ".join(args).encode()
+    elif not sys.stdin.isatty():
+        try:
+            raw_data = sys.stdin.buffer.read()
+        except Exception:
+            pass
+    else:
+        try:
+            user_text = input("[Cyberguard-PWN] Insira o payload de injeção (ou use pipe stdin): ")
+            raw_data = user_text.encode()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if len(raw_data) == 0:
+        print("[!] Nenhuma carga útil recebida via stdin ou argumentos.")
+        show_lesson()
+        sys.exit(1)
+
+    # Verifica presença de NOP sled em bytes ou texto escapado ou token de validação
+    has_nops = (b"\x90\x90\x90" in raw_data or
+                b"\\x90\\x90\\x90" in raw_data or
+                b"909090" in raw_data)
+    has_pwn = (b"PWN" in raw_data.upper() or
+               b"SHELLCRAFT" in raw_data.upper())
+
+    if has_nops or has_pwn:
+        print("\n" + "="*80)
+        print(" [+] DEBRIEFING TÉCNICO: NOP SLED & SHELLCODE EXECUTADOS COM SUCESSO!")
+        print("="*80)
+        print(" Carga útil validada pelo simulador de execução de pilha RWX!")
+        print(" A CPU aterrissou na pista deslizante de NOPs (0x90), incrementou o RIP")
+        print(" suavemente e executou a syscall execve(/bin/sh) com privilégios elevados.")
+        print(" Você dominou a mecânica da injeção direta de código em memória.")
+        print("-" * 80)
+        print("[FLAG DE VALIDAÇÃO CYBERGUARD]:")
+        print_flag()
+        print("="*80)
+        sys.exit(0)
+    else:
+        print(f"\n[X] Payload inválido ({len(raw_data)} bytes recebidos).")
+        print("[!] ERRO: O payload não contém a estrutura de NOP sled (\\x90\\x90\\x90) ou token de shellcode.")
+        show_lesson()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

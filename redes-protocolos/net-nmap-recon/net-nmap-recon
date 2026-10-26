@@ -1,16 +1,132 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os, socket
-target_port = 8085
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-try:
-    s.bind(("127.0.0.1", target_port))
-    s.listen(1)
-    print(f"[*] Um servico foi iniciado em 127.0.0.1 entre as portas 8080 e 8090.")
-    print(f"[*] Faca um scan com 'nmap -p 8080-8090 127.0.0.1' e conecte-se a porta correta.")
-    conn, addr = s.accept()
-    flag = open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}\n"
-    conn.sendall(f"[+] Porta localizada com sucesso! Flag: {flag}\n".encode())
-    conn.close()
-finally:
-    s.close()
+import sys
+import os
+import socket
+
+BANNER = r"""
+ ╔══════════════════════════════════════════════════════════════════════════════╗
+ ║   ______      __                                   __                        ║
+ ║  / ____/_  __/ /_  ___  _____ ____ ___  ______ _____/ /                        ║
+ ║ / /   / / / / __ \/ _ \/ ___// __ `/ / / / __ `/ ___/ /_                       ║
+ ║/ /___/ /_/ / /_/ /  __/ /   / /_/ / /_/ / /_/ / /  / __ \                      ║
+ ║\____/\__, /_.___/\___/_/    \__, /\__,_/\__,_/_/  /_/ /_/                      ║
+ ║     /____/                 /____/     CYBERGUARD OPERATIONAL PLATFORM 2026   ║
+ ╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception as e:
+            return f"[!] Erro ao ler /flag: {e}"
+    return "pwn.college{cyberguard_nmap_reconnaissance_specialist_2026}"
+
+def show_lesson(reason=None):
+    print(BANNER)
+    if reason:
+        print(f"[-] AVISO OPERACIONAL: {reason}\n")
+    print("=" * 80)
+    print("   AULA DIDÁTICA: RECONHECIMENTO ATIVO, ESTADOS DE PORTA E VARREDURA COM NMAP")
+    print("=" * 80)
+    print("""
+1. O PAPEL DO NMAP NO RECONHECIMENTO DE REDE:
+   O Nmap (Network Mapper) é a ferramenta de varredura mais influente da segurança
+   da informação. Ele envia pacotes especialmente forjados para descobrir nós ativos,
+   portas abertas, sistemas operacionais e versões de serviços em execução.
+
+2. OS ESTADOS DE PORTAS NO NMAP:
+   * OPEN (Aberta)       : A porta respondeu com SYN-ACK. Há um serviço pronto para receber dados.
+   * CLOSED (Fechada)    : A porta respondeu com RST-ACK. A máquina está ativa, mas nenhum daemon escuta nela.
+   * FILTERED (Filtrada) : Nenhuma resposta ou mensagem ICMP Unreachable. Um Firewall bloqueou o pacote!
+   * UNFILTERED          : Respondeu a pacotes ACK, mas o Nmap não pôde determinar se está aberta ou fechada.
+
+3. MODOS DE VARREDURA MAIS IMPORTANTES:
+   * '-sS' (TCP SYN Stealth Scan): Envia SYN e responde com RST. Extremamente rápido e discreto.
+   * '-sT' (TCP Connect Scan)    : Completa o 3-Way Handshake com a chamada de sistema connect().
+   * '-sV' (Version Detection)   : Interroga banners de aplicação para extrair versões exatas.
+   * '-p <range>'                : Especifica a faixa de portas (ex: -p 8080-8090 ou -p- para todas as 65535).
+   * '-n'                        : Desativa a resolução reversa de DNS para acelerar a varredura.
+
+4. PASSO A PASSO PARA RESOLVER ESTE DESAFIO:
+   Passo 1: Inicie este desafio em um terminal:
+            $ /challenge/net-nmap-recon
+   Passo 2: Em outro terminal, execute o Nmap para descobrir em qual porta entre 8080 e 8090 o serviço está:
+            $ nmap -p 8080-8090 127.0.0.1
+            (Você verá que a porta 8085 está aberta!)
+   Passo 3: Conecte-se à porta aberta com netcat ou curl para extrair a flag:
+            $ nc 127.0.0.1 8085
+            ou faça um scan com detecção de versão:
+            $ nmap -sV -p 8085 127.0.0.1
+""")
+    print("=" * 80)
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help", "help"):
+        show_lesson("Manual de ajuda solicitado pelo operador.")
+        sys.exit(0)
+
+    target_port = 8085
+    host = "127.0.0.1"
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    try:
+        server.bind((host, target_port))
+        server.listen(2)
+        server.settimeout(120.0)
+    except Exception as e:
+        show_lesson(f"Não foi possível abrir o socket na porta {target_port}: {e}")
+        sys.exit(1)
+
+    print(BANNER)
+    print("=" * 80)
+    print("   OPERAÇÃO TARGET RECON — SERVIÇO ALVO ATIVO PARA VARREDURA")
+    print("=" * 80)
+    print(f"[*] Um serviço alvo da Cyberguard foi implantado em uma porta oculta.")
+    print(f"[*] Faixa operacional de portas: 8080 até 8090 (Endereço: {host}).")
+    print("[*] STATUS: Aguardando varredura e conexão do operador...")
+    print("-" * 80)
+    print("[*] COMANDO RECOMENDADO EM OUTRO TERMINAL:")
+    print("    nmap -p 8080-8090 127.0.0.1")
+    print("    Depois, conecte-se à porta encontrada: nc 127.0.0.1 <porta_aberta>")
+    print("=" * 80)
+
+    try:
+        conn, addr = server.accept()
+        print(f"\n[+] Alvo localizado! Conexão originada de {addr[0]}:{addr[1]}")
+        flag = print_flag()
+        payload = (
+            "\n"
+            "╔══════════════════════════════════════════════════════════════════════╗\n"
+            "║        CYBERGUARD RECONNAISSANCE TARGET — RECON CONCLUÍDO            ║\n"
+            "╚══════════════════════════════════════════════════════════════════════╝\n"
+            f"[+] PORTA IDENTIFICADA COM SUCESSO: {target_port}/TCP\n"
+            "[*] DEBRIEFING TÉCNICO:\n"
+            "    Você utilizou técnicas de varredura metódica com Nmap para mapear\n"
+            "    a superfície de ataque e descobrir portas não padronizadas.\n"
+            "    Em cenários corporativos, administradores frequentemente escondem\n"
+            "    interfaces de administração em portas altas na esperança ilusória\n"
+            "    de segurança por obscuridade (Security through Obscurity).\n\n"
+            f"[+] FLAG DE ACESSO AUTORIZADO:\n{flag}\n\n"
+        )
+        conn.sendall(payload.encode("utf-8"))
+        conn.close()
+
+        print("[+] Reconhecimento validado com sucesso!")
+        print(f"[*] Flag entregue ao cliente remoto na porta {target_port}.")
+        print(f"[+] FLAG LOCAL:\n{flag}")
+
+    except socket.timeout:
+        print("\n[-] TEMPO LIMITE ESGOTADO: Nenhuma conexão recebida em 120 segundos.")
+        print("[*] Execute novamente quando estiver com o Nmap pronto.")
+    except KeyboardInterrupt:
+        print("\n[*] Operação cancelada pelo operador.")
+    finally:
+        server.close()
+
+if __name__ == "__main__":
+    main()

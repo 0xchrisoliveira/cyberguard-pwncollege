@@ -1,11 +1,140 @@
 #!/usr/bin/exec-suid -- /usr/local/bin/python -I
-import sys, os
-print("Como funciona o ataque Kerberoasting?")
-print("1) Esgotar conexoes SYN no Domain Controller")
-print("2) Solicitar tickets de servico (TGS) de contas com SPN e quebrar o hash da senha offline")
-ans = input("Opcao: ").strip()
-if ans == "2":
-    print("[+] Exato! Contas de servico com senhas fracas sao alvos faceis de Kerberoasting.")
-    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
-else:
-    print("[X] Incorreto.")
+# -*- coding: utf-8 -*-
+"""
+Cyberguard Security Research & Operational Dojo
+Desafio: ad-kerberoasting-offline (Identificação de SPNs e Ataque Kerberoasting)
+Módulo 7: Infraestrutura Corporativa & Active Directory
+"""
+import sys
+import os
+
+BANNER = r"""
+  ____      _                                     _ 
+ / ___|   _| |__   ___ _ __ __ _ _   _  __ _ _ __| |
+| |  | | | | '_ \ / _ \ '__/ _` | | | |/ _` | '__| |
+| |__| |_| | |_) |  __/ | | (_| | |_| | (_| | |  |_|
+ \____\__, |_.__/ \___|_|  \__, |\__,_|\__,_|_|  (_)
+      |___/                |___/                    
+ [ CYBERGUARD HIGH-PERFORMANCE SECURITY TRAINING LAB ]
+"""
+
+AULA_DIDATICA = r"""
+================================================================================
+           AULA DIDÁTICA: O ATAQUE DE KERBEROASTING (MITRE T1558.003)
+================================================================================
+
+1. O ERRO DO DIAGNÓSTICO (Q07):
+   No diagnóstico da Cyberguard, 75% da equipe (6 de 8 membros) não soube explicar
+   o mecanismo do Kerberoasting, com respondentes confundindo o ataque com
+   uma negação de serviço (DoS) contra servidores DNS.
+
+2. A FALHA DE DESIGN EXPLORADA NO KERBEROS:
+   O Kerberos v5 foi desenhado sob uma premissa de conveniência:
+   > QUALQUER usuário autenticado no domínio (mesmo sem privilégios) tem o direito
+     legítimo de solicitar ao Domain Controller (KDC) um Ticket Granting Service
+     (TGS) para QUALQUER conta que possua um Service Principal Name (SPN) registrado!
+
+3. O FLUXO DO ATAQUE EM 4 ETAPAS:
+   Passo 1: Reconhecimento via LDAP
+            O atacante consulta o catálogo global em busca de contas de usuário que
+            possuam o atributo 'servicePrincipalName' preenchido (ex: svc_mssql).
+   
+   Passo 2: Solicitação do Ticket TGS (TGS-REQ / TGS-REP)
+            O usuário envia ao KDC o seu Ticket de Concessão (TGT) solicitando o ticket
+            para o serviço alvo (ex: MSSQLSvc/sql01.corp.local:1433).
+   
+   Passo 3: A Armadilha Criptográfica
+            O Domain Controller emite o Ticket TGS cifrado com o HASH DA SENHA da
+            conta de serviço proprietária do SPN!
+   
+   Passo 4: Quebra Offline (Cracking sem Alertas)
+            O atacante extrai o ticket recebido e executa força bruta OFFLINE em sua
+            máquina (com Hashcat modo 13100 ou John the Ripper).
+            Como o ataque é 100% offline, NENHUM alerta de bloqueio de conta é gerado
+            no Domain Controller!
+
+4. COMANDOS OPERACIONAIS DE RED TEAM:
+   * Requisitar tickets de contas com SPN via Impacket:
+     $ GetUserSPNs.py corp.cyberguard.local/aluno:Senha123 -dc-ip 10.10.10.1 -request -outputfile tgs_hashes.txt
+
+   * Quebrar os tickets via Hashcat (Modo 13100):
+     $ hashcat -m 13100 -a 0 tgs_hashes.txt /usr/share/wordlists/rockyou.txt
+
+5. MITIGAÇÕES RECOMENDADAS PELO BLUE TEAM:
+   a) Migração para gMSA (Group Managed Service Accounts): senhas de 128 caracteres
+      geradas e rotacionadas automaticamente pelo Windows.
+   b) Senhas longas (> 25 caracteres) para contas de serviço legadas.
+   c) Monitoramento no SIEM do Event ID 4769 (Kerberos Service Ticket Operations)
+      com cifragem fraca RC4 (0x17).
+
+================================================================================
+"""
+
+def print_flag():
+    flag_path = "/flag"
+    if os.path.exists(flag_path):
+        try:
+            with open(flag_path, "r") as f:
+                print(f.read().strip())
+                return
+        except Exception as e:
+            print(f"[!] Erro ao ler {flag_path}: {e}")
+    print("pwn.college{cyberguard_kerberoasting_offline_cracking_flag}")
+
+def main():
+    print(BANNER)
+    print("[*] OPERAÇÃO GOLDEN ROAST // CYBERGUARD ACTIVE DIRECTORY RESEARCH")
+    print("[*] Alvo: Contas de Serviço com Service Principal Name (SPN) Cadastrado")
+    print("[*] Missão: Explicar o vetor técnico do ataque de Kerberoasting.\n")
+
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h", "help", "?"):
+        print(AULA_DIDATICA)
+        sys.exit(0)
+
+    print("--- [ AVALIAÇÃO DE VETOR DE ATAQUE KERBEROS ] ---")
+    print("Como é caracterizado tecnicamente o ataque conhecido como Kerberoasting?")
+    print("\nOpções:")
+    print("  [1] Esgotamento de pacotes SYN contra a porta UDP 53 do servidor DNS do domínio")
+    print("  [2] Solicitar tickets de serviço (TGS) de contas com SPN ao KDC e quebrar o hash da senha offline")
+    print("  [3] Injeção de código SQL em estações de trabalho de usuários comuns sem rede")
+    print("  [4] Interceptar o tráfego físico Wi-Fi para clonar o endereço MAC do switch core")
+
+    if len(sys.argv) >= 2 and sys.argv[1] not in ("--help", "-h"):
+        escolha = sys.argv[1].strip()
+        print(f"\n[*] Resposta fornecida via CLI: {escolha}")
+    else:
+        try:
+            escolha = input("\n[?] Escolha a opção correta [1/2/3/4]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[!] Operação cancelada.")
+            sys.exit(1)
+
+    if escolha in ("2", "[2]"):
+        print("\n" + "="*80)
+        print("[+] [MECÂNICA HOMOLOGADA] Excelente! Kerberoasting perfeitamente compreendido.")
+        print("="*80)
+        print("\n[*] DEBRIEFING TÉCNICO:")
+        print("    O Kerberoasting é devastador porque não exige privilégios administrativos:")
+        print("    qualquer conta de domínio tem permissão de solicitar tickets de serviço.")
+        print("    O ticket TGS é cifrado com a chave secreta da conta do SPN, permitindo")
+        print("    que o invasor realize testes exaustivos de wordlist em ambiente isolado,")
+        print("    sem gerar logs de falha de login (Event ID 4625) no Domain Controller.")
+        print("    Defesa primordial: Contas de Serviço Gerenciadas (gMSA) e senhas com alta entropia.\n")
+        print("[*] FLAG DE CONCLUSÃO:")
+        print_flag()
+    elif escolha in ("1", "[1]"):
+        print("\n[X] [ERRO DO DIAGNÓSTICO DETECTADO] Você confundiu Kerberoasting com DoS em DNS!")
+        print("    O Kerberoasting NÃO é negação de serviço. É uma técnica de extração e quebra")
+        print("    offline de credenciais de contas de serviço registradas no Active Directory.")
+        print("[*] Estude o fluxo do Kerberoasting na aula técnica abaixo:\n")
+        print(AULA_DIDATICA)
+        sys.exit(1)
+    else:
+        print(f"\n[X] [OPÇÃO INCORRETA] Opção '{escolha}' inválida.")
+        print("[*] Consulte os fundamentos de Kerberos e SPNs na aula didática abaixo:\n")
+        print(AULA_DIDATICA)
+        print("[*] DICA: A opção correta é a [2] (Solicitar TGS de contas com SPN e quebrar offline).")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
