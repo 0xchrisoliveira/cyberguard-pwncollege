@@ -75,47 +75,6 @@ A captura e filtragem cirúrgica de pacotes com o `tcpdump` baseiam-se em flags 
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para capturar o segredo transmitido na rede local e resgatar a flag:
-
-1. **Inicie o sniffer no primeiro terminal:**
-   Configure o `tcpdump` para escutar na interface de loopback (`lo`), filtrando o tráfego UDP na porta `44444` e exibindo os dados em ASCII:
-   ```bash
-   tcpdump -i lo -A -nn udp port 44444
-   ```
-   *(Caso esteja utilizando uma única janela de terminal, envie o comando para segundo plano com `&`:)*
-   ```bash
-   tcpdump -i lo -A -nn udp port 44444 &
-   ```
-
-2. **Execute o binário do desafio:**
-   No mesmo terminal (ou em um segundo terminal), dispare o programa gerador de tráfego:
-   ```bash
-   /challenge/net-tcpdump-sniffing
-   ```
-   *O programa avisará que está disparando pacotes UDP contendo o token secreto para a porta 44444 e aguardará sua resposta no prompt:*
-   ```text
-   [?] Digite o token capturado no trafego: 
-   ```
-
-3. **Inspecione a saída do tcpdump:**
-   Localize no payload capturado pelo sniffer a chave transmitida:
-   ```text
-   CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026
-   ```
-
-4. **Submeta o token capturado:**
-   O token corresponde exatamente ao valor após o sinal de igual: `tcpdump_mestre_2026`.
-   Insira o token no prompt e pressione `Enter`:
-   ```text
-   tcpdump_mestre_2026
-   ```
-
-5. **Capture e submeta a flag:**
-   O validador confirmará a integridade do token e exibirá a flag autorizada:
-   ```text
-   [+] Captura realizada com sucesso!
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e submeta-a na plataforma.
+O sistema está transmitindo pacotes de rede sensíveis através da interface de loopback (`lo`). Seu objetivo é colocar o `tcpdump` em execução para capturar o tráfego em tempo real, aplicar filtros adequados para isolar a comunicação relevante e inspecionar o conteúdo dos pacotes transmitidos em texto claro para extrair a credencial ou token necessário para obter a flag.

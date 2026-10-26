@@ -51,29 +51,6 @@ Consultas LDAP essenciais no terminal Linux utilizando `ldapsearch`:
    ldapsearch -x -H ldap://dc01.corp.cyberguard.local      -b "DC=corp,DC=cyberguard,DC=local"      "(userAccountControl:1.2.840.113556.1.4.803:=4194304)"      sAMAccountName
    ```
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio de governança e infraestrutura Active Directory:
-   ```bash
-   /challenge/ad-ldap-enumeration
-   ```
-2. **Analisar a Pergunta do Laboratório:**
-   O programa exibirá a questão técnica fundamental sobre a arquitetura corporativa:
-   "Qual é a função primordial de um Domain Controller (DC) no Active Directory?"
-   Opções:
-   * `[A]` Funcionar meramente como um roteador de pacotes TCP e comutador de nível 3
-   * `[B]` Autenticar usuários/serviços e centralizar a base mestra de segurança do domínio (NTDS.dit)
-   * `[C]` Substituir switches de borda e acelerar conexões Wi-Fi sem criptografia
-   * `[D]` Converter endereços IPv4 em IPv6 através de NAT de camada de enlace
-3. **Submeter a Resposta Correta:**
-   No prompt interativo `[A/B/C/D]`, selecione a opção **B**:
-   ```text
-   B
-   ```
-   *(Ou execute diretamente com argumento CLI: `/challenge/ad-ldap-enumeration B`).*
-4. **Capturar e Submeter a Flag:**
-   O binário confirmará a resposta, apresentará o debriefing sobre a centralidade do banco `NTDS.dit` e imprimirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e submeta-a no painel do dojo.
+### 🎯 Seu Objetivo
+
+Enumerar informações estruturais de um domínio Active Directory utilizando consultas LDAP. Seu objetivo é consultar a árvore de diretórios para descobrir contas de usuários com privilégios elevados, mapear o grupo de Domain Admins e identificar propriedades e descrições de contas que revelem informações confidenciais para responder à auditoria do desafio.

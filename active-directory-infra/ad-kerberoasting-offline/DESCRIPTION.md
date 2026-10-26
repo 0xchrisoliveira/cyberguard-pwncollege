@@ -54,29 +54,6 @@ O atacante **não precisa se conectar ao servidor do serviço real**:
    .\Rubeus.exe kerberoast /outfile:tgs_hashes.txt
    ```
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio de Kerberoasting:
-   ```bash
-   /challenge/ad-kerberoasting-offline
-   ```
-2. **Analisar a Pergunta Conceitual:**
-   O programa exibirá a questão técnica sobre o mecanismo operacional do ataque:
-   "Como é caracterizado tecnicamente o ataque conhecido como Kerberoasting?"
-   Opções:
-   * `[1]` Esgotamento de pacotes SYN contra a porta UDP 53 do servidor DNS do domínio
-   * `[2]` Solicitar tickets de serviço (TGS) de contas com SPN ao KDC e quebrar o hash da senha offline
-   * `[3]` Injeção de código SQL em estações de trabalho de usuários comuns sem rede
-   * `[4]` Interceptar o tráfego físico Wi-Fi para clonar o endereço MAC do switch core
-3. **Submeter a Opção Correta:**
-   No prompt do desafio `[1/2/3/4]`, insira a opção **2**:
-   ```text
-   2
-   ```
-   *(Ou invoque diretamente com argumento: `/challenge/ad-kerberoasting-offline 2`).*
-4. **Capturar e Submeter a Flag:**
-   O programa validará a resposta, fornecerá o debriefing operacional sobre segurança de contas de serviço e exibirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e registre a pontuação no portal.
+### 🎯 Seu Objetivo
+
+Compreender e explorar a técnica de Kerberoasting contra o protocolo Kerberos. Seu objetivo é identificar contas de serviço vinculadas a Service Principal Names (SPNs), solicitar e extrair o ticket de serviço TGS criptografado e realizar a quebra de senha offline desse ticket para recuperar a senha em texto claro da conta de serviço.

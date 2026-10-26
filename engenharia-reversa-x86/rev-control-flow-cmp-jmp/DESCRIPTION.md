@@ -96,40 +96,6 @@ python3 -c "print(0x12d // 7)"
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para resolver a equação assembly e obter a flag:
-
-1. **Inicie o binário do desafio:**
-   Execute `/challenge/rev-control-flow-cmp-jmp`:
-   ```bash
-   /challenge/rev-control-flow-cmp-jmp
-   ```
-
-2. **Analise as instruções de máquina desmontadas:**
-   O terminal apresentará o trecho assembly de validação:
-   ```text
-   imul eax, eax, 0x7    ; multiplica entrada por 7
-   cmp  eax, 0x12d       ; compara com 301 em decimal
-   jne  <rotina_bloqueio>
-   ```
-
-3. **Calcule o valor reverso:**
-   - Converta `0x12d` para decimal: $1 \times 256 + 2 \times 16 + 13 = 301$.
-   - Divida 301 pelo fator multiplicador 7: $\frac{301}{7} = 43$.
-
-4. **Envie o valor calculado:**
-   Digite **`43`** no prompt interativo e pressione Enter.
-   *Ou execute fornecendo o número diretamente como argumento:*
-   ```bash
-   /challenge/rev-control-flow-cmp-jmp 43
-   ```
-
-5. **Capture a flag:**
-   O binário confirmará que $43 \times 7 = 301$, ativando a Zero Flag ($\text{ZF} = 1$) e liberando a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: DESVIO CONDICIONAL RESOLVIDO COM SUCESSO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a string completa `pwn.college{...}` e submeta-a no painel do dojo.
+Compreender o fluxo de controle em baixo nível analisando instruções de comparação e desvio condicional em assembly (`cmp`, `test`, `je`, `jne`, etc.). Seu objetivo é analisar a lógica de bifurcação do programa e determinar qual entrada fará com que as flags da CPU satisfaçam a condição necessária para saltar para o bloco de código que revela a flag.

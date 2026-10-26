@@ -72,35 +72,6 @@ O controle de descritores no shell Bash é exercido através de operadores espec
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para concluir o desafio e capturar a flag no container pwn.college:
-
-1. **Compreenda o requisito do binário:**
-   O binário `/challenge/linux-io-redirection` espera receber a string de validação exata `CYBERGUARD_PIPELINE` através de seu canal de entrada padrão (`stdin`). Se você executá-lo sem argumentos em um terminal interativo (`tty`), ele avisará que a entrada padrão não foi fornecida via pipeline.
-
-2. **Resolva via Pipeline com `echo` (Método Principal):**
-   Envie o token diretamente ao processo através de um pipe:
-   ```bash
-   echo "CYBERGUARD_PIPELINE" | /challenge/linux-io-redirection
-   ```
-
-3. **Resolva via Pipeline com `printf` (Método de Precisão de Bytes):**
-   ```bash
-   printf "CYBERGUARD_PIPELINE\n" | /challenge/linux-io-redirection
-   ```
-
-4. **Resolva via Redirecionamento de Arquivo (`<`):**
-   Como alternativa instrutiva, grave o token em `/tmp` e alimente o programa:
-   ```bash
-   echo "CYBERGUARD_PIPELINE" > /tmp/input_token.txt
-   /challenge/linux-io-redirection < /tmp/input_token.txt
-   ```
-
-5. **Capture e submeta a flag:**
-   Ao receber a entrada correta pelo descritor 0 (`stdin`), o validador emitirá a confirmação e imprimirá a flag:
-   ```text
-   [+] Redirecionamento I/O recebido com sucesso!
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e registre sua pontuação na plataforma.
+O programa `/challenge/linux-io-redirection` gera um grande volume de texto na saída padrão e erros intencionais para distrair o operador. Seu objetivo é utilizar operadores de redirecionamento (`>`, `2>`, etc.) e pipelines (`|`) combinados com ferramentas de filtragem como `grep` para isolar a informação útil ou o token de autorização emitido pelo binário e capturar a flag.

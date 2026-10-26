@@ -65,29 +65,6 @@ Ferramentas de linha de comando para identificação e análise de hashes:
    print("Senha válida?", confere)
    ```
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio de identificação criptográfica:
-   ```bash
-   /challenge/crypto-hash-identification
-   ```
-2. **Analisar a Questão do Laboratório:**
-   O programa exibirá os artefatos criptográficos e fará a pergunta técnica:
-   "Por que funções de hash lentas e adaptativas com salt (como Bcrypt e Argon2) são obrigatórias para armazenamento de senhas corporativas, em vez de MD5 ou SHA-256?"
-   Opções:
-   * `[1]` Porque MD5 é uma cifra reversível que usa chave privada
-   * `[2]` Porque o cálculo propositalmente lento somado ao Salt exclusivo anula Rainbow Tables e inviabiliza força bruta massiva em GPUs
-   * `[3]` Porque Bcrypt comprime senhas com perda de integridade para economizar disco
-   * `[4]` Porque funções rápidas sofrem de vulnerabilidade de overflow no buffer do kernel
-3. **Submeter a Opção Correta:**
-   No prompt `[1/2/3/4]`, digite a opção **2**:
-   ```text
-   2
-   ```
-   *(Ou execute diretamente com argumento: `/challenge/crypto-hash-identification 2`).*
-4. **Capturar e Submeter a Flag:**
-   O binário confirmará a resposta correta, detalhará as diretrizes de armazenamento seguro do NIST e exibirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e registre a pontuação no portal.
+### 🎯 Seu Objetivo
+
+Inspecionar amostras de hashes criptográficos desconhecidos e identificar os algoritmos utilizados para gerá-los. Seu objetivo é analisar o comprimento em caracteres, o formato de codificação e a entropia das amostras para classificar corretamente se tratam-se de algoritmos clássicos de digest (MD5, SHA-1, SHA-256) ou funções modernas de derivação de chave com salt (como bcrypt), fornecendo a classificação correta ao validador.

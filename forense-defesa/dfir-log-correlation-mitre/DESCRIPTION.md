@@ -47,7 +47,7 @@ ausearch -m EXECVE -ts today
 aureport -x --summary
 ```
 
-#### 2. Amostra de Telemetria Correlacionada (`/tmp/cyberguard_auth_audit.log`)
+#### 2. Amostra de Telemetria Correlacionada (`/tmp/<resultado_da_auditoria>.log`)
 ```text
 Oct 26 03:14:10 sec-srv-01 sshd[1204]: Failed password for invalid user admin from 192.168.1.100 port 49152 ssh2
 Oct 26 03:14:15 sec-srv-01 sshd[1205]: Failed password for invalid user admin from 192.168.1.100 port 49154 ssh2
@@ -79,48 +79,6 @@ tags:
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para analisar os logs e responder ao desafio:
-
-1. **Inicie o desafio de correlação de logs:**
-   Execute `/challenge/dfir-log-correlation-mitre` no terminal:
-   ```bash
-   /challenge/dfir-log-correlation-mitre
-   ```
-   *O simulador criará o arquivo `/tmp/cyberguard_auth_audit.log`.*
-
-2. **Analise o histórico de eventos:**
-   Examine o conteúdo do arquivo gerado para reconstruir a cadeia do ataque:
-   ```bash
-   cat /tmp/cyberguard_auth_audit.log
-   ```
-   *Identifique o encadeamento:*
-   - Falhas consecutivas de senha originadas de `192.168.1.100`.
-   - Sucesso de autenticação via chave pública para a conta `svc_backup`.
-   - Execução via Cron de cópia do `/bin/bash` com atribuição de bit SUID (`chmod +s /tmp/.pwned`).
-   - Leitura privilegiada da `/flag`.
-
-3. **Avalie a pergunta conceitual:**
-   O binário apresentará a seguinte questão:
-   > *"O que é a matriz MITRE ATT&CK e para que serve na operação do Blue Team?"*
-   * 1) Um software antivírus open-source para bloqueio de malware em endpoints
-   * **2) Uma base de conhecimento global de táticas e técnicas adversárias utilizada para orientar regras de detecção, mapear campanhas e organizar a telemetria**
-   * 3) Uma linguagem de programação exclusiva para desenvolvimento de exploits
-   * 4) Um protocolo de rede proprietário para transporte de logs cifrados
-
-4. **Selecione a resposta correta:**
-   Digite **`2`** no prompt interativo e pressione Enter.
-   *Ou execute passando diretamente o parâmetro:*
-   ```bash
-   /challenge/dfir-log-correlation-mitre 2
-   ```
-
-5. **Capture a flag:**
-   O sistema validará o mapeamento conceitual e emitirá a flag de conclusão:
-   ```text
-   [+] DEBRIEFING TÉCNICO: MAPEAMENTO MITRE ATT&CK CONSOLIDADO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a flag no formato `pwn.college{...}` para pontuar no painel.
+Analisar eventos de log de autenticação e auditoria do sistema em busca de indicadores de ataque (*Indicators of Attack*). Seu objetivo é correlacionar a sequência de eventos suspeitos registrados nos logs com a técnica correspondente do framework MITRE ATT&CK, preenchendo o relatório de incidente para comprovar a atribuição da atividade adversária e obter a flag.

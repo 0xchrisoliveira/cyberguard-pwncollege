@@ -69,50 +69,11 @@ A navegação eficiente e a auditoria de arquivos dependem do domínio dos coman
 3. **Exibição do Conteúdo da Chave:**
    ```bash
    $ cat .segredo_cyberguard
-   cyberguard_linux_fhs_2026
+   <conteudo_da_chave_secreta>
    ```
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga rigorosamente as etapas abaixo dentro do terminal do container para capturar a flag:
-
-1. **Navegue até o diretório do desafio:**
-   ```bash
-   cd /challenge
-   pwd
-   ```
-   *Confirme que você está em `/challenge`.*
-
-2. **Inspecione os arquivos ocultos do diretório:**
-   Execute a listagem exaustiva com o utilitário `ls`:
-   ```bash
-   ls -la /challenge
-   ```
-   *Observe a presença do arquivo `.segredo_cyberguard`.*
-
-3. **Extraia o valor da chave secreta:**
-   Leia o conteúdo do arquivo oculto com `cat`:
-   ```bash
-   cat /challenge/.segredo_cyberguard
-   ```
-   *O terminal exibirá a chave:* `cyberguard_linux_fhs_2026`.
-
-4. **Invoque o binário passando a chave como argumento:**
-   Execute o binário `/challenge/linux-nav-files` fornecendo a chave extraída:
-   ```bash
-   /challenge/linux-nav-files cyberguard_linux_fhs_2026
-   ```
-   *Ou execute em um comando único elegante via command substitution:*
-   ```bash
-   /challenge/linux-nav-files $(cat /challenge/.segredo_cyberguard)
-   ```
-
-5. **Capture e submeta a flag:**
-   O binário validará a chave secreta e exibirá a flag do desafio:
-   ```text
-   [+] Chave validada com sucesso! Voce dominou navegacao e arquivos ocultos.
-   pwn.college{...}
-   ```
-   Copie a string completa no formato `pwn.college{...}` e submeta-a no painel da plataforma para pontuar.
+Seu objetivo neste desafio é inspecionar o diretório `/challenge`, localizar um arquivo oculto protegido pela convenção do Unix (nomes iniciados por ponto) e extrair a chave secreta que ele contém. Em seguida, invoque o programa `/challenge/linux-nav-files` passando essa chave como argumento para comprovar que você dominou a navegação e a visualização de arquivos ocultos e obter a flag.

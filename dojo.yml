@@ -126,53 +126,14 @@ modules:
       3. **Exibição do Conteúdo da Chave:**
          ```bash
          $ cat .segredo_cyberguard
-         cyberguard_linux_fhs_2026
+         <conteudo_da_chave_secreta>
          ```
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga rigorosamente as etapas abaixo dentro do terminal do container para capturar a flag:
-
-      1. **Navegue até o diretório do desafio:**
-         ```bash
-         cd /challenge
-         pwd
-         ```
-         *Confirme que você está em `/challenge`.*
-
-      2. **Inspecione os arquivos ocultos do diretório:**
-         Execute a listagem exaustiva com o utilitário `ls`:
-         ```bash
-         ls -la /challenge
-         ```
-         *Observe a presença do arquivo `.segredo_cyberguard`.*
-
-      3. **Extraia o valor da chave secreta:**
-         Leia o conteúdo do arquivo oculto com `cat`:
-         ```bash
-         cat /challenge/.segredo_cyberguard
-         ```
-         *O terminal exibirá a chave:* `cyberguard_linux_fhs_2026`.
-
-      4. **Invoque o binário passando a chave como argumento:**
-         Execute o binário `/challenge/linux-nav-files` fornecendo a chave extraída:
-         ```bash
-         /challenge/linux-nav-files cyberguard_linux_fhs_2026
-         ```
-         *Ou execute em um comando único elegante via command substitution:*
-         ```bash
-         /challenge/linux-nav-files $(cat /challenge/.segredo_cyberguard)
-         ```
-
-      5. **Capture e submeta a flag:**
-         O binário validará a chave secreta e exibirá a flag do desafio:
-         ```text
-         [+] Chave validada com sucesso! Voce dominou navegacao e arquivos ocultos.
-         pwn.college{...}
-         ```
-         Copie a string completa no formato `pwn.college{...}` e submeta-a no painel da plataforma para pontuar.
+      Seu objetivo neste desafio é inspecionar o diretório `/challenge`, localizar um arquivo oculto protegido pela convenção do Unix (nomes iniciados por ponto) e extrair a chave secreta que ele contém. Em seguida, invoque o programa `/challenge/linux-nav-files` passando essa chave como argumento para comprovar que você dominou a navegação e a visualização de arquivos ocultos e obter a flag.
   - id: linux-io-redirection
     name: Mestria em Redirecionamento (I/O e Pipes)
     description: |
@@ -248,38 +209,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Para concluir o desafio e capturar a flag no container pwn.college:
-
-      1. **Compreenda o requisito do binário:**
-         O binário `/challenge/linux-io-redirection` espera receber a string de validação exata `CYBERGUARD_PIPELINE` através de seu canal de entrada padrão (`stdin`). Se você executá-lo sem argumentos em um terminal interativo (`tty`), ele avisará que a entrada padrão não foi fornecida via pipeline.
-
-      2. **Resolva via Pipeline com `echo` (Método Principal):**
-         Envie o token diretamente ao processo através de um pipe:
-         ```bash
-         echo "CYBERGUARD_PIPELINE" | /challenge/linux-io-redirection
-         ```
-
-      3. **Resolva via Pipeline com `printf` (Método de Precisão de Bytes):**
-         ```bash
-         printf "CYBERGUARD_PIPELINE\n" | /challenge/linux-io-redirection
-         ```
-
-      4. **Resolva via Redirecionamento de Arquivo (`<`):**
-         Como alternativa instrutiva, grave o token em `/tmp` e alimente o programa:
-         ```bash
-         echo "CYBERGUARD_PIPELINE" > /tmp/input_token.txt
-         /challenge/linux-io-redirection < /tmp/input_token.txt
-         ```
-
-      5. **Capture e submeta a flag:**
-         Ao receber a entrada correta pelo descritor 0 (`stdin`), o validador emitirá a confirmação e imprimirá a flag:
-         ```text
-         [+] Redirecionamento I/O recebido com sucesso!
-         pwn.college{...}
-         ```
-         Copie a string no formato `pwn.college{...}` e registre sua pontuação na plataforma.
+      O programa `/challenge/linux-io-redirection` gera um grande volume de texto na saída padrão e erros intencionais para distrair o operador. Seu objetivo é utilizar operadores de redirecionamento (`>`, `2>`, etc.) e pipelines (`|`) combinados com ferramentas de filtragem como `grep` para isolar a informação útil ou o token de autorização emitido pelo binário e capturar a flag.
   - id: linux-env-manipulation
     name: Engenharia de Variáveis de Ambiente
     description: "### \U0001F4D6 Introdução Teórica\n\nNo sistema operacional Linux, cada processo possui um bloco de memória\
@@ -317,17 +249,11 @@ modules:
       \n   efemero\n   $ echo $TOKEN\n   (vazio)\n   ```\n\n4. **Inspeção Forense via Pseudo-Filesystem `/proc`:**\n   ```bash\n\
       \   $ cat /proc/$$/environ | tr '\\0' '\\n' | grep PATH\n   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
       \   ```\n   *O pseudofilesystem armazena variáveis terminadas pelo byte nulo (`\\0`); o comando `tr` as substitui por\
-      \ quebras de linha.*\n\n---\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n\nSiga estas instruções\
-      \ para suprir a variável esperada e resgatar a flag:\n\n1. **Inspecione a exigência do binário:**\n   Execute `/challenge/linux-env-manipulation`\
-      \ sem alterar o ambiente:\n   ```bash\n   /challenge/linux-env-manipulation\n   ```\n   *O programa indicará que a variável\
-      \ `CYBERGUARD_TOKEN` está ausente ou com valor incorreto.*\n\n2. **Método 1: Resolução Elegante com Injeção Inline (Recomendado):**\n\
-      \   Defina a variável imediatamente antes do comando em uma única linha:\n   ```bash\n   CYBERGUARD_TOKEN=\"treinamento_2026\"\
-      \ /challenge/linux-env-manipulation\n   ```\n\n3. **Método 2: Resolução com `export` na Sessão:**\n   Exporte a variável\
-      \ para a shell e execute o binário:\n   ```bash\n   export CYBERGUARD_TOKEN=\"treinamento_2026\"\n   /challenge/linux-env-manipulation\n\
-      \   ```\n   *(Opcional) Verifique se a variável está ativa antes da execução:*\n   ```bash\n   printenv CYBERGUARD_TOKEN\n\
-      \   ```\n\n4. **Capture e submeta a flag:**\n   O binário validará a variável no dicionário de ambiente e liberará a\
-      \ flag:\n   ```text\n   [+] Variavel de ambiente CYBERGUARD_TOKEN identificada!\n   pwn.college{...}\n   ```\n   Copie\
-      \ a sequência no padrão `pwn.college{...}` e insira no portal de treinamento.\n"
+      \ quebras de linha.*\n\n---\n\n### \U0001F3AF Seu Objetivo\n\nO binário `/challenge/linux-env-manipulation` espera encontrar\
+      \ variáveis de ambiente específicas configuradas na sessão do processo para validar a identidade do operador. Seu objetivo\
+      \ é identificar quais variáveis e valores são exigidos (execute o binário para ver as instruções de verificação), configurá-los\
+      \ no seu shell atual utilizando o comando `export` e executar o programa novamente com o ambiente devidamente preparado\
+      \ para liberar a flag.\n"
   - id: linux-permissions-octal
     name: Auditoria e Cálculo de Permissões Octais
     description: |
@@ -402,45 +328,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Para satisfazer os critérios do verificador `/challenge/linux-permissions-octal`:
-
-      1. **Compreenda o objetivo:**
-         O binário do desafio exige que o arquivo `/tmp/config.conf` exista e esteja protegido com a máscara octal exata `640`.
-
-      2. **Crie o arquivo alvo em `/tmp`:**
-         Utilize o comando `touch` para instanciar o arquivo:
-         ```bash
-         touch /tmp/config.conf
-         ```
-
-      3. **Configure as permissões octais para 640:**
-         Aplique o comando `chmod`:
-         ```bash
-         chmod 640 /tmp/config.conf
-         ```
-
-      4. **Confirme as permissões aplicadas:**
-         Certifique-se de que o arquivo reflete `-rw-r-----`:
-         ```bash
-         stat -c "%a %A %n" /tmp/config.conf
-         # Deve retornar: 640 -rw-r----- /tmp/config.conf
-         ```
-
-      5. **Execute o binário de validação:**
-         Dispare o auditor para avaliar o arquivo e emitir a flag:
-         ```bash
-         /challenge/linux-permissions-octal
-         ```
-
-      6. **Capture e submeta a flag:**
-         Ao detectar a permissão `640`, o programa imprimirá a confirmação de conformidade e a flag:
-         ```text
-         [+] Permissao 640 confirmada: Dono rw, Grupo r, Outros nada!
-         pwn.college{...}
-         ```
-         Copie a sequência `pwn.college{...}` e submeta-a no painel do dojo.
+      Existe um arquivo sensível no ambiente do desafio que atualmente possui permissões inseguras ou incorretas. Seu objetivo é auditar as permissões atuais utilizando `ls -l` e aplicar a máscara de permissões octais restritiva `640` (leitura/escrita para o proprietário, leitura para o grupo e nenhum acesso a outros usuários) utilizando o utilitário `chmod`. Em seguida, execute `/challenge/linux-permissions-octal` para que ele verifique a política de acesso e conceda a flag.
   - id: linux-suid-privilege
     name: O Poder do SUID (Set User ID)
     description: |
@@ -512,40 +402,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Para concluir a missão e extrair a flag no container pwn.college:
-
-      1. **Inspecione os atributos do executável:**
-         Verifique as permissões de `/challenge/linux-suid-privilege`:
-         ```bash
-         ls -la /challenge/linux-suid-privilege
-         ```
-         *Observe o bit `s` e o usuário proprietário `root`.*
-
-      2. **Execute uma varredura para auditar outros binários SUID do sistema:**
-         Pratique a localização de binários privilegiados:
-         ```bash
-         find /challenge -perm -4000 -type f 2>/dev/null
-         ```
-
-      3. **Invoque o binário do desafio:**
-         Execute o programa no terminal:
-         ```bash
-         /challenge/linux-suid-privilege
-         ```
-
-      4. **Analise o diagnóstico de identidade emitido pelo processo:**
-         O binário exibirá as identidades consultadas diretamente via chamadas de sistema `getuid()` e `geteuid()`:
-         ```text
-         [*] Seu Real UID: 1000 | Effective UID: 0
-         [+] Executando com privilegios de root via SUID!
-         pwn.college{...}
-         ```
-         *Constata-se que o Real UID pertence ao usuário `hacker` (1000), mas o Effective UID foi elevado pelo kernel para `root` (0), viabilizando a leitura de `/flag`.*
-
-      5. **Capture e submeta a flag:**
-         Copie a sequência no padrão `pwn.college{...}` e submeta-a na plataforma.
+      Compreender na prática como binários com o bit especial SUID (`Set User ID`) permitem a execução com privilégios temporários do usuário root. Seu objetivo é inspecionar as permissões do executável `/challenge/linux-suid-privilege` (notando o bit `s` no campo de execução do proprietário) e executá-lo para que ele exerça esses privilégios elevados para ler e exibir a `/flag` do sistema.
 - id: redes-protocolos
   name: 'Módulo 2: Redes de Computadores, Protocolos & Reconhecimento'
   description: |
@@ -596,107 +455,159 @@ modules:
   challenges:
   - id: net-nc-raw-socket
     name: Conexões Manuais com Netcat
-    description: "### \U0001F4D6 Introdução Teórica\n\nEm redes de computadores baseadas na arquitetura TCP/IP, a maior parte\
-      \ dos usuários e desenvolvedores interage exclusivamente com a **Camada de Aplicação (Camada 7 do modelo OSI)** através\
-      \ de navegadores web (HTTP/HTTPS) ou clientes SSH. Esses protocolos encapsulam dados em cabeçalhos extensos, certificados\
-      \ TLS e regras de formatação rígidas.\n\nNo entanto, a comunicação de rede no nível do sistema operacional ocorre na\
-      \ **Camada de Transporte (Camada 4 — TCP ou UDP)** através de abstrações do kernel denominadas **Sockets de Rede**.\
-      \ O utilitário **Netcat (`nc`)** — historicamente consagrado como o \"canivete suíço do TCP/IP\" — permite interagir\
-      \ diretamente com a Camada 4, transmitindo e recebendo bytes crus através de `stdin` e `stdout` sem qualquer encapsulamento\
-      \ adicional.\n\n```\n   [ Operador / Terminal ]\n             │ (Bytes puros via stdin / stdout)\n             ▼\n \
-      \  [ Netcat (nc) ]\n             │ (Criação de socket TCP: socket(AF_INET, SOCK_STREAM))\n             ▼\n   [ Camada\
-      \ de Transporte (TCP) ]\n             │ (Handshake de 3 vias: SYN -> SYN-ACK -> ACK)\n             ▼\n   [ Conexão Estabelecida\
-      \ na Porta 31337 ]\n```\n\n#### O Ciclo de Vida dos Sockets de Rede\nNo nível de chamadas de sistema (syscalls) do Linux:\n\
-      1. **Servidor (Listener):** Cria o socket (`socket`), vincula-o a um endereço IP e porta (`bind`), define a fila de\
-      \ espera (`listen`) e bloqueia aguardando conexões (`accept`).\n2. **Cliente:** Cria o socket (`socket`) e dispara a\
-      \ conexão contra o IP e porta do servidor (`connect`), iniciando o Three-Way Handshake. Uma vez estabelecido o canal,\
-      \ os dados trafegam via `send()`/`recv()` (ou `read()`/`write()`).\n\n#### Relevância Ofensiva e Defensiva\n* **Segurança\
-      \ Ofensiva (Red Team):** O Netcat é a ferramenta padrão para o recebimento de conexões reversas (*Reverse Shells*).\
-      \ Ao explorar um alvo vulnerável, o atacante instrui a máquina comprometida a se conectar de volta para um listener\
-      \ netcat (`nc -lvnp 4444`), contornando regras de firewall de entrada (inbound).\n* **Segurança Defensiva (Blue Team\
-      \ / SysAdmin):** Permite realizar *Banner Grabbing* e auditorias rápidas em daemons desconhecidos. Analistas testam\
-      \ se portas estão abertas e coletam assinaturas de versões em servidores de email (SMTP porta 25), servidores de terminal\
-      \ ou roteadores sem a sobrecarga de ferramentas pesadas.\n\n---\n\n### \U0001F4BB Exemplos Práticos e Sintaxe\n\nO domínio\
-      \ do Netcat exige conhecer seus modos de operação como cliente e como servidor:\n\n#### Comandos Essenciais e Flags\n\
-      * `nc <IP> <PORTA>`: Conecta como cliente TCP ao endereço e porta indicados.\n* `nc -u <IP> <PORTA>`: Conecta utilizando\
-      \ o protocolo UDP em vez de TCP.\n* `nc -lvnp <PORTA>`: Inicia um listener local aguardando conexões de entrada:\n \
-      \ * `-l` (*listen*): Coloca o netcat em modo de escuta.\n  * `-v` (*verbose*): Exibe detalhes operacionais da conexão.\n\
-      \  * `-n` (*numeric only*): Não resolve nomes via DNS (evita atrasos e vazamentos de tráfego).\n  * `-p <porta>` (*port*):\
-      \ Define a porta local para escuta.\n* `nc -zv <IP> <PORTAS>`: Modo scan (*zero-I/O*), testa se as portas estão abertas\
-      \ sem enviar dados.\n* `ss -tlpn`: Inspeciona todos os processos que estão ouvindo em portas TCP no host local.\n\n\
-      #### Snippets de Terminal e Saídas Observadas\n\n1. **Iniciando um Listener de Teste:**\n   ```bash\n   $ nc -lvnp 4444\n\
-      \   Listening on 0.0.0.0 4444\n   ```\n\n2. **Conectando e Realizando Banner Grabbing Manual:**\n   ```bash\n   $ nc\
-      \ 127.0.0.1 22\n   SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6\n   ```\n   *O banner do servidor SSH é exibido imediatamente\
-      \ em texto plano.*\n\n3. **Verificação de Portas Locais em Escuta com `ss`:**\n   ```bash\n   $ ss -tlpn | grep 31337\n\
-      \   LISTEN 0 1 127.0.0.1:31337 0.0.0.0:* users:((\"python3\",pid=1234,fd=3))\n   ```\n\n---\n\n### \U0001F3AF O que\
-      \ fazer para resolver o desafio (Passo a Passo)\n\nPara concluir o desafio e capturar a flag no container pwn.college:\n\
-      \n1. **Inicie o serviço do desafio:**\n   O binário `/challenge/net-nc-raw-socket` abre um servidor TCP na porta `31337`.\
-      \ Como ele ocupa o terminal aguardando conexões, execute-o em segundo plano (*background*) adicionando um `&` ao final,\
-      \ ou utilize um segundo terminal:\n   ```bash\n   /challenge/net-nc-raw-socket &\n   ```\n   *O serviço imprimirá: `[*]\
-      \ Servidor escutando na porta 127.0.0.1:31337...`.*\n\n2. **Conecte-se à porta do serviço utilizando o Netcat:**\n \
-      \  No mesmo terminal (ou no segundo terminal), invoque o `nc`:\n   ```bash\n   nc 127.0.0.1 31337\n   ```\n\n3. **Interaja\
-      \ com o protocolo do servidor:**\n   Assim que o canal for aberto, o servidor enviará a mensagem de boas-vindas:\n \
-      \  ```text\n   Bem-vindo ao netcat raw socket da Cyberguard!\n   Envie 'PING': \n   ```\n\n4. **Transmita a saudação\
-      \ exigida:**\n   Digite exatamente `PING` e pressione `Enter`:\n   ```text\n   PING\n   ```\n\n5. **Capture e submeta\
-      \ a flag:**\n   O servidor responderá com `PONG!` e emitirá a flag autorizada:\n   ```text\n   [+] PONG! Flag: pwn.college{...}\n\
-      \   ```\n   *Dica avançada: Você também pode resolver o desafio em uma única linha:*\n   ```bash\n   echo \"PING\" |\
-      \ nc 127.0.0.1 31337\n   ```\n   Copie a sequência no padrão `pwn.college{...}` e insira no portal para pontuar.\n"
+    description: |
+      ### 📖 Introdução Teórica
+
+      Em redes de computadores baseadas na arquitetura TCP/IP, a maior parte dos usuários e desenvolvedores interage exclusivamente com a **Camada de Aplicação (Camada 7 do modelo OSI)** através de navegadores web (HTTP/HTTPS) ou clientes SSH. Esses protocolos encapsulam dados em cabeçalhos extensos, certificados TLS e regras de formatação rígidas.
+
+      No entanto, a comunicação de rede no nível do sistema operacional ocorre na **Camada de Transporte (Camada 4 — TCP ou UDP)** através de abstrações do kernel denominadas **Sockets de Rede**. O utilitário **Netcat (`nc`)** — historicamente consagrado como o "canivete suíço do TCP/IP" — permite interagir diretamente com a Camada 4, transmitindo e recebendo bytes crus através de `stdin` e `stdout` sem qualquer encapsulamento adicional.
+
+      ```
+         [ Operador / Terminal ]
+                   │ (Bytes puros via stdin / stdout)
+                   ▼
+         [ Netcat (nc) ]
+                   │ (Criação de socket TCP: socket(AF_INET, SOCK_STREAM))
+                   ▼
+         [ Camada de Transporte (TCP) ]
+                   │ (Handshake de 3 vias: SYN -> SYN-ACK -> ACK)
+                   ▼
+         [ Conexão Estabelecida na Porta 31337 ]
+      ```
+
+      #### O Ciclo de Vida dos Sockets de Rede
+      No nível de chamadas de sistema (syscalls) do Linux:
+      1. **Servidor (Listener):** Cria o socket (`socket`), vincula-o a um endereço IP e porta (`bind`), define a fila de espera (`listen`) e bloqueia aguardando conexões (`accept`).
+      2. **Cliente:** Cria o socket (`socket`) e dispara a conexão contra o IP e porta do servidor (`connect`), iniciando o Three-Way Handshake. Uma vez estabelecido o canal, os dados trafegam via `send()`/`recv()` (ou `read()`/`write()`).
+
+      #### Relevância Ofensiva e Defensiva
+      * **Segurança Ofensiva (Red Team):** O Netcat é a ferramenta padrão para o recebimento de conexões reversas (*Reverse Shells*). Ao explorar um alvo vulnerável, o atacante instrui a máquina comprometida a se conectar de volta para um listener netcat (`nc -lvnp 4444`), contornando regras de firewall de entrada (inbound).
+      * **Segurança Defensiva (Blue Team / SysAdmin):** Permite realizar *Banner Grabbing* e auditorias rápidas em daemons desconhecidos. Analistas testam se portas estão abertas e coletam assinaturas de versões em servidores de email (SMTP porta 25), servidores de terminal ou roteadores sem a sobrecarga de ferramentas pesadas.
+
+      ---
+
+      ### 💻 Exemplos Práticos e Sintaxe
+
+      O domínio do Netcat exige conhecer seus modos de operação como cliente e como servidor:
+
+      #### Comandos Essenciais e Flags
+      * `nc <IP> <PORTA>`: Conecta como cliente TCP ao endereço e porta indicados.
+      * `nc -u <IP> <PORTA>`: Conecta utilizando o protocolo UDP em vez de TCP.
+      * `nc -lvnp <PORTA>`: Inicia um listener local aguardando conexões de entrada:
+        * `-l` (*listen*): Coloca o netcat em modo de escuta.
+        * `-v` (*verbose*): Exibe detalhes operacionais da conexão.
+        * `-n` (*numeric only*): Não resolve nomes via DNS (evita atrasos e vazamentos de tráfego).
+        * `-p <porta>` (*port*): Define a porta local para escuta.
+      * `nc -zv <IP> <PORTAS>`: Modo scan (*zero-I/O*), testa se as portas estão abertas sem enviar dados.
+      * `ss -tlpn`: Inspeciona todos os processos que estão ouvindo em portas TCP no host local.
+
+      #### Snippets de Terminal e Saídas Observadas
+
+      1. **Iniciando um Listener de Teste:**
+         ```bash
+         $ nc -lvnp 4444
+         Listening on 0.0.0.0 4444
+         ```
+
+      2. **Conectando e Realizando Banner Grabbing Manual:**
+         ```bash
+         $ nc 127.0.0.1 22
+         SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6
+         ```
+         *O banner do servidor SSH é exibido imediatamente em texto plano.*
+
+      3. **Verificação de Portas Locais em Escuta com `ss`:**
+         ```bash
+         $ ss -tlpn | grep 31337
+         LISTEN 0 1 127.0.0.1:31337 0.0.0.0:* users:(("python3",pid=1234,fd=3))
+         ```
+
+      ---
+
+      ### 🎯 Seu Objetivo
+
+      Um serviço de rede está escutando em uma porta TCP local no container. Seu objetivo é utilizar o utilitário `nc` (netcat) para abrir uma conexão de socket bruta diretamente com o serviço, interagir com o protocolo textual simples implementado por ele e enviar o comando ou resposta solicitada para receber a flag de volta pela conexão.
   - id: net-tcpdump-sniffing
     name: Sniffing de Pacotes com Tcpdump
-    description: "### \U0001F4D6 Introdução Teórica\n\nEm condições normais de operação, a pilha de rede do kernel Linux descarta\
-      \ qualquer pacote recebido cuja porta de destino não possua um processo escutando ativamente. Além disso, se o tráfego\
-      \ transitar pela rede local mas não for endereçado ao MAC/IP da máquina, a placa de rede ignora os quadros.\n\nA técnica\
-      \ de **Sniffing de Pacotes (Captura Promíscua de Tráfego)** subverte esse comportamento. Quando um utilitário como o\
-      \ **Tcpdump** é iniciado:\n1. Ele cria um socket de camada de enlace bruto (`socket(AF_PACKET, SOCK_RAW, ...)`).\n2.\
-      \ O subsistema de rede do kernel copia todos os quadros e datagramas recebidos ou transmitidos pela interface especificada.\n\
-      3. Esses pacotes são submetidos ao motor do **Berkeley Packet Filter (BPF)**, um interpretador de bytecode ultraotimizado\
-      \ que roda diretamente no kernel space para descartar imediatamente pacotes irrelevantes antes que consumam ciclos de\
-      \ CPU no espaço de usuário.\n\n```\n       [ Processo Emissor: net-tcpdump-sniffing ]\n                         │ (sendto\
-      \ UDP port 44444)\n                         ▼\n             [ Interface de Loopback: lo ]\n             ┌───────────┴───────────┐\n\
-      \             │                       │\n             ▼                       ▼\n      [ Pilha IPv4 Normal ]     [ AF_PACKET\
-      \ Raw Socket ]\n                                     │\n                                     ▼\n                   \
-      \         [ Filtro BPF no Kernel ] (udp port 44444)\n                                     │\n                      \
-      \               ▼\n                              [ tcpdump -i lo -A ]\n                                     │\n    \
-      \                                 ▼\n                          [ Payload em Texto Claro ]\n```\n\n#### A Interface de\
-      \ Loopback (`lo`)\nA interface de loopback (`127.0.0.1` / `::1`) é uma interface puramente virtual gerenciada pelo kernel.\
-      \ O tráfego que transita por ela nunca atinge circuitos de rede físicos e é frequentemente utilizado por microsserviços\
-      \ e bancos de dados locais. Por padrão, muitos desenvolvedores supõem que comunicações em loopback são \"invisíveis\"\
-      , transmitindo tokens confidenciais sem criptografia.\n\n#### Relevância Ofensiva e Defensiva\n* **Segurança Ofensiva\
-      \ (Red Team / Man-in-the-Middle):** Em redes corporativas, atacantes realizam ataques de ARP Spoofing e posicionam sniffers\
-      \ para capturar credenciais de protocolos legados não criptografados (HTTP, FTP, Telnet, LDAP simples, SNMP v1/v2c).\n\
-      * **Segurança Defensiva (Blue Team / DFIR / SOC):** O `tcpdump` é a ferramenta de primeira resposta em incidentes de\
-      \ segurança. Em servidores headless sem interface gráfica para rodar o Wireshark, o tcpdump permite isolar exfiltrações\
-      \ de dados, beacons de Command & Control (C2) e ataques de negação de serviço em tempo real.\n\n---\n\n### \U0001F4BB\
-      \ Exemplos Práticos e Sintaxe\n\nA captura e filtragem cirúrgica de pacotes com o `tcpdump` baseiam-se em flags e expressões\
-      \ BPF:\n\n#### Parâmetros e Flags Críticas\n* `-i <interface>`: Define a interface de escuta. Para tráfego interno entre\
-      \ processos na mesma máquina, use `-i lo`. Para interfaces de rede convencionais, use `-i eth0` ou `-i any`.\n* `-A`:\
-      \ Renderiza o payload dos pacotes em caracteres legíveis ASCII na tela (ideal para inspecionar protocolos de texto).\n\
-      * `-X`: Renderiza os bytes em hexadecimal e caracteres ASCII lado a lado.\n* `-nn`: Desativa a resolução de nomes de\
-      \ domínio (DNS) e conversão de números de portas em serviços (ex: não converte porta 80 em `http`). Acelera drasticamente\
-      \ a captura.\n* `-v` / `-vv`: Aumenta o nível de verbosidade exibindo TTL, identificação IP e opções TCP.\n* `-w <arquivo.pcap>`:\
-      \ Grava os pacotes brutos capturados para abertura posterior no Wireshark.\n* `-r <arquivo.pcap>`: Lê e analisa um arquivo\
-      \ de captura previamente salvo.\n\n#### Snippets Práticos e Saídas Observadas\n\n1. **Captura na Interface de Loopback\
-      \ com Filtro BPF na Porta 44444:**\n   ```bash\n   $ tcpdump -i lo -A -nn udp port 44444\n   tcpdump: verbose output\
-      \ suppressed, use -v[v]... for full protocol decode\n   listening on lo, link-type EN10MB (Ethernet), snapshot length\
-      \ 262144 bytes\n   ```\n\n2. **Inspeção do Pacote Interceptado no Terminal:**\n   ```text\n   12:34:56.789123 IP 127.0.0.1.54321\
-      \ > 127.0.0.1.44444: UDP, length 43\n   E..G..@.@.V...........4.../.CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026\n  \
-      \ ```\n   *Nota-se claramente a string transmitida no corpo do pacote UDP.*\n\n3. **Expressões BPF Comuns para Incident\
-      \ Response:**\n   ```bash\n   # Capturar apenas pacotes TCP direcionados à porta 80 vindos de um host específico:\n\
-      \   $ tcpdump -i eth0 -nn \"tcp dst port 80 and src host 192.168.1.100\"\n   ```\n\n---\n\n### \U0001F3AF O que fazer\
-      \ para resolver o desafio (Passo a Passo)\n\nPara capturar o segredo transmitido na rede local e resgatar a flag:\n\n\
-      1. **Inicie o sniffer no primeiro terminal:**\n   Configure o `tcpdump` para escutar na interface de loopback (`lo`),\
-      \ filtrando o tráfego UDP na porta `44444` e exibindo os dados em ASCII:\n   ```bash\n   tcpdump -i lo -A -nn udp port\
-      \ 44444\n   ```\n   *(Caso esteja utilizando uma única janela de terminal, envie o comando para segundo plano com `&`:)*\n\
-      \   ```bash\n   tcpdump -i lo -A -nn udp port 44444 &\n   ```\n\n2. **Execute o binário do desafio:**\n   No mesmo terminal\
-      \ (ou em um segundo terminal), dispare o programa gerador de tráfego:\n   ```bash\n   /challenge/net-tcpdump-sniffing\n\
-      \   ```\n   *O programa avisará que está disparando pacotes UDP contendo o token secreto para a porta 44444 e aguardará\
-      \ sua resposta no prompt:*\n   ```text\n   [?] Digite o token capturado no trafego: \n   ```\n\n3. **Inspecione a saída\
-      \ do tcpdump:**\n   Localize no payload capturado pelo sniffer a chave transmitida:\n   ```text\n   CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026\n\
-      \   ```\n\n4. **Submeta o token capturado:**\n   O token corresponde exatamente ao valor após o sinal de igual: `tcpdump_mestre_2026`.\n\
-      \   Insira o token no prompt e pressione `Enter`:\n   ```text\n   tcpdump_mestre_2026\n   ```\n\n5. **Capture e submeta\
-      \ a flag:**\n   O validador confirmará a integridade do token e exibirá a flag autorizada:\n   ```text\n   [+] Captura\
-      \ realizada com sucesso!\n   pwn.college{...}\n   ```\n   Copie a string no formato `pwn.college{...}` e submeta-a na\
-      \ plataforma.\n"
+    description: |
+      ### 📖 Introdução Teórica
+
+      Em condições normais de operação, a pilha de rede do kernel Linux descarta qualquer pacote recebido cuja porta de destino não possua um processo escutando ativamente. Além disso, se o tráfego transitar pela rede local mas não for endereçado ao MAC/IP da máquina, a placa de rede ignora os quadros.
+
+      A técnica de **Sniffing de Pacotes (Captura Promíscua de Tráfego)** subverte esse comportamento. Quando um utilitário como o **Tcpdump** é iniciado:
+      1. Ele cria um socket de camada de enlace bruto (`socket(AF_PACKET, SOCK_RAW, ...)`).
+      2. O subsistema de rede do kernel copia todos os quadros e datagramas recebidos ou transmitidos pela interface especificada.
+      3. Esses pacotes são submetidos ao motor do **Berkeley Packet Filter (BPF)**, um interpretador de bytecode ultraotimizado que roda diretamente no kernel space para descartar imediatamente pacotes irrelevantes antes que consumam ciclos de CPU no espaço de usuário.
+
+      ```
+             [ Processo Emissor: net-tcpdump-sniffing ]
+                               │ (sendto UDP port 44444)
+                               ▼
+                   [ Interface de Loopback: lo ]
+                   ┌───────────┴───────────┐
+                   │                       │
+                   ▼                       ▼
+            [ Pilha IPv4 Normal ]     [ AF_PACKET Raw Socket ]
+                                           │
+                                           ▼
+                                  [ Filtro BPF no Kernel ] (udp port 44444)
+                                           │
+                                           ▼
+                                    [ tcpdump -i lo -A ]
+                                           │
+                                           ▼
+                                [ Payload em Texto Claro ]
+      ```
+
+      #### A Interface de Loopback (`lo`)
+      A interface de loopback (`127.0.0.1` / `::1`) é uma interface puramente virtual gerenciada pelo kernel. O tráfego que transita por ela nunca atinge circuitos de rede físicos e é frequentemente utilizado por microsserviços e bancos de dados locais. Por padrão, muitos desenvolvedores supõem que comunicações em loopback são "invisíveis", transmitindo tokens confidenciais sem criptografia.
+
+      #### Relevância Ofensiva e Defensiva
+      * **Segurança Ofensiva (Red Team / Man-in-the-Middle):** Em redes corporativas, atacantes realizam ataques de ARP Spoofing e posicionam sniffers para capturar credenciais de protocolos legados não criptografados (HTTP, FTP, Telnet, LDAP simples, SNMP v1/v2c).
+      * **Segurança Defensiva (Blue Team / DFIR / SOC):** O `tcpdump` é a ferramenta de primeira resposta em incidentes de segurança. Em servidores headless sem interface gráfica para rodar o Wireshark, o tcpdump permite isolar exfiltrações de dados, beacons de Command & Control (C2) e ataques de negação de serviço em tempo real.
+
+      ---
+
+      ### 💻 Exemplos Práticos e Sintaxe
+
+      A captura e filtragem cirúrgica de pacotes com o `tcpdump` baseiam-se em flags e expressões BPF:
+
+      #### Parâmetros e Flags Críticas
+      * `-i <interface>`: Define a interface de escuta. Para tráfego interno entre processos na mesma máquina, use `-i lo`. Para interfaces de rede convencionais, use `-i eth0` ou `-i any`.
+      * `-A`: Renderiza o payload dos pacotes em caracteres legíveis ASCII na tela (ideal para inspecionar protocolos de texto).
+      * `-X`: Renderiza os bytes em hexadecimal e caracteres ASCII lado a lado.
+      * `-nn`: Desativa a resolução de nomes de domínio (DNS) e conversão de números de portas em serviços (ex: não converte porta 80 em `http`). Acelera drasticamente a captura.
+      * `-v` / `-vv`: Aumenta o nível de verbosidade exibindo TTL, identificação IP e opções TCP.
+      * `-w <arquivo.pcap>`: Grava os pacotes brutos capturados para abertura posterior no Wireshark.
+      * `-r <arquivo.pcap>`: Lê e analisa um arquivo de captura previamente salvo.
+
+      #### Snippets Práticos e Saídas Observadas
+
+      1. **Captura na Interface de Loopback com Filtro BPF na Porta 44444:**
+         ```bash
+         $ tcpdump -i lo -A -nn udp port 44444
+         tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+         listening on lo, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+         ```
+
+      2. **Inspeção do Pacote Interceptado no Terminal:**
+         ```text
+         12:34:56.789123 IP 127.0.0.1.54321 > 127.0.0.1.44444: UDP, length 43
+         E..G..@.@.V...........4.../.CYBERGUARD_SNIFF_SECRET=tcpdump_mestre_2026
+         ```
+         *Nota-se claramente a string transmitida no corpo do pacote UDP.*
+
+      3. **Expressões BPF Comuns para Incident Response:**
+         ```bash
+         # Capturar apenas pacotes TCP direcionados à porta 80 vindos de um host específico:
+         $ tcpdump -i eth0 -nn "tcp dst port 80 and src host 192.168.1.100"
+         ```
+
+      ---
+
+      ### 🎯 Seu Objetivo
+
+      O sistema está transmitindo pacotes de rede sensíveis através da interface de loopback (`lo`). Seu objetivo é colocar o `tcpdump` em execução para capturar o tráfego em tempo real, aplicar filtros adequados para isolar a comunicação relevante e inspecionar o conteúdo dos pacotes transmitidos em texto claro para extrair a credencial ou token necessário para obter a flag.
   - id: net-tcp-handshake-analysis
     name: Dissecando o Handshake TCP no Wireshark/Tshark
     description: "### \U0001F4D6 Introdução Teórica\n\nDiferente do protocolo UDP (User Datagram Protocol), que opera sob\
@@ -751,19 +662,10 @@ modules:
       \ via Tcpdump:**\n   ```text\n   12:00:00.100 IP 10.0.0.2.4000 > 10.0.0.1.80: Flags [S], seq 1000\n   12:00:00.105 IP\
       \ 10.0.0.1.80 > 10.0.0.2.4000: Flags [S.], seq 2000, ack 1001\n   12:00:00.106 IP 10.0.0.2.4000 > 10.0.0.1.80: Flags\
       \ [.], ack 2001\n   ```\n   *Note a notação compacta do tcpdump: `[S]` = SYN, `[S.]` = SYN-ACK, `[.]` = ACK puro.*\n\
-      \n---\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n\nPara comprovar seu domínio teórico do\
-      \ protocolo TCP e liberar a flag:\n\n1. **Invoque o binário do desafio:**\n   Execute `/challenge/net-tcp-handshake-analysis`\
-      \ no terminal:\n   ```bash\n   /challenge/net-tcp-handshake-analysis\n   ```\n\n2. **Avalie o questionário interativo:**\n\
-      \   O binário apresentará a seguinte questão:\n   ```text\n   === DESAFIO DO THREE-WAY HANDSHAKE TCP ===\n   Qual e\
-      \ a sequencia exata dos 3 pacotes que iniciam uma conexao TCP?\n   1) SYN, ACK, SYN-ACK\n   2) SYN, SYN-ACK, ACK\n \
-      \  3) ACK, SYN, SYN-ACK\n   Sua resposta (1, 2 ou 3): \n   ```\n\n3. **Submeta a resposta correta:**\n   A única sequência\
-      \ canônica universal é:\n   - Pacote 1: **SYN** (Cliente -> Servidor)\n   - Pacote 2: **SYN-ACK** (Servidor -> Cliente)\n\
-      \   - Pacote 3: **ACK** (Cliente -> Servidor)\n\n   Digite o número `2` e pressione `Enter`:\n   ```text\n   2\n   ```\n\
-      \n4. **Alternativa via argumento direto:**\n   Você também pode resolver passando a resposta como argumento:\n   ```bash\n\
-      \   /challenge/net-tcp-handshake-analysis 2\n   ```\n\n5. **Capture e submeta a flag:**\n   O sistema validará sua resposta\
-      \ e exibirá a flag do desafio:\n   ```text\n   [+] Exato! SYN (cliente -> servidor) -> SYN-ACK (servidor -> cliente)\
-      \ -> ACK (cliente -> servidor).\n   pwn.college{...}\n   ```\n   Copie a string no formato `pwn.college{...}` e insira\
-      \ no portal da Cyberguard.\n"
+      \n---\n\n### \U0001F3AF Seu Objetivo\n\nAnalisar detalhadamente o mecanismo de sincronização de conexões TCP (Three-Way\
+      \ Handshake: SYN -> SYN-ACK -> ACK). Seu objetivo é executar `/challenge/net-tcp-handshake-analysis` e responder corretamente\
+      \ às perguntas sobre as flags ativas, números de sequência (`SEQ`) e números de confirmação (`ACK`) durante a negociação\
+      \ da conexão para validar seus conhecimentos teóricos e resgatar a flag.\n"
   - id: net-nmap-recon
     name: Reconhecimento Ativo com Nmap
     description: |
@@ -843,42 +745,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Para localizar o serviço escondido entre as portas 8080 e 8090 e capturar a flag:
-
-      1. **Inicie o daemon alvo do desafio:**
-         O binário `/challenge/net-nmap-recon` vincula um serviço em uma porta aleatória dentro do intervalo 8080-8090. Execute-o em segundo plano:
-         ```bash
-         /challenge/net-nmap-recon &
-         ```
-         *O programa notificará:*
-         ```text
-         [*] Um servico foi iniciado em 127.0.0.1 entre as portas 8080 e 8090.
-         [*] Faca um scan com 'nmap -p 8080-8090 127.0.0.1' e conecte-se a porta correta.
-         ```
-
-      2. **Execute a varredura com o Nmap:**
-         Sonde o intervalo de portas especificado na interface local:
-         ```bash
-         nmap -p 8080-8090 127.0.0.1
-         ```
-
-      3. **Identifique a porta aberta:**
-         Na tabela de resultados do Nmap, localize a linha cujo estado seja `open`. Você notará que a porta é a `8085/tcp`.
-
-      4. **Conecte-se à porta aberta com o Netcat:**
-         Dialogue diretamente com o serviço na porta descoberta:
-         ```bash
-         nc 127.0.0.1 8085
-         ```
-
-      5. **Capture e submeta a flag:**
-         Ao aceitar a conexão na porta correta, o serviço transmitirá a validação e exibirá a flag:
-         ```text
-         [+] Porta localizada com sucesso! Flag: pwn.college{...}
-         ```
-         Copie a string no formato `pwn.college{...}` e insira no painel da plataforma para confirmar a conclusão do desafio.
+      Realizar o reconhecimento de serviços em execução no host local. Seu objetivo é utilizar o `nmap` para varrer as portas abertas do container, identificar em qual porta não padrão um serviço misterioso está escutando, determinar a versão ou banner desse serviço e interagir com ele para capturar a flag.
 - id: scripting-automacao
   name: 'Módulo 3: Programação e Scripting Ofensivo (Python & Bash)'
   description: |
@@ -935,47 +804,88 @@ modules:
   challenges:
   - id: script-bash-loop
     name: Automação em Bash e Manipulação de Arquivos
-    description: "### \U0001F4D6 Introdução Teórica\n\nO diferencial de um profissional de elite em segurança ofensiva e defensiva\
-      \ é a capacidade de automatizar tarefas repetitivas diretamente no terminal, sem depender de ferramentas gráficas de\
-      \ terceiros. O **Bourne-Again Shell (Bash)** é a linguagem de controle e automação universal nos sistemas operacionais\
-      \ baseados em Linux.\n\nAtravés de estruturas de controle de fluxo e repetição (**laços `for` e `while`**), combinadas\
-      \ com a filosofia Unix de encadeamento de pequenos utilitários via pipes (`|`), operadores conseguem processar milhões\
-      \ de registros, realizar cálculos matemáticos complexos e automatizar ataques de força bruta local em frações de segundo.\n\
-      \n```\n[ Gerador de Sequência: seq 2 2 100 ]\n  (Emite: 2, 4, 6, ..., 100 em linhas separadas)\n       │\n       ▼ (stdout\
-      \ para stdin via pipe)\n[ Formatador de Texto: paste -sd+ - ]\n  (Mescla as linhas usando o delimitador '+': \"2+4+6+...+100\"\
-      )\n       │\n       ▼ (stdout para stdin via pipe)\n[ Calculadora Arbitrária: bc ]\n  (Computa a expressão matemática\
-      \ completa: 2550)\n```\n\n#### Fundamentação Matemática (Progressão Aritmética)\nA soma de todos os inteiros pares de\
-      \ 2 a 100 representa uma Progressão Aritmética (PA) clássica:\n* Primeiro termo: $a_1 = 2$\n* Último termo: $a_n = 100$\n\
-      * Razão: $r = 2$\n* Quantidade de termos: $n = \\frac{a_n - a_1}{r} + 1 = \\frac{100 - 2}{2} + 1 = 50$\n\nA soma $S_n$\
-      \ é dada rigorosamente por:\n$$S_{50} = \\frac{n \\cdot (a_1 + a_n)}{2} = \\frac{50 \\cdot (2 + 100)}{2} = \\frac{50\
-      \ \\cdot 102}{2} = 50 \\cdot 51 = 2550$$\n\n#### Relevância Ofensiva e Defensiva\n* **Segurança Ofensiva (Red Team /\
-      \ Brute Force Local):** Laços em Bash são amplamente utilizados para conduzir ataques de força bruta local contra binários\
-      \ protegidos por PIN ou senha (`for pin in {0000..9999}; do ./validador $pin && break; done`), fuzzing rápido de parâmetros\
-      \ de linha de comando e enumeração massiva de arquivos em diretórios restritos.\n* **Segurança Defensiva (Blue Team\
-      \ / Triage Forense):** Analistas de resposta a incidentes utilizam laços e pipelines em Bash para sumarizar métricas\
-      \ de tráfego a partir de gigabytes de logs do Apache/Nginx, calcular contagens de requisições por segundo e extrair\
-      \ somas de bytes transferidos por endereços IP maliciosos.\n\n---\n\n### \U0001F4BB Exemplos Práticos e Sintaxe\n\n\
-      O Bash oferece múltiplas maneiras elegantes de construir repetições e cálculos:\n\n#### Estruturas de Sintaxe no Terminal\n\
-      1. **Laço Estilo C (Aritmético Nativo):**\n   ```bash\n   for (( i = 2; i <= 100; i += 2 )); do\n       (( soma += i\
-      \ ))\n   done\n   echo $soma\n   ```\n2. **One-Liner com Pipelines Unix (`seq` + `paste` + `bc`):**\n   ```bash\n  \
-      \ seq 2 2 100 | paste -sd+ - | bc\n   ```\n3. **One-Liner com `awk`:**\n   ```bash\n   awk 'BEGIN {s=0; for(i=2;i<=100;i+=2)\
-      \ s+=i; print s}'\n   ```\n4. **Laço de Força Bruta Local com `while`:**\n   ```bash\n   while read senha; do\n    \
-      \   /challenge/autenticador \"$senha\" 2>/dev/null && break\n   done < /usr/share/wordlists/rockyou.txt\n   ```\n\n\
-      #### Snippets Práticos e Saídas Observadas\n\n* **Executando o Cálculo Direto no Terminal:**\n  ```bash\n  $ seq 2 2\
-      \ 100 | paste -sd+ - | bc\n  2550\n  ```\n\n* **Demonstração com Expansão Aritmética do Shell (`$(( ... ))`):**\n  ```bash\n\
-      \  $ soma=0; for num in $(seq 2 2 100); do soma=$((soma + num)); done; echo $soma\n  2550\n  ```\n\n---\n\n### \U0001F3AF\
-      \ O que fazer para resolver o desafio (Passo a Passo)\n\nPara satisfazer a validação do verificador e capturar a flag:\n\
-      \n1. **Inspecione a requisição do binário:**\n   Execute `/challenge/script-bash-loop` no terminal:\n   ```bash\n  \
-      \ /challenge/script-bash-loop\n   ```\n   *O programa solicitará interativamente:*\n   ```text\n   [?] Digite a soma\
-      \ dos numeros pares de 2 a 100: \n   ```\n\n2. **Calcule a soma via linha de comando:**\n   Utilize o pipeline com `seq`,\
-      \ `paste` e `bc` para obter o valor exato:\n   ```bash\n   seq 2 2 100 | paste -sd+ - | bc\n   # Resultado: 2550\n \
-      \  ```\n\n3. **Submeta a resposta calculada:**\n   * **Método Interativo:** Digite `2550` no prompt e pressione `Enter`.\n\
-      \   * **Método via Pipeline (Recomendado):**\n     ```bash\n     echo \"2550\" | /challenge/script-bash-loop\n     ```\n\
-      \   * **Método via Command Substitution:**\n     ```bash\n     echo $(seq 2 2 100 | paste -sd+ - | bc) | /challenge/script-bash-loop\n\
-      \     ```\n   * **Método via Argumento:**\n     ```bash\n     /challenge/script-bash-loop 2550\n     ```\n\n4. **Capture\
-      \ e submeta a flag:**\n   Ao receber o valor `2550`, o programa validará a computação e exibirá a flag autorizada:\n\
-      \   ```text\n   [+] Calculo correto via Bash!\n   pwn.college{...}\n   ```\n   Copie a string no formato `pwn.college{...}`\
-      \ e insira no portal da Cyberguard.\n"
+    description: |
+      ### 📖 Introdução Teórica
+
+      O diferencial de um profissional de elite em segurança ofensiva e defensiva é a capacidade de automatizar tarefas repetitivas diretamente no terminal, sem depender de ferramentas gráficas de terceiros. O **Bourne-Again Shell (Bash)** é a linguagem de controle e automação universal nos sistemas operacionais baseados em Linux.
+
+      Através de estruturas de controle de fluxo e repetição (**laços `for` e `while`**), combinadas com a filosofia Unix de encadeamento de pequenos utilitários via pipes (`|`), operadores conseguem processar milhões de registros, realizar cálculos matemáticos complexos e automatizar ataques de força bruta local em frações de segundo.
+
+      ```
+      [ Gerador de Sequência: seq 2 2 100 ]
+        (Emite: 2, 4, 6, ..., 100 em linhas separadas)
+             │
+             ▼ (stdout para stdin via pipe)
+      [ Formatador de Texto: paste -sd+ - ]
+        (Mescla as linhas usando o delimitador '+': "2+4+6+...+100")
+             │
+             ▼ (stdout para stdin via pipe)
+      [ Calculadora Arbitrária: bc ]
+        (Computa a expressão matemática completa: 2550)
+      ```
+
+      #### Fundamentação Matemática (Progressão Aritmética)
+      A soma de todos os inteiros pares de 2 a 100 representa uma Progressão Aritmética (PA) clássica:
+      * Primeiro termo: $a_1 = 2$
+      * Último termo: $a_n = 100$
+      * Razão: $r = 2$
+      * Quantidade de termos: $n = \frac{a_n - a_1}{r} + 1 = \frac{100 - 2}{2} + 1 = 50$
+
+      A soma $S_n$ é dada rigorosamente por:
+      $$S_{50} = \frac{n \cdot (a_1 + a_n)}{2} = \frac{50 \cdot (2 + 100)}{2} = \frac{50 \cdot 102}{2} = 50 \cdot 51 = 2550$$
+
+      #### Relevância Ofensiva e Defensiva
+      * **Segurança Ofensiva (Red Team / Brute Force Local):** Laços em Bash são amplamente utilizados para conduzir ataques de força bruta local contra binários protegidos por PIN ou senha (`for pin in {0000..9999}; do ./validador $pin && break; done`), fuzzing rápido de parâmetros de linha de comando e enumeração massiva de arquivos em diretórios restritos.
+      * **Segurança Defensiva (Blue Team / Triage Forense):** Analistas de resposta a incidentes utilizam laços e pipelines em Bash para sumarizar métricas de tráfego a partir de gigabytes de logs do Apache/Nginx, calcular contagens de requisições por segundo e extrair somas de bytes transferidos por endereços IP maliciosos.
+
+      ---
+
+      ### 💻 Exemplos Práticos e Sintaxe
+
+      O Bash oferece múltiplas maneiras elegantes de construir repetições e cálculos:
+
+      #### Estruturas de Sintaxe no Terminal
+      1. **Laço Estilo C (Aritmético Nativo):**
+         ```bash
+         for (( i = 2; i <= 100; i += 2 )); do
+             (( soma += i ))
+         done
+         echo $soma
+         ```
+      2. **One-Liner com Pipelines Unix (`seq` + `paste` + `bc`):**
+         ```bash
+         seq 2 2 100 | paste -sd+ - | bc
+         ```
+      3. **One-Liner com `awk`:**
+         ```bash
+         awk 'BEGIN {s=0; for(i=2;i<=100;i+=2) s+=i; print s}'
+         ```
+      4. **Laço de Força Bruta Local com `while`:**
+         ```bash
+         while read senha; do
+             /challenge/autenticador "$senha" 2>/dev/null && break
+         done < /usr/share/wordlists/rockyou.txt
+         ```
+
+      #### Snippets Práticos e Saídas Observadas
+
+      * **Executando o Cálculo Direto no Terminal:**
+        ```bash
+        $ seq 2 2 100 | paste -sd+ - | bc
+        2550
+        ```
+
+      * **Demonstração com Expansão Aritmética do Shell (`$(( ... ))`):**
+        ```bash
+        $ soma=0; for num in $(seq 2 2 100); do soma=$((soma + num)); done; echo $soma
+        2550
+        ```
+
+      ---
+
+      ### 🎯 Seu Objetivo
+
+      O binário `/challenge/script-bash-loop` implementa uma proteção que exige um código numérico (PIN) específico. Como testar manualmente centenas ou milhares de combinações é inviável, seu objetivo é escrever um script em Bash utilizando loops (`for` ou `while`) para automatizar o envio dos valores até encontrar o PIN correto e extrair a flag.
   - id: script-python-socket-math
     name: Desafio Matemático em Alta Velocidade com Sockets
     description: "### \U0001F4D6 Introdução Teórica\n\nEm competições de cibersegurança (CTFs) e auditorias de sistemas no\
@@ -1014,21 +924,11 @@ modules:
       , prompt)\n    if match:\n        a = int(match.group(1))\n        b = int(match.group(2))\n        resultado = str(a\
       \ + b)\n        print(f\"[+] Rodada {rodada}: {a} + {b} = {resultado}\")\n        \n        # Envia a resposta calculada\n\
       \        io.sendline(resultado.encode(\"utf-8\"))\n\n# Imprime o debriefing e a flag final\nprint(io.recvall().decode(\"\
-      utf-8\"))\n```\n\n---\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n\nPara contornar o timeout\
-      \ estrito e capturar a flag:\n\n1. **Teste a execução manual inicial (comprove a impossibilidade):**\n   Execute o programa\
-      \ no terminal:\n   ```bash\n   /challenge/script-python-socket-math\n   ```\n   *Observe que tentar calcular e digitar\
-      \ a resposta manualmente acarreta a mensagem `[X] Tempo esgotado! Voce precisa automatizar com Python.` após 1.5 segundos.*\n\
-      \n2. **Crie o script de automação em `/tmp/solve_math.py`:**\n   Utilize o editor de sua preferência ou o utilitário\
-      \ `cat` para salvar o script em `/tmp`:\n   ```bash\n   cat << 'EOF' > /tmp/solve_math.py\n   #!/usr/bin/env python3\n\
-      \   import re\n   from pwn import *\n\n   io = process(\"/challenge/script-python-socket-math\")\n   for i in range(1,\
-      \ 11):\n       prompt = io.recvuntil(b\"? \").decode(\"utf-8\")\n       match = re.search(r\"Quanto e (\\d+) \\+ (\\\
-      d+)\", prompt)\n       if match:\n           res = str(int(match.group(1)) + int(match.group(2)))\n           io.sendline(res.encode(\"\
-      utf-8\"))\n\n   print(io.recvall().decode(\"utf-8\"))\n   EOF\n   ```\n\n3. **Execute o script de automação:**\n   Dispare\
-      \ o resolvedor em Python:\n   ```bash\n   python3 /tmp/solve_math.py\n   ```\n\n4. **Observe a resolução instantânea:**\n\
-      \   O script resolverá as 10 operações matemáticas consecutivas em milissegundos, superando com facilidade o temporizador.\n\
-      \n5. **Capture e submeta a flag:**\n   Ao final da décima rodada, o programa imprimirá a confirmação e a flag:\n   ```text\n\
-      \   [+] Incrivel! Automacao rapida bem-sucedida.\n   pwn.college{...}\n   ```\n   Copie a string no formato `pwn.college{...}`\
-      \ e insira no painel da Cyberguard.\n"
+      utf-8\"))\n```\n\n---\n\n### \U0001F3AF Seu Objetivo\n\nUm serviço de rede exige que o cliente resolva uma sequência\
+      \ de cálculos matemáticos dinâmicos em um tempo extremamente curto (fração de segundo por cálculo), tornando a resolução\
+      \ manual impossível. Seu objetivo é criar um script em Python utilizando o módulo `socket` para automatizar a leitura\
+      \ dos enunciados, o cálculo das operações e o envio das respostas em tempo real até completar todas as rodadas e receber\
+      \ a flag.\n"
   - id: script-pwntools-interaction
     name: Orquestração de Processos com Pwntools
     description: |
@@ -1104,106 +1004,90 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Para orquestrar a comunicação com o binário e extrair a flag:
-
-      1. **Inspecione o comportamento do programa:**
-         Execute `/challenge/script-pwntools-interaction` no terminal:
-         ```bash
-         /challenge/script-pwntools-interaction
-         ```
-         *O programa emitirá a linha de sincronismo `PWNTOOLS_CHALLENGE_READY` e aguardará o token de confirmação via `stdin`.*
-
-      2. **Crie o script de automação em `/tmp/solve_pwn.py`:**
-         Grave o código de interação no diretório temporário:
-         ```bash
-         cat << 'EOF' > /tmp/solve_pwn.py
-         #!/usr/bin/env python3
-         from pwn import *
-
-         io = process("/challenge/script-pwntools-interaction")
-         io.recvuntil(b"PWNTOOLS_CHALLENGE_READY")
-         io.sendline(b"CYBERGUARD_PWNTOOLS_OK")
-         print(io.recvall().decode("utf-8"))
-         EOF
-         ```
-
-      3. **Execute o script:**
-         Execute o script com o interpretador Python:
-         ```bash
-         python3 /tmp/solve_pwn.py
-         ```
-
-      4. **Capture e submeta a flag:**
-         O programa receberá a mensagem no momento exato e emitirá a confirmação acompanhada da flag:
-         ```text
-         [+] Conexao via pwntools confirmada!
-         pwn.college{...}
-         ```
-         Copie a string no formato `pwn.college{...}` e insira no portal da Cyberguard.
+      Criar um script de automação e exploração utilizando a consagrada biblioteca `pwntools`. Seu objetivo é conectar-se ao programa ou serviço via `process()` ou `remote()`, tratar o fluxo de dados recebidos com funções como `recvuntil()` e responder automaticamente com `sendline()`, garantindo uma comunicação rápida, confiável e programática para extrair a flag.
   - id: script-strace-secrets
     name: Rastreamento de Chamadas de Sistema (Strace)
-    description: "### \U0001F4D6 Introdução Teórica\n\nNa arquitetura de segurança dos processadores modernos x86_64 e do\
-      \ kernel Linux, aplicações comuns de usuário executam em um anel de privilégio desprivilegiado conhecido como **Ring\
-      \ 3 (User Space / Espaço do Usuário)**. O hardware impede que tais programas acessem diretamente a memória de outros\
-      \ processos, interajam diretamente com o disco rígido ou enviem pacotes para interfaces físicas de rede.\n\nSempre que\
-      \ uma aplicação necessita interagir com o mundo externo (abrir um arquivo, ler dados do disco, criar um processo filho\
-      \ ou conectar-se à internet), ela é obrigada a solicitar a intervenção do kernel no **Ring 0 (Kernel Space / Supervisor)**\
-      \ através de uma **Chamada de Sistema (Syscall)**.\n\n```\n+-----------------------------------------------------------+\n\
-      |              Aplicação (Ring 3 / User Space)              |\n|              Código executável do binário         \
-      \        |\n+-----------------------------------------------------------+\n       │\n       │ Instrução Assembly: syscall\
-      \ (RAX = 257 / openat)\n       ▼\n+-----------------------------------------------------------+\n|          strace (intercepta\
-      \ via chamada ptrace)           |\n|          \"openat(AT_FDCWD, '/tmp/.secret', O_RDONLY) = 3\" |\n+-----------------------------------------------------------+\n\
-      \       │\n       ▼\n+-----------------------------------------------------------+\n|            Kernel Linux (Ring\
-      \ 0 / Supervisor)             |\n|            Acesso real ao hardware e arquivos             |\n+-----------------------------------------------------------+\n\
-      ```\n\n#### Como o `strace` Funciona Internamente\nO **`strace` (System Call Trace)** utiliza a chamada de sistema `ptrace(PTRACE_SYSCALL,\
-      \ ...)` do Linux. Essa syscall permite que o `strace` anexe um interceptador ao processo-alvo. Cada vez que a CPU encontra\
-      \ a instrução assembly `syscall`, a execução do binário é congelada antes e depois de transitar para o kernel, permitindo\
-      \ ao `strace` decodificar e imprimir na tela os argumentos exatos passados nos registradores (`RDI`, `RSI`, `RDX`, etc.)\
-      \ e o valor retornado em `RAX`.\n\n#### Análise Estática vs. Análise Dinâmica\n* **Análise Estática (`strings`, `objdump`,\
-      \ `Ghidra`):** Avalia os bytes do executável em repouso sem dispará-lo. Embora indispensável, é facilmente frustrada\
-      \ por técnicas de ofuscação, empacotadores (*packers*) ou strings cifradas que só são decodificadas em tempo de execução.\n\
-      * **Análise Dinâmica (`strace`, `ltrace`, `GDB`):** Observa o binário durante a execução. O programa não pode mentir\
-      \ para o kernel: para ler uma chave no disco, ele obrigatoriamente terá que passar o nome do arquivo para `openat()`\
-      \ e carregar os bytes do segredo via `read()`. O `strace` revela essas operações instantaneamente sem exigir engenharia\
-      \ reversa profunda.\n\n#### Relevância Ofensiva e Defensiva\n* **Segurança Ofensiva (Red Team / Engenharia Reversa):**\
-      \ Permite recuperar senhas, caminhos de arquivos de configuração camuflados e chaves criptográficas em segundos, além\
-      \ de identificar falhas lógicas em checagens de validação de arquivos.\n* **Segurança Defensiva (Blue Team / Triage\
-      \ de Malware no SOC):** Analistas de segurança executam malwares suspeitos dentro de sandboxes monitoradas por `strace`\
-      \ para descobrir imediatamente quais arquivos estão sendo criptografados por ransomware, quais chaves de persistência\
-      \ estão sendo gravadas e quais endereços IP de Comando & Controle (C2) estão sendo contactados.\n\n---\n\n### \U0001F4BB\
-      \ Exemplos Práticos e Sintaxe\n\nO uso cirúrgico do `strace` envolve filtros e controle de buffer de leitura:\n\n####\
-      \ Parâmetros e Flags Fundamentais\n* `-e trace=<syscalls>`: Filtra apenas as chamadas de sistema especificadas (ex:\
-      \ `-e trace=openat,read`, `-e trace=network`, `-e trace=file`).\n* `-s <tamanho>`: Define o tamanho máximo de caracteres\
-      \ exibidos para buffers de strings (o padrão é truncar em apenas 32 caracteres; use `-s 256` para ler chaves e tokens\
-      \ inteiros).\n* `-f`: Segue processos filhos gerados via chamadas `fork` ou `clone`.\n* `-p <PID>`: Conecta o interceptador\
-      \ a um processo que já está rodando em segundo plano.\n* `-c`: Modo contagem/sumário; exibe uma tabela estatística consolidando\
-      \ quantas chamadas cada syscall efetuou e o tempo gasto.\n\n#### Tabela de Chamadas de Sistema Críticas em Linux x86_64\n\
-      | Syscall | Número RAX | Propósito no Kernel | O que o `strace` revela |\n| :---: | :---: | :--- | :--- |\n| **`openat`**\
-      \ | `257` | Abre ou cria arquivos relativo a um diretório | Caminho completo do arquivo e modo de abertura |\n| **`read`**\
-      \ | `0` | Lê bytes a partir de um File Descriptor | Conteúdo bruto de senhas, chaves e arquivos |\n| **`write`** | `1`\
-      \ | Grava bytes em um File Descriptor | Mensagens enviadas ao terminal, arquivo ou socket |\n| **`connect`**| `42` |\
-      \ Inicia conexão de rede TCP contra um IP/porta | Endereço IP e porta do servidor de destino |\n| **`execve`** | `59`\
-      \ | Executa um novo programa | Argumentos e binários derivados |\n\n#### Snippets Práticos e Saídas Observadas\n\n1.\
-      \ **Rastreamento de Chamadas de Abertura e Leitura de Arquivo:**\n   ```bash\n   $ strace -s 256 -e trace=openat,read\
-      \ /challenge/script-strace-secrets\n   ```\n\n2. **Linhas de Saída Típicas Emitidas pelo Kernel:**\n   ```text\n   openat(AT_FDCWD,\
-      \ \"/tmp/.cyberguard_strace_secret.key\", O_RDONLY) = 3\n   read(3, \"strace_sys_secret_778\", 256) = 21\n   ```\n \
-      \  *O `openat` retornou o File Descriptor número 3, e o `read` seguinte leu 21 bytes correspondentes à chave secreta:*\
-      \ `strace_sys_secret_778`.\n\n---\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n\nPara interceptar\
-      \ a chave secreta com o strace e resgatar a flag:\n\n1. **Inspecione a execução normal do binário:**\n   Execute `/challenge/script-strace-secrets`\
-      \ diretamente:\n   ```bash\n   /challenge/script-strace-secrets\n   ```\n   *O programa solicitará interativamente:*\n\
-      \   ```text\n   [?] Digite a chave lida durante a chamada openat/read: \n   ```\n\n2. **Execute o binário sob o controle\
-      \ do `strace`:**\n   Dispare o binário filtrando chamadas de sistema `openat` e `read`, expandindo o buffer com `-s\
-      \ 256`:\n   ```bash\n   strace -s 256 -e trace=openat,read /challenge/script-strace-secrets\n   ```\n\n3. **Analise\
-      \ as chamadas interceptadas no terminal:**\n   Procure na saída gerada pelo kernel a leitura do arquivo secreto em `/tmp`:\n\
-      \   ```text\n   openat(AT_FDCWD, \"/tmp/.cyberguard_strace_secret.key\", O_RDONLY) = 3\n   read(3, \"strace_sys_secret_778\"\
-      , 256) = 21\n   ```\n\n4. **Submeta a chave capturada:**\n   A chave lida diretamente pelo descritor de arquivo é `strace_sys_secret_778`.\n\
-      \   Digite a chave no prompt e pressione `Enter`:\n   ```text\n   strace_sys_secret_778\n   ```\n   *Ou execute diretamente\
-      \ passando o segredo como argumento:*\n   ```bash\n   /challenge/script-strace-secrets strace_sys_secret_778\n   ```\n\
-      \n5. **Capture e submeta a flag:**\n   O verificador validará o segredo e exibirá a flag autorizada:\n   ```text\n \
-      \  [+] Excelente analise com strace!\n   pwn.college{...}\n   ```\n   Copie a string no formato `pwn.college{...}` e\
-      \ insira no painel da plataforma.\n"
+    description: |
+      ### 📖 Introdução Teórica
+
+      Na arquitetura de segurança dos processadores modernos x86_64 e do kernel Linux, aplicações comuns de usuário executam em um anel de privilégio desprivilegiado conhecido como **Ring 3 (User Space / Espaço do Usuário)**. O hardware impede que tais programas acessem diretamente a memória de outros processos, interajam diretamente com o disco rígido ou enviem pacotes para interfaces físicas de rede.
+
+      Sempre que uma aplicação necessita interagir com o mundo externo (abrir um arquivo, ler dados do disco, criar um processo filho ou conectar-se à internet), ela é obrigada a solicitar a intervenção do kernel no **Ring 0 (Kernel Space / Supervisor)** através de uma **Chamada de Sistema (Syscall)**.
+
+      ```
+      +-----------------------------------------------------------+
+      |              Aplicação (Ring 3 / User Space)              |
+      |              Código executável do binário                 |
+      +-----------------------------------------------------------+
+             │
+             │ Instrução Assembly: syscall (RAX = 257 / openat)
+             ▼
+      +-----------------------------------------------------------+
+      |          strace (intercepta via chamada ptrace)           |
+      |          "openat(AT_FDCWD, '/tmp/.secret', O_RDONLY) = 3" |
+      +-----------------------------------------------------------+
+             │
+             ▼
+      +-----------------------------------------------------------+
+      |            Kernel Linux (Ring 0 / Supervisor)             |
+      |            Acesso real ao hardware e arquivos             |
+      +-----------------------------------------------------------+
+      ```
+
+      #### Como o `strace` Funciona Internamente
+      O **`strace` (System Call Trace)** utiliza a chamada de sistema `ptrace(PTRACE_SYSCALL, ...)` do Linux. Essa syscall permite que o `strace` anexe um interceptador ao processo-alvo. Cada vez que a CPU encontra a instrução assembly `syscall`, a execução do binário é congelada antes e depois de transitar para o kernel, permitindo ao `strace` decodificar e imprimir na tela os argumentos exatos passados nos registradores (`RDI`, `RSI`, `RDX`, etc.) e o valor retornado em `RAX`.
+
+      #### Análise Estática vs. Análise Dinâmica
+      * **Análise Estática (`strings`, `objdump`, `Ghidra`):** Avalia os bytes do executável em repouso sem dispará-lo. Embora indispensável, é facilmente frustrada por técnicas de ofuscação, empacotadores (*packers*) ou strings cifradas que só são decodificadas em tempo de execução.
+      * **Análise Dinâmica (`strace`, `ltrace`, `GDB`):** Observa o binário durante a execução. O programa não pode mentir para o kernel: para ler uma chave no disco, ele obrigatoriamente terá que passar o nome do arquivo para `openat()` e carregar os bytes do segredo via `read()`. O `strace` revela essas operações instantaneamente sem exigir engenharia reversa profunda.
+
+      #### Relevância Ofensiva e Defensiva
+      * **Segurança Ofensiva (Red Team / Engenharia Reversa):** Permite recuperar senhas, caminhos de arquivos de configuração camuflados e chaves criptográficas em segundos, além de identificar falhas lógicas em checagens de validação de arquivos.
+      * **Segurança Defensiva (Blue Team / Triage de Malware no SOC):** Analistas de segurança executam malwares suspeitos dentro de sandboxes monitoradas por `strace` para descobrir imediatamente quais arquivos estão sendo criptografados por ransomware, quais chaves de persistência estão sendo gravadas e quais endereços IP de Comando & Controle (C2) estão sendo contactados.
+
+      ---
+
+      ### 💻 Exemplos Práticos e Sintaxe
+
+      O uso cirúrgico do `strace` envolve filtros e controle de buffer de leitura:
+
+      #### Parâmetros e Flags Fundamentais
+      * `-e trace=<syscalls>`: Filtra apenas as chamadas de sistema especificadas (ex: `-e trace=openat,read`, `-e trace=network`, `-e trace=file`).
+      * `-s <tamanho>`: Define o tamanho máximo de caracteres exibidos para buffers de strings (o padrão é truncar em apenas 32 caracteres; use `-s 256` para ler chaves e tokens inteiros).
+      * `-f`: Segue processos filhos gerados via chamadas `fork` ou `clone`.
+      * `-p <PID>`: Conecta o interceptador a um processo que já está rodando em segundo plano.
+      * `-c`: Modo contagem/sumário; exibe uma tabela estatística consolidando quantas chamadas cada syscall efetuou e o tempo gasto.
+
+      #### Tabela de Chamadas de Sistema Críticas em Linux x86_64
+      | Syscall | Número RAX | Propósito no Kernel | O que o `strace` revela |
+      | :---: | :---: | :--- | :--- |
+      | **`openat`** | `257` | Abre ou cria arquivos relativo a um diretório | Caminho completo do arquivo e modo de abertura |
+      | **`read`** | `0` | Lê bytes a partir de um File Descriptor | Conteúdo bruto de senhas, chaves e arquivos |
+      | **`write`** | `1` | Grava bytes em um File Descriptor | Mensagens enviadas ao terminal, arquivo ou socket |
+      | **`connect`**| `42` | Inicia conexão de rede TCP contra um IP/porta | Endereço IP e porta do servidor de destino |
+      | **`execve`** | `59` | Executa um novo programa | Argumentos e binários derivados |
+
+      #### Snippets Práticos e Saídas Observadas
+
+      1. **Rastreamento de Chamadas de Abertura e Leitura de Arquivo:**
+         ```bash
+         $ strace -s 256 -e trace=openat,read /challenge/script-strace-secrets
+         ```
+
+      2. **Linhas de Saída Típicas Emitidas pelo Kernel:**
+         ```text
+         openat(AT_FDCWD, "/tmp/.<senha_interceptada_aqui>.key", O_RDONLY) = 3
+         read(3, "strace_sys_secret_778", 256) = 21
+         ```
+         *O `openat` retornou o File Descriptor número 3, e o `read` seguinte leu 21 bytes correspondentes à chave secreta:* `strace_sys_secret_778`.
+
+      ---
+
+      ### 🎯 Seu Objetivo
+
+      O executável `/challenge/script-strace-secrets` valida uma senha secreta internamente em memória sem jamais exibi-la na tela. Seu objetivo é monitorar a execução do programa em nível de chamadas de sistema utilizando o utilitário `strace`, interceptar as syscalls (como `read` ou `open`) no momento em que o segredo é manipulado pelo kernel e utilizá-lo para solucionar o desafio.
 - id: web-pentest-owasp
   name: 'Módulo 4: Segurança Web & OWASP Top 10'
   description: |
@@ -1307,33 +1191,9 @@ modules:
          print(f"Corpo:\n{response.text}")
          ```
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Inspecionar o Binário:**
-         No ambiente do container, o executável do desafio está localizado no caminho absoluto:
-         ```bash
-         /challenge/web-http-headers-cookies
-         ```
-      2. **Executar o Desafio no Terminal:**
-         Execute o binário para iniciar a emulação do Gateway de API da Cyberguard:
-         ```bash
-         /challenge/web-http-headers-cookies
-         ```
-         O programa exibirá o banner operacional e abrirá o prompt interativo (`>> `) aguardando o cabeçalho de autorização.
-      3. **Fornecer o Cabeçalho Administrativo:**
-         No prompt, digite o cabeçalho exato exigido pela política de controle de acesso:
-         ```text
-         X-Cyberguard-Role: admin
-         ```
-         *Alternativa rápida via linha de comando:* Você também pode passar o cabeçalho diretamente como argumento:
-         ```bash
-         /challenge/web-http-headers-cookies "X-Cyberguard-Role: admin"
-         ```
-      4. **Capturar e Submeter a Flag:**
-         O verificador validará o cabeçalho forjado, confirmará a elevação de privilégios para Administrador e imprimirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a string completa da flag e submeta-a na plataforma para concluir o desafio.
+      ### 🎯 Seu Objetivo
+
+      Interagir com a aplicação web diretamente via terminal com o utilitário `curl`. Seu objetivo é inspecionar os cabeçalhos de resposta HTTP, identificar como a aplicação gerencia sessões e privilégios através de cookies ou headers customizados, e forjar uma requisição HTTP enviando as credenciais de sessão administrativa para acessar o endpoint restrito e capturar a flag.
   - id: web-sqli-login-bypass
     name: Bypass de Autenticação via SQL Injection Clássico
     description: |
@@ -1396,31 +1256,9 @@ modules:
          ```
          *O SQLMap realiza varreduras metódicas identificando pontos de injeção booleanos, baseados em erro e baseados em tempo.*
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o executável do desafio:
-         ```bash
-         /challenge/web-sqli-login-bypass
-         ```
-      2. **Fornecer o Payload de Injeção no Prompt Interativo:**
-         O programa solicitará as credenciais para submissão ao backend SQL:
-         * No prompt `Usuário >> `, insira o payload clássico de bypass booleano:
-           ```text
-           ' OR 1=1 --
-           ```
-           *(Você também pode utilizar `admin' --` ou `' OR '1'='1`).*
-         * No prompt `Senha >> `, digite qualquer valor ou pressione Enter (a checagem de senha será neutralizada pelo comentário da query).
-      3. **Alternativa Direta via Linha de Comando:**
-         Você também pode invocar o executável diretamente passando os parâmetros como argumentos:
-         ```bash
-         /challenge/web-sqli-login-bypass "' OR 1=1 --" "senha_dummy"
-         ```
-      4. **Capturar e Submeter a Flag:**
-         O programa demonstrará a query interpolada no banco de dados, confirmará o desvio da lógica booleana e imprimirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag gerada e submeta-a na interface da plataforma.
+      ### 🎯 Seu Objetivo
+
+      Analisar uma rotina de autenticação vulnerável a SQL Injection clássico. Seu objetivo é explorar a concatenação insegura de parâmetros na consulta SQL construindo uma carga útil (*payload*) no campo de entrada que altere a lógica booleana da cláusula `WHERE`, forçando a consulta a retornar verdadeira e autenticar com sucesso como administrador sem conhecer a senha real.
   - id: web-sqli-remediation
     name: 'Laboratório de Defesa: Implementando Prepared Statements'
     description: |
@@ -1477,33 +1315,9 @@ modules:
          const [rows] = await db.execute('SELECT * FROM users WHERE username = ?', [usuario]);
          ```
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o programa de auditoria e revisão de código seguro:
-         ```bash
-         /challenge/web-sqli-remediation
-         ```
-      2. **Analisar as Opções Apresentadas:**
-         O binário apresentará as quatro propostas técnicas para blindagem da aplicação contra SQL Injection:
-         * `[A]` Criar uma lista negra (Blacklist) proibindo as palavras 'SELECT' e 'UNION'
-         * `[B]` Implementar Consultas Parametrizadas (Prepared Statements) separando código de dados
-         * `[C]` Aplicar escape de aspas com expressões regulares (addslashes / regex)
-         * `[D]` Codificar todas as entradas do usuário em Base64 antes de salvar no banco
-      3. **Submeter a Mitigação Canônica:**
-         No prompt interativo `[A/B/C/D]`, selecione a opção **B**:
-         ```text
-         B
-         ```
-         *Alternativa CLI:* Você pode executar o binário passando a resposta diretamente:
-         ```bash
-         /challenge/web-sqli-remediation B
-         ```
-      4. **Capturar e Submeter a Flag:**
-         O sistema homologará a escolha de Prepared Statements, apresentará uma demonstração de por que as abordagens alternativas (como Blacklists) falham em produção e exibirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag e registre a pontuação no portal.
+      ### 🎯 Seu Objetivo
+
+      Demonstrar a ineficácia de mecanismos de defesa baseados em listas de bloqueio (*blacklists*) e compreender a remediação definitiva de injeções SQL. Seu objetivo é contornar a filtragem ingênua do binário e identificar a técnica correta de parametrização (*Prepared Statements*) para comprovar o domínio do desenvolvimento seguro e resgatar a flag.
   - id: web-ssrf-internal-recon
     name: Exploração de SSRF para Acesso à Rede Interna
     description: "### \U0001F4D6 Introdução Teórica\nO Server-Side Request Forgery (SSRF - OWASP Top 10 - A10:2021) é uma\
@@ -1540,15 +1354,10 @@ modules:
       \ de Filtros Simples de URL:**\n   * **Notação Decimal de IPv4:** `http://2130706433/` (converte cada octeto de `127.0.0.1`\
       \ para representação inteira de 32 bits: $127 \times 256^3 + 1$).\n   * **Notação Hexadecimal:** `http://0x7f000001/`.\n\
       \   * **Redirecionamento HTTP 302:** Apontar para um domínio externo controlado que responde redirecionando para `http://169.254.169.254/`.\n\
-      \n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n1. **Localizar e Iniciar o Binário:**\n   No terminal\
-      \ do container, execute o desafio de SSRF:\n   ```bash\n   /challenge/web-ssrf-internal-recon\n   ```\n2. **Fornecer\
-      \ o Alvo Interno de Nuvem ou Loopback:**\n   Quando solicitado pelo prompt `>> `, insira a URL apontando para a API\
-      \ de metadados de nuvem:\n   ```text\n   http://169.254.169.254/latest/meta-data/\n   ```\n   *Alternativa:* Você também\
-      \ pode direcionar para a porta administrativa local:\n   ```text\n   http://127.0.0.1:8080/admin\n   ```\n3. **Disparo\
-      \ Direto via Linha de Comando:**\n   Você pode fornecer a URL diretamente como argumento CLI:\n   ```bash\n   /challenge/web-ssrf-internal-recon\
-      \ \"http://169.254.169.254/latest/meta-data/\"\n   ```\n4. **Capturar e Submeter a Flag:**\n   O backend simulará a\
-      \ requisição interna, exibirá os metadados confidenciais ou a resposta do painel de administração e liberará a flag\
-      \ no formato:\n   ```text\n   pwn.college{...}\n   ```\n   Copie a flag e registre a pontuação no portal.\n"
+      \n### \U0001F3AF Seu Objetivo\n\nExplorar uma falha de Server-Side Request Forgery (SSRF) em um serviço que processa\
+      \ URLs externas. Seu objetivo é fornecer parâmetros que forcem o servidor da aplicação a disparar requisições contra\
+      \ recursos internos protegidos (como serviços em `localhost` ou serviços de metadados em nuvem `169.254.169.254`) para\
+      \ extrair informações confidenciais inacessíveis externamente.\n"
 - id: criptografia-ctf-basics
   name: 'Módulo 5: Criptografia Aplicada & Fundamentos CTF'
   description: |
@@ -1610,16 +1419,10 @@ modules:
       \ | xxd -r -p\n   ```\n   *Saída esperada:*\n   ```text\n   flag{teste}\n   ```\n\n4. **Decodificar ROT13 com `tr` no\
       \ terminal:**\n   ```bash\n   echo \"synt{grfgr}\" | tr 'A-Za-z' 'N-ZA-Mn-za-m'\n   ```\n\n5. **Decodificação Programática\
       \ em Python:**\n   ```python\n   import base64\n\n   payload = \"ZmxhZ3t0ZXN0ZX0=\"\n   resultado = base64.b64decode(payload).decode(\"\
-      utf-8\")\n   print(\"Texto recuperado:\", resultado)\n   ```\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo\
-      \ a Passo)\n1. **Localizar e Iniciar o Binário:**\n   No terminal do container, execute o executável do desafio:\n \
-      \  ```bash\n   /challenge/crypto-encodings-pipeline\n   ```\n   O binário apresentará a string interceptada: `ZmxhZ3t0ZXN0ZX0=`.\n\
-      2. **Decodificar o Payload no Terminal:**\n   Em uma linha de comando do Linux, decodifique a string com o utilitário\
-      \ nativo:\n   ```bash\n   echo -n \"ZmxhZ3t0ZXN0ZX0=\" | base64 -d\n   ```\n   O comando exibirá o texto original em\
-      \ claro:\n   ```text\n   flag{teste}\n   ```\n3. **Enviar a Resposta ao Desafio:**\n   No prompt do binário (`>> `),\
-      \ digite o texto em claro recuperado:\n   ```text\n   flag{teste}\n   ```\n   *Alternativa rápida:* Você pode executar\
-      \ o binário passando a resposta diretamente:\n   ```bash\n   /challenge/crypto-encodings-pipeline \"flag{teste}\"\n\
-      \   ```\n4. **Capturar e Submeter a Flag:**\n   O programa validará a decodificação da string Base64 e imprimirá a flag\
-      \ no formato:\n   ```text\n   pwn.college{...}\n   ```\n   Copie a flag e registre a pontuação na plataforma.\n"
+      utf-8\")\n   print(\"Texto recuperado:\", resultado)\n   ```\n\n### \U0001F3AF Seu Objetivo\n\nUma mensagem confidencial\
+      \ foi submetida a uma cadeia sequencial de múltiplos formatos de representação e encoding (Hexadecimal, Base64, etc.).\
+      \ Seu objetivo é analisar a estrutura dos dados, reconhecer cada formato presente na cadeia e reverter o processo etapa\
+      \ por etapa até restaurar o texto em claro original da flag.\n"
   - id: crypto-hash-identification
     name: Identificação e Análise de Hashes
     description: "### \U0001F4D6 Introdução Teórica\nA identificação precisa de formatos de hash e algoritmos criptográficos\
@@ -1657,18 +1460,10 @@ modules:
       \   import bcrypt\n\n   senha = b\"Cyberguard@2026!\"\n   # Gera salt aleatório e aplica work factor 12:\n   hash_bcrypt\
       \ = bcrypt.hashpw(senha, bcrypt.gensalt(rounds=12))\n   print(f\"Hash gerado: {hash_bcrypt.decode()}\")\n\n   # Validação\
       \ segura resistente a ataques de temporização:\n   confere = bcrypt.checkpw(senha, hash_bcrypt)\n   print(\"Senha válida?\"\
-      , confere)\n   ```\n\n### \U0001F3AF O que fazer para resolver o desafio (Passo a Passo)\n1. **Localizar e Iniciar o\
-      \ Binário:**\n   No terminal do container, execute o desafio de identificação criptográfica:\n   ```bash\n   /challenge/crypto-hash-identification\n\
-      \   ```\n2. **Analisar a Questão do Laboratório:**\n   O programa exibirá os artefatos criptográficos e fará a pergunta\
-      \ técnica:\n   \"Por que funções de hash lentas e adaptativas com salt (como Bcrypt e Argon2) são obrigatórias para\
-      \ armazenamento de senhas corporativas, em vez de MD5 ou SHA-256?\"\n   Opções:\n   * `[1]` Porque MD5 é uma cifra reversível\
-      \ que usa chave privada\n   * `[2]` Porque o cálculo propositalmente lento somado ao Salt exclusivo anula Rainbow Tables\
-      \ e inviabiliza força bruta massiva em GPUs\n   * `[3]` Porque Bcrypt comprime senhas com perda de integridade para\
-      \ economizar disco\n   * `[4]` Porque funções rápidas sofrem de vulnerabilidade de overflow no buffer do kernel\n3.\
-      \ **Submeter a Opção Correta:**\n   No prompt `[1/2/3/4]`, digite a opção **2**:\n   ```text\n   2\n   ```\n   *(Ou\
-      \ execute diretamente com argumento: `/challenge/crypto-hash-identification 2`).*\n4. **Capturar e Submeter a Flag:**\n\
-      \   O binário confirmará a resposta correta, detalhará as diretrizes de armazenamento seguro do NIST e exibirá a flag\
-      \ no formato:\n   ```text\n   pwn.college{...}\n   ```\n   Copie a flag e registre a pontuação no portal.\n"
+      , confere)\n   ```\n\n### \U0001F3AF Seu Objetivo\n\nInspecionar amostras de hashes criptográficos desconhecidos e identificar\
+      \ os algoritmos utilizados para gerá-los. Seu objetivo é analisar o comprimento em caracteres, o formato de codificação\
+      \ e a entropia das amostras para classificar corretamente se tratam-se de algoritmos clássicos de digest (MD5, SHA-1,\
+      \ SHA-256) ou funções modernas de derivação de chave com salt (como bcrypt), fornecendo a classificação correta ao validador.\n"
   - id: crypto-john-cracking
     name: Quebra de Hashes com John the Ripper / Hashcat
     description: |
@@ -1727,42 +1522,9 @@ modules:
          * `-m 13100`: Kerberos 5 TGS-REP (Kerberoasting)
          * `-m 3200`: Bcrypt
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o desafio:
-         ```bash
-         /challenge/crypto-john-cracking
-         ```
-         O programa exibirá o hash MD5 alvo:
-         ```text
-         e10adc3949ba59abbe56e057f20f883e
-         ```
-      2. **Quebrar o Hash com John the Ripper no Terminal:**
-         Em uma janela de terminal, salve o hash e invoque o John:
-         ```bash
-         echo "e10adc3949ba59abbe56e057f20f883e" > /tmp/hash.txt
-         john --format=raw-md5 /tmp/hash.txt
-         john --show --format=raw-md5 /tmp/hash.txt
-         ```
-         O John the Ripper identificará que a senha em texto claro é:
-         ```text
-         123456
-         ```
-      3. **Submeter a Senha Recuperada:**
-         No prompt do desafio (`>> `), digite a senha decifrada:
-         ```text
-         123456
-         ```
-         *Alternativa:* Invoque o binário diretamente com o parâmetro:
-         ```bash
-         /challenge/crypto-john-cracking 123456
-         ```
-      4. **Capturar e Submeter a Flag:**
-         O programa validará que o hash MD5 de `123456` confere com o alvo e exibirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag e registre a pontuação no portal.
+      ### 🎯 Seu Objetivo
+
+      Realizar um ataque de dicionário offline contra um arquivo de hashes de senhas. Seu objetivo é utilizar a ferramenta John the Ripper em conjunto com uma lista de senhas conhecidas para quebrar o hash de uma credencial fraca, descobrindo a senha em texto claro e utilizando-a para autenticar no desafio e liberar a flag.
   - id: crypto-stego-basics
     name: Esteganografia e Análise de Metadados em Imagens
     description: "### \U0001F4D6 Introdução Teórica\nA palavra **Esteganografia** tem origem grega (*steganos* = oculto /\
@@ -1796,17 +1558,10 @@ modules:
       \ /tmp/suspicious.bin\n   ```\n   *Exibe tags EXIF, dados de geolocalização e comentários embutidos.*\n\n5. **Análise\
       \ de Planos LSB em Imagens PNG com `zsteg`:**\n   ```bash\n   zsteg -a imagem.png\n   ```\n   *Testa automaticamente\
       \ todas as combinações de canais de cor e ordens de bits LSB.*\n\n6. **Inspeção Hexadecimal de Cabeçalhos com `xxd`\
-      \ ou `hexdump`:**\n   ```bash\n   xxd -l 64 /tmp/suspicious.bin\n   ```\n\n### \U0001F3AF O que fazer para resolver\
-      \ o desafio (Passo a Passo)\n1. **Localizar e Iniciar o Binário:**\n   No terminal do container, execute o desafio de\
-      \ esteganografia:\n   ```bash\n   /challenge/crypto-stego-basics\n   ```\n   O binário criará e depositará o artefato\
-      \ suspeito no sistema de arquivos temporário:\n   ```text\n   /tmp/suspicious.bin\n   ```\n2. **Inspecionar as Strings\
-      \ do Artefato:**\n   Em uma sessão do terminal, filtre as sequências de texto do arquivo gerado procurando pelo padrão\
-      \ `FLAG_HIDDEN_STEGO`:\n   ```bash\n   strings /tmp/suspicious.bin | grep FLAG_HIDDEN_STEGO\n   ```\n   A ferramenta\
-      \ revelará a linha embutida nos bytes do binário:\n   ```text\n   ### METADATA_PAYLOAD: FLAG_HIDDEN_STEGO_cyberguard2026\
-      \ ###\n   ```\n3. **Submeter a Chave Esteganografada:**\n   No prompt do desafio (`>> `), forneça a chave secreta extraída:\n\
-      \   ```text\n   cyberguard2026\n   ```\n   *(Ou submeta diretamente via CLI: `/challenge/crypto-stego-basics cyberguard2026`).*\n\
-      4. **Capturar e Submeter a Flag:**\n   O programa homologará a chave extraída da estrutura de bytes e exibirá a flag\
-      \ no formato:\n   ```text\n   pwn.college{...}\n   ```\n   Submeta a flag na plataforma para concluir o módulo de criptografia.\n"
+      \ ou `hexdump`:**\n   ```bash\n   xxd -l 64 /tmp/suspicious.bin\n   ```\n\n### \U0001F3AF Seu Objetivo\n\nInvestigar\
+      \ um arquivo de mídia digital (imagem) que oculta dados confidenciais em sua estrutura interna. Seu objetivo é aplicar\
+      \ técnicas básicas de esteganografia e análise de artefatos (como inspeção de sequências de strings imprimíveis ou extração\
+      \ de metadados e blocos anexados) para revelar a mensagem secreta oculta na imagem e obter a flag.\n"
 - id: forense-defesa
   name: 'Módulo 6: Forense Digital, Resposta a Incidentes (DFIR) & Hardening'
   description: |
@@ -1847,7 +1602,7 @@ modules:
   challenges:
   - id: dfir-volatility-order
     name: 'Triage Emergencial: Respeitando a RFC 3227'
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Em computação forense e resposta a incidentes de segurança (DFIR - *Digital Forensics and Incident Response*), o primeiro contato com um sistema comprometido dita o sucesso ou o fracasso de toda a investigação pericial. Diante de um servidor sob ataque ativo, a reação instintiva de operadores destreinados costuma ser desligar imediatamente o equipamento da tomada ou iniciar a cópia de arquivos de log do disco rígido. Essa atitude catastrófica destrói as evidências mais ricas e definitivas do ataque.
@@ -1933,48 +1688,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga rigorosamente as instruções abaixo dentro do container para demonstrar o domínio sobre a RFC 3227 e desbloquear a flag:
-
-      1. **Invoque o binário do desafio:**
-         No terminal, execute o desafio de triagem forense:
-         ```bash
-         /challenge/dfir-volatility-order
-         ```
-
-      2. **Revise a aula teórica integrada (Opcional):**
-         Caso deseje rever os parâmetros normativos da RFC 3227 diretamente no terminal:
-         ```bash
-         /challenge/dfir-volatility-order --help
-         ```
-
-      3. **Avalie o cenário operacional apresentado:**
-         O binário apresentará a seguinte questão:
-         > *"Diante de um servidor ativo sob ataque, qual evidência deve ser adquirida EM PRIMEIRO LUGAR conforme a RFC 3227?"*
-         * A) Disco Rígido e Logs salvos (/var/log/auth.log)
-         * **B) Memória RAM física volátil (processos vivos, chaves, sockets)**
-         * C) Fitas de Backup externo e imagens de restauração
-         * D) Arquivos de configuração do sistema em /etc/
-
-      4. **Forneça a resposta correta:**
-         Digite **`B`** (ou `RAM`) no prompt interativo e pressione Enter.
-         *Alternativamente, passe a resposta diretamente como argumento:*
-         ```bash
-         /challenge/dfir-volatility-order B
-         ```
-
-      5. **Capture e submeta a flag:**
-         O sistema validará a resposta, confirmará a anexação da imagem da RAM à cadeia de custódia e imprimirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: RESPOSTA EXATA! OPERAÇÃO BEM-SUCEDIDA.
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a string completa `pwn.college{...}` e submeta-a para pontuar.
+      Aplicar as diretrizes metodológicas da norma RFC 3227 sobre preservação de evidências digitais. Seu objetivo é organizar as diferentes fontes de evidência do sistema (registradores, memória RAM, tráfego de rede, armazenamento em disco e backups) em ordem estrita de volatilidade, garantindo que os dados mais efêmeros sejam coletados primeiro para validar a perícia e receber a flag.
   - id: dfir-memory-dump-inspection
     name: Análise de Imagem de Memória RAM com Volatility
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       A análise forense de memória volátil é um dos ramos mais avançados e reveladores da cibersegurança defensiva. Enquanto a análise de discos rígidos e sistemas de arquivos busca artefatos persistentes gravados no passado, a inspeção da memória RAM (*memory forensics*) revela o estado exato em que o computador se encontrava no momento preciso da captura: processos ativos em execução, fios de execução (*threads*), conexões de rede abertas, credenciais de autenticação decifradas e códigos maliciosos invisíveis no disco.
@@ -1988,7 +1707,7 @@ modules:
       ```
       +-----------------------------------------------------------------------------------------+
       |                               IMAGEM BRUTA DA MEMÓRIA RAM                               |
-      |                              (/tmp/cyberguard_ram_dump.raw)                             |
+      |                              (/tmp/<token_encontrado_na_memoria>.raw)                             |
       +-----------------------------------------------------------------------------------------+
       |  Kernel Structures: task_struct (PID 1337, Comm: "rev_tunnel.elf")                      |
       |  Active Socket:     192.168.10.45:4444 -> 10.0.0.1:8443 (Túnel C2 Ativo)               |
@@ -2020,29 +1739,29 @@ modules:
       #### 1. Varredura com Volatility 3
       ```bash
       # Listar processos em execução na imagem de memória:
-      vol -f /tmp/cyberguard_ram_dump.raw linux.pslist
+      vol -f /tmp/<token_encontrado_na_memoria>.raw linux.pslist
 
       # Localizar injeções de código e regiões RWX:
-      vol -f /tmp/cyberguard_ram_dump.raw linux.malfind
+      vol -f /tmp/<token_encontrado_na_memoria>.raw linux.malfind
 
       # Inspecionar sockets de rede abertos:
-      vol -f /tmp/cyberguard_ram_dump.raw linux.netscan
+      vol -f /tmp/<token_encontrado_na_memoria>.raw linux.netscan
 
       # Recuperar linhas de comando digitadas:
-      vol -f /tmp/cyberguard_ram_dump.raw linux.bash
+      vol -f /tmp/<token_encontrado_na_memoria>.raw linux.bash
       ```
 
       #### 2. Extração Rápida de Strings e Chaves em Dumps Brutos (Raw)
       Quando o perfil do kernel não está imediatamente disponível, utilitários GNU permitem localizar padrões textuais conhecidos:
       ```bash
       # Extrair todas as cadeias de texto imprimíveis e filtrar termos de chave:
-      strings -a /tmp/cyberguard_ram_dump.raw | grep -i MEM_KEY
+      strings -a /tmp/<token_encontrado_na_memoria>.raw | grep -i MEM_KEY
 
       # Extrair padrões com regex direta sobre o binário:
-      grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
+      grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/<token_encontrado_na_memoria>.raw
 
       # Inspecionar o offset com contexto de bytes em hexadecimal (xxd):
-      xxd -s 0x200 -l 128 /tmp/cyberguard_ram_dump.raw
+      xxd -s 0x200 -l 128 /tmp/<token_encontrado_na_memoria>.raw
       ```
 
       #### 3. Saída Esperada no Terminal
@@ -2057,51 +1776,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para analisar a imagem de memória e validar a resolução:
-
-      1. **Inicie o laboratório do desafio:**
-         Execute o executável `/challenge/dfir-memory-dump-inspection`:
-         ```bash
-         /challenge/dfir-memory-dump-inspection
-         ```
-         *O desafio gerará a imagem simulada de memória em `/tmp/cyberguard_ram_dump.raw`.*
-
-      2. **Inspecione a imagem de memória gerada em `/tmp`:**
-         Utilize o comando `strings` ou `grep` para vasculhar o arquivo de despejo de memória em busca do artefato criptográfico:
-         ```bash
-         strings /tmp/cyberguard_ram_dump.raw | grep MEM_KEY
-         ```
-         *Alternativa com grep de bytes:*
-         ```bash
-         grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
-         ```
-
-      3. **Identifique a chave volátil:**
-         A inspeção revelará o token de cifragem AES-256 do malware:
-         ```text
-         MEM_KEY_AES_256_CYBERGUARD_LIVE
-         ```
-
-      4. **Submeta a chave ao binário validador:**
-         Passe a chave identificada como argumento para o desafio:
-         ```bash
-         /challenge/dfir-memory-dump-inspection MEM_KEY_AES_256_CYBERGUARD_LIVE
-         ```
-         *Ou digite-a no prompt interativo caso execute sem argumentos.*
-
-      5. **Capture a flag:**
-         O sistema validará o artefato recuperado e liberará a flag de conclusão:
-         ```text
-         [+] DEBRIEFING TÉCNICO: CHAVE AES-256 RECUPERADA DA MEMÓRIA VOLÁTIL!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a flag no formato `pwn.college{...}` para submissão.
+      Realizar a análise forense de um despejo (*dump*) de memória volátil de um sistema comprometido. Seu objetivo é investigar o estado dos processos em execução, conexões de rede e comandos executados para rastrear as ações do invasor, isolar o artefato malicioso persistido na memória e capturar a flag.
   - id: dfir-linux-hardening-audit
     name: Hardening de Bastion Host e Serviço SSH
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Em segurança da informação defensiva, **Hardening** (endurecimento de sistemas) é o processo metódico e proativo de mitigação de vulnerabilidades com o objetivo de reduzir ao máximo a superfície de ataque de um sistema operacional, serviço de rede ou aplicação. A premissa central é que instalações padrão de sistemas operacionais privilegiam compatibilidade e facilidade de uso em detrimento da segurança, deixando portas abertas, protocolos legados ativos e parâmetros excessivamente permissivos.
@@ -2182,54 +1862,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para auditar a configuração e responder corretamente ao desafio:
-
-      1. **Inicie o desafio de auditoria:**
-         Execute o executável `/challenge/dfir-linux-hardening-audit`:
-         ```bash
-         /challenge/dfir-linux-hardening-audit
-         ```
-         *O desafio gerará o arquivo simulado de auditoria em `/tmp/sshd_config_audit`.*
-
-      2. **Inspecione o arquivo auditado:**
-         Examine o arquivo de configuração gerado para identificar as fragilidades:
-         ```bash
-         cat /tmp/sshd_config_audit
-         ```
-         *Observe as diretrizes permissivas:*
-         ```text
-         PermitRootLogin yes
-         PasswordAuthentication yes
-         MaxAuthTries 10
-         ```
-
-      3. **Avalie as opções de remediação:**
-         O desafio questionará qual conjunto de diretrizes no `sshd_config` eleva substancialmente a segurança do host e aplica conformidade CIS:
-         * 1) `PermitRootLogin yes` e `PasswordAuthentication yes`
-         * **2) `PermitRootLogin no` e `PasswordAuthentication no` (exigindo chaves criptográficas)**
-         * 3) `MaxAuthTries 100` e `PermitEmptyPasswords yes`
-         * 4) `Port 22` sem qualquer restrição de usuário ou chave
-
-      4. **Forneça a alternativa correta:**
-         Digite **`2`** no prompt interativo e pressione Enter.
-         *Alternativamente, envie como argumento de linha de comando:*
-         ```bash
-         /challenge/dfir-linux-hardening-audit 2
-         ```
-
-      5. **Capture e registre a flag:**
-         O sistema confirmará a validação da política de hardening CIS e imprimirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: POLÍTICA DE HARDENING SSH CONFIRMADA!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a string completa `pwn.college{...}` e submeta-a para pontuar.
+      Auditar a postura de segurança e as configurações de um servidor Linux corporativo. Seu objetivo é inspecionar arquivos críticos de configuração do sistema (como `/etc/ssh/sshd_config`, permissões de arquivos de senhas e políticas de contas) para identificar a vulnerabilidade ou falha de hardening presente no ambiente e reportá-la para receber a flag.
   - id: dfir-log-correlation-mitre
     name: Correlação de Logs e Mapeamento MITRE ATT&CK
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       No ecossistema moderno de defesa cibernética (Blue Team e SOC - *Security Operations Center*), a detecção de ameaças não se limita à análise isolada de eventos. Um único login com falha é um ruído corriqueiro de rede; no entanto, cinquenta logins falhados seguidos de um login bem-sucedido via conta de serviço e o agendamento imediato de uma tarefa no Cron representam um incidente crítico de intrusão e movimentação lateral. A capacidade de conectar esses pontos é a essência do **SIEM** e do **Mapeamento Tático MITRE ATT&CK**.
@@ -2277,7 +1915,7 @@ modules:
       aureport -x --summary
       ```
 
-      #### 2. Amostra de Telemetria Correlacionada (`/tmp/cyberguard_auth_audit.log`)
+      #### 2. Amostra de Telemetria Correlacionada (`/tmp/<resultado_da_auditoria>.log`)
       ```text
       Oct 26 03:14:10 sec-srv-01 sshd[1204]: Failed password for invalid user admin from 192.168.1.100 port 49152 ssh2
       Oct 26 03:14:15 sec-srv-01 sshd[1205]: Failed password for invalid user admin from 192.168.1.100 port 49154 ssh2
@@ -2309,51 +1947,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para analisar os logs e responder ao desafio:
-
-      1. **Inicie o desafio de correlação de logs:**
-         Execute `/challenge/dfir-log-correlation-mitre` no terminal:
-         ```bash
-         /challenge/dfir-log-correlation-mitre
-         ```
-         *O simulador criará o arquivo `/tmp/cyberguard_auth_audit.log`.*
-
-      2. **Analise o histórico de eventos:**
-         Examine o conteúdo do arquivo gerado para reconstruir a cadeia do ataque:
-         ```bash
-         cat /tmp/cyberguard_auth_audit.log
-         ```
-         *Identifique o encadeamento:*
-         - Falhas consecutivas de senha originadas de `192.168.1.100`.
-         - Sucesso de autenticação via chave pública para a conta `svc_backup`.
-         - Execução via Cron de cópia do `/bin/bash` com atribuição de bit SUID (`chmod +s /tmp/.pwned`).
-         - Leitura privilegiada da `/flag`.
-
-      3. **Avalie a pergunta conceitual:**
-         O binário apresentará a seguinte questão:
-         > *"O que é a matriz MITRE ATT&CK e para que serve na operação do Blue Team?"*
-         * 1) Um software antivírus open-source para bloqueio de malware em endpoints
-         * **2) Uma base de conhecimento global de táticas e técnicas adversárias utilizada para orientar regras de detecção, mapear campanhas e organizar a telemetria**
-         * 3) Uma linguagem de programação exclusiva para desenvolvimento de exploits
-         * 4) Um protocolo de rede proprietário para transporte de logs cifrados
-
-      4. **Selecione a resposta correta:**
-         Digite **`2`** no prompt interativo e pressione Enter.
-         *Ou execute passando diretamente o parâmetro:*
-         ```bash
-         /challenge/dfir-log-correlation-mitre 2
-         ```
-
-      5. **Capture a flag:**
-         O sistema validará o mapeamento conceitual e emitirá a flag de conclusão:
-         ```text
-         [+] DEBRIEFING TÉCNICO: MAPEAMENTO MITRE ATT&CK CONSOLIDADO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a flag no formato `pwn.college{...}` para pontuar no painel.
+      Analisar eventos de log de autenticação e auditoria do sistema em busca de indicadores de ataque (*Indicators of Attack*). Seu objetivo é correlacionar a sequência de eventos suspeitos registrados nos logs com a técnica correspondente do framework MITRE ATT&CK, preenchendo o relatório de incidente para comprovar a atribuição da atividade adversária e obter a flag.
 - id: active-directory-infra
   name: 'Módulo 7: Infraestrutura Corporativa & Active Directory'
   description: |
@@ -2436,32 +2032,9 @@ modules:
          ldapsearch -x -H ldap://dc01.corp.cyberguard.local      -b "DC=corp,DC=cyberguard,DC=local"      "(userAccountControl:1.2.840.113556.1.4.803:=4194304)"      sAMAccountName
          ```
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o desafio de governança e infraestrutura Active Directory:
-         ```bash
-         /challenge/ad-ldap-enumeration
-         ```
-      2. **Analisar a Pergunta do Laboratório:**
-         O programa exibirá a questão técnica fundamental sobre a arquitetura corporativa:
-         "Qual é a função primordial de um Domain Controller (DC) no Active Directory?"
-         Opções:
-         * `[A]` Funcionar meramente como um roteador de pacotes TCP e comutador de nível 3
-         * `[B]` Autenticar usuários/serviços e centralizar a base mestra de segurança do domínio (NTDS.dit)
-         * `[C]` Substituir switches de borda e acelerar conexões Wi-Fi sem criptografia
-         * `[D]` Converter endereços IPv4 em IPv6 através de NAT de camada de enlace
-      3. **Submeter a Resposta Correta:**
-         No prompt interativo `[A/B/C/D]`, selecione a opção **B**:
-         ```text
-         B
-         ```
-         *(Ou execute diretamente com argumento CLI: `/challenge/ad-ldap-enumeration B`).*
-      4. **Capturar e Submeter a Flag:**
-         O binário confirmará a resposta, apresentará o debriefing sobre a centralidade do banco `NTDS.dit` e imprimirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag e submeta-a no painel do dojo.
+      ### 🎯 Seu Objetivo
+
+      Enumerar informações estruturais de um domínio Active Directory utilizando consultas LDAP. Seu objetivo é consultar a árvore de diretórios para descobrir contas de usuários com privilégios elevados, mapear o grupo de Domain Admins e identificar propriedades e descrições de contas que revelem informações confidenciais para responder à auditoria do desafio.
   - id: ad-kerberoasting-offline
     name: Identificação de SPNs e Ataque Kerberoasting
     description: |
@@ -2519,32 +2092,9 @@ modules:
          .\Rubeus.exe kerberoast /outfile:tgs_hashes.txt
          ```
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o desafio de Kerberoasting:
-         ```bash
-         /challenge/ad-kerberoasting-offline
-         ```
-      2. **Analisar a Pergunta Conceitual:**
-         O programa exibirá a questão técnica sobre o mecanismo operacional do ataque:
-         "Como é caracterizado tecnicamente o ataque conhecido como Kerberoasting?"
-         Opções:
-         * `[1]` Esgotamento de pacotes SYN contra a porta UDP 53 do servidor DNS do domínio
-         * `[2]` Solicitar tickets de serviço (TGS) de contas com SPN ao KDC e quebrar o hash da senha offline
-         * `[3]` Injeção de código SQL em estações de trabalho de usuários comuns sem rede
-         * `[4]` Interceptar o tráfego físico Wi-Fi para clonar o endereço MAC do switch core
-      3. **Submeter a Opção Correta:**
-         No prompt do desafio `[1/2/3/4]`, insira a opção **2**:
-         ```text
-         2
-         ```
-         *(Ou invoque diretamente com argumento: `/challenge/ad-kerberoasting-offline 2`).*
-      4. **Capturar e Submeter a Flag:**
-         O programa validará a resposta, fornecerá o debriefing operacional sobre segurança de contas de serviço e exibirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag e registre a pontuação no portal.
+      ### 🎯 Seu Objetivo
+
+      Compreender e explorar a técnica de Kerberoasting contra o protocolo Kerberos. Seu objetivo é identificar contas de serviço vinculadas a Service Principal Names (SPNs), solicitar e extrair o ticket de serviço TGS criptografado e realizar a quebra de senha offline desse ticket para recuperar a senha em texto claro da conta de serviço.
   - id: ad-bloodhound-path
     name: Mapeamento de Rotas de Ataque com BloodHound
     description: |
@@ -2611,31 +2161,9 @@ modules:
          A Microsoft recomenda o isolamento estrito de ativos:
          * **Tier 0:** Domain Controllers, contas de Domain Admins e servidores PKI. Contas de Tier inferior (HelpDesk, estações comuns) jamais podem ter qualquer direito de escrita ou acesso sobre objetos de Tier 0.
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-      1. **Localizar e Iniciar o Binário:**
-         No terminal do container, execute o desafio de análise de grafos:
-         ```bash
-         /challenge/ad-bloodhound-path
-         ```
-      2. **Examinar o Grafo Exibido no Terminal:**
-         O programa exibirá a rota de permissões transitivas mapeada:
-         ```text
-         [User: bob] -> MemberOf -> [Group: HelpDesk] -> GenericAll -> [User: srv_backup] -> WriteDacl -> [Group: Domain Admins]
-         ```
-         E fará a pergunta:
-         "Qual é o usuário comum inicial que pode explorar essa cadeia transitiva de permissões para escalar privilégios até o grupo 'Domain Admins'?"
-      3. **Identificar e Submeter o Usuário Inicial:**
-         No prompt interativo `>> `, digite o identificador da conta de origem:
-         ```text
-         bob
-         ```
-         *(Ou execute diretamente via CLI: `/challenge/ad-bloodhound-path bob`).*
-      4. **Capturar e Submeter a Flag:**
-         O binário confirmará a análise correta da rota do BloodHound e exibirá a flag no formato:
-         ```text
-         pwn.college{...}
-         ```
-         Copie a flag e registre a pontuação no portal.
+      ### 🎯 Seu Objetivo
+
+      Mapear e analisar caminhos de escalação de privilégios em um ambiente de Active Directory modelado como grafo. Seu objetivo é investigar as relações de controle, direitos de escrita (GenericAll, WriteDacl) e sessões ativas para descobrir o caminho mais curto (*shortest path*) que permite a uma conta sem privilégios obter controle total sobre o domínio (*Domain Admin*).
 - id: engenharia-reversa-x86
   name: 'Módulo 8: Engenharia Reversa x86/x64 & Arquitetura de CPU'
   description: |
@@ -2676,7 +2204,7 @@ modules:
   challenges:
   - id: rev-static-strings-objdump
     name: Análise Estática Fundamental (Strings & Objdump)
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       A Engenharia Reversa de software é a disciplina dedicada a desconstruir um artefato compilado para compreender seus algoritmos internos, desvendar mecanismos de proteção ou identificar vulnerabilidades sem ter acesso prévio ao código-fonte original. No fluxo de análise de binários, o primeiro e mais seguro passo metodológico é a **Análise Estática**.
@@ -2752,57 +2280,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para conduzir a análise estática e extrair a chave do binário:
-
-      1. **Inicie o desafio para disponibilizar a amostra:**
-         Execute `/challenge/rev-static-strings-objdump`:
-         ```bash
-         /challenge/rev-static-strings-objdump
-         ```
-         *O ambiente gerará o binário simulado para análise em `/tmp/malware_sample.elf`.*
-
-      2. **Inspecione a arquitetura do artefato com `file`:**
-         Confirme que se trata de um binário ELF de 64 bits:
-         ```bash
-         file /tmp/malware_sample.elf
-         ```
-
-      3. **Extraia as cadeias de texto da seção de dados com `strings`:**
-         Execute o utilitário `strings` filtrando palavras-chave de interesse:
-         ```bash
-         strings -a /tmp/malware_sample.elf | grep REVERSE
-         ```
-         *Você também pode inspecionar diretamente o dump da seção `.rodata`:*
-         ```bash
-         objdump -s -j .rodata /tmp/malware_sample.elf
-         ```
-
-      4. **Identifique a chave estática:**
-         O terminal revelará a constante gravada na seção de dados:
-         ```text
-         REVERSE_STATIC_KEY_984
-         ```
-
-      5. **Submeta a chave ao validador da missão:**
-         Envie a chave encontrada como parâmetro de execução do desafio:
-         ```bash
-         /challenge/rev-static-strings-objdump REVERSE_STATIC_KEY_984
-         ```
-         *Ou insira-a no prompt interativo se invocado sem argumentos.*
-
-      6. **Capture e registre a flag:**
-         O binário homologará o resultado da análise estática e exibirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: CHAVE ESTÁTICA LOCALIZADA COM SUCESSO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação.
+      Realizar a engenharia reversa estática de um binário compilado sem código-fonte. Seu objetivo é utilizar ferramentas como `strings` e `objdump` para inspecionar os símbolos, as seções de texto e as instruções em assembly do executável, identificando como o programa processa a entrada do usuário e descobrindo a chave necessária para acionar o fluxo de sucesso.
   - id: rev-gdb-rip-inspection
     name: 'Depuração Dinâmica com GDB: Inspecionando o RIP'
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       A Engenharia Reversa Dinâmica estuda o binário **durante sua execução ativa** em um ambiente controlado e instrumentado por um depurador (*debugger*), como o GDB (*GNU Debugger*). Enquanto a análise estática examina o código gravado no disco, a análise dinâmica permite congelar a execução a cada ciclo de instrução, inspecionar a memória RAM em tempo real e monitorar os registradores internos do processador.
@@ -2897,48 +2380,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga as instruções abaixo para validar a compreensão conceitual do registrador RIP:
-
-      1. **Invoque o binário do desafio:**
-         No terminal, execute o desafio de arquitetura x86_64:
-         ```bash
-         /challenge/rev-gdb-rip-inspection
-         ```
-
-      2. **Revise a aula teórica (Opcional):**
-         Caso deseje visualizar a dissecação completa dos registradores da CPU:
-         ```bash
-         /challenge/rev-gdb-rip-inspection --help
-         ```
-
-      3. **Analise a questão apresentada:**
-         O desafio exibirá a seguinte pergunta:
-         > *"Em processadores de arquitetura x86 e x86_64, qual é a função exata do registrador EIP / RIP?"*
-         * 1) Armazenar o resultado de operações lógicas e de comparação (Zero Flag)
-         * **2) Armazenar o endereço de memória da PRÓXIMA instrução a ser executada pela CPU**
-         * 3) Armazenar o valor retornado pela última chamada de função executada
-         * 4) Armazenar o endereço fixo da base do quadro de pilha (Stack Frame)
-
-      4. **Responda com a opção correta:**
-         Digite **`2`** no prompt interativo e pressione Enter.
-         *Alternativamente, envie diretamente como argumento:*
-         ```bash
-         /challenge/rev-gdb-rip-inspection 2
-         ```
-
-      5. **Capture a flag:**
-         O sistema confirmará a consolidação do conceito de ponteiro de instrução e imprimirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: CONCEITO DE RIP CONSOLIDADO COM PERFEIÇÃO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a flag no formato `pwn.college{...}` e submeta-a para registrar sua pontuação.
+      Analisar a execução de um programa x86_64 em tempo real utilizando o depurador GDB. Seu objetivo é definir pontos de parada (*breakpoints*), acompanhar o valor dos registradores da CPU — em especial o registrador `RIP`, que aponta soberanamente para a próxima instrução a ser executada — e inspecionar os valores na memória no instante em que as verificações de acesso são avaliadas.
   - id: rev-control-flow-cmp-jmp
     name: Revertendo Desvios Condicionais (CMP, JZ, JNZ)
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Em operações reais de engenharia reversa — seja para analisar a lógica de validação de um malware, contornar rotinas de licenciamento (*crackmes*) ou auditar controles de integridade — os programas raramente utilizam senhas puras em texto claro. Em vez disso, a lógica de autorização depende de equações aritméticas seguidas por instruções de **controle de fluxo e desvios condicionais** baseados nas flags do processador x86_64.
@@ -3035,46 +2482,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para resolver a equação assembly e obter a flag:
-
-      1. **Inicie o binário do desafio:**
-         Execute `/challenge/rev-control-flow-cmp-jmp`:
-         ```bash
-         /challenge/rev-control-flow-cmp-jmp
-         ```
-
-      2. **Analise as instruções de máquina desmontadas:**
-         O terminal apresentará o trecho assembly de validação:
-         ```text
-         imul eax, eax, 0x7    ; multiplica entrada por 7
-         cmp  eax, 0x12d       ; compara com 301 em decimal
-         jne  <rotina_bloqueio>
-         ```
-
-      3. **Calcule o valor reverso:**
-         - Converta `0x12d` para decimal: $1 \times 256 + 2 \times 16 + 13 = 301$.
-         - Divida 301 pelo fator multiplicador 7: $\frac{301}{7} = 43$.
-
-      4. **Envie o valor calculado:**
-         Digite **`43`** no prompt interativo e pressione Enter.
-         *Ou execute fornecendo o número diretamente como argumento:*
-         ```bash
-         /challenge/rev-control-flow-cmp-jmp 43
-         ```
-
-      5. **Capture a flag:**
-         O binário confirmará que $43 \times 7 = 301$, ativando a Zero Flag ($\text{ZF} = 1$) e liberando a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: DESVIO CONDICIONAL RESOLVIDO COM SUCESSO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a string completa `pwn.college{...}` e submeta-a no painel do dojo.
+      Compreender o fluxo de controle em baixo nível analisando instruções de comparação e desvio condicional em assembly (`cmp`, `test`, `je`, `jne`, etc.). Seu objetivo é analisar a lógica de bifurcação do programa e determinar qual entrada fará com que as flags da CPU satisfaçam a condição necessária para saltar para o bloco de código que revela a flag.
   - id: rev-ghidra-decompilation
     name: Descompilação Avançada com Ghidra
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       A Engenharia Reversa contemporânea foi profundamente transformada pela disponibilização pública da suíte **Ghidra**, desenvolvida pela Agência de Segurança Nacional dos Estados Unidos (NSA). Enquanto desmontadores tradicionais (*disassemblers* como o `objdump`) apenas traduzem opcodes hexadecimais em mnemônicos crus de assembly x86_64, descompiladores modernos reconstroem a lógica do programa de volta em pseudocódigo na linguagem C de alto nível.
@@ -3147,45 +2560,9 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para consolidar os conceitos de descompilação e análise de binários:
-
-      1. **Inicie o executável do desafio:**
-         No terminal, execute o binário `/challenge/rev-ghidra-decompilation`:
-         ```bash
-         /challenge/rev-ghidra-decompilation
-         ```
-
-      2. **Consulte a aula didática (Opcional):**
-         Caso queira revisar as diretrizes de descompilação da NSA:
-         ```bash
-         /challenge/rev-ghidra-decompilation --help
-         ```
-
-      3. **Avalie a pergunta conceitual:**
-         O binário apresentará a seguinte questão:
-         > *"Qual é a diferença fundamental entre Análise Estática e Análise Dinâmica?"*
-         * 1) A estática executa o binário com múltiplos parâmetros; a dinâmica lê apenas o assembly gravado no disco rígido sem carregar na memória
-         * **2) A estática examina o binário e seu pseudocódigo SEM executá-lo; a dinâmica observa e manipula o comportamento durante a execução ativa**
-         * 3) A estática é exclusiva para sistemas Windows; a dinâmica é restrita ao Linux
-         * 4) Ambas executam o código, diferindo apenas pelo uso ou não de interface gráfica
-
-      4. **Envie a alternativa correta:**
-         Digite **`2`** no prompt interativo e pressione Enter.
-         *Ou envie diretamente via linha de comando:*
-         ```bash
-         /challenge/rev-ghidra-decompilation 2
-         ```
-
-      5. **Capture a flag de conclusão:**
-         O sistema confirmará o fechamento conceitual do Módulo 8 e emitirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: DISTINÇÃO ESTÁTICA VS DINÂMICA FIXADA COM SUCESSO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação da plataforma.
+      Utilizar um descompilador profissional (como Ghidra) para traduzir o código de máquina de um binário complexo de volta para uma representação legível em pseudo-código C. Seu objetivo é analisar os loops, manipulações de arrays e operações de transformação implementadas na função de verificação para deduzir o segredo esperado e solucionar o desafio.
 - id: exploracao-binaria-pwn
   name: 'Módulo 9: Exploração Binária (Pwn) & Corrupção de Memória'
   description: |
@@ -3231,7 +2608,7 @@ modules:
   challenges:
   - id: pwn-stack-anatomy-crash
     name: Anatomia do Crash e Medição de Offset na Pilha
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       A Exploração Binária (*Pwn*) representa a fronteira mais técnica e profunda da segurança ofensiva de baixo nível. Para além de ferramentas automatizadas de varredura, a exploração de corrupção de memória exige uma compreensão cirúrgica de como a CPU gerencia a memória física e de como vulnerabilidades em código compilado na linguagem C permitem sequestrar o fluxo de execução de um processo.
@@ -3316,45 +2693,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga rigorosamente as instruções abaixo para causar o estouro de buffer e obter a flag:
-
-      1. **Inicie o binário do desafio:**
-         Execute `/challenge/pwn-stack-anatomy-crash` no terminal:
-         ```bash
-         /challenge/pwn-stack-anatomy-crash
-         ```
-         *Observe que o binário relata um buffer estático alocado na pilha de exatamente 64 bytes.*
-
-      2. **Consulte a aula didática integrada (Opcional):**
-         Para inspecionar o diagrama completo da pilha e a teoria de buffer overflow:
-         ```bash
-         /challenge/pwn-stack-anatomy-crash --help
-         ```
-
-      3. **Gere um payload de entrada superior a 64 bytes:**
-         Utilize o Python para gerar uma cadeia de 80 caracteres (`'A' * 80`), garantindo que 16 bytes excedam a capacidade do buffer e saturem a pilha:
-         ```bash
-         python3 -c "print('A' * 80)" | /challenge/pwn-stack-anatomy-crash
-         ```
-         *Ou execute passando via argumento:*
-         ```bash
-         /challenge/pwn-stack-anatomy-crash $(python3 -c "print('A'*80)")
-         ```
-
-      4. **Observe a resposta do simulador:**
-         O binário identificará o recebimento de 80 bytes, reportará a corrupção do `Saved RBP` e do `Saved RIP`, simulará a falha de segmentação (SIGSEGV) e emitirá a flag de homologação:
-         ```text
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-
-      5. **Submeta a flag:**
-         Copie a sequência completa `pwn.college{...}` e insira no painel da plataforma.
+      Compreender a estrutura do Stack Frame de uma função na arquitetura x86_64. Seu objetivo é fornecer ao programa uma entrada com tamanho superior ao buffer alocado na pilha, provocando um transbordamento de memória intencional (*buffer overflow*) que sobrescreva dados de controle e resulte em uma falha de segmentação (*Segmentation Fault / Crash*), comprovando a vulnerabilidade.
   - id: pwn-win-function-redirection
     name: Sequestrando o RIP para a Função Win()
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Na exploração de software em código binário fechado (Black-Box Testing), analistas ofensivos frequentemente encontram sub-rotinas de depuração, funções administrativas esquecidas por desenvolvedores ou rotinas de teste (comumente chamadas de `win()`, `print_flag()` ou `backdoor()`). Essas funções contêm o código necessário para ler arquivos confidenciais ou abrir privilégios, mas **nunca são invocadas no fluxo normal de execução do programa**.
@@ -3447,50 +2791,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para resolver a missão e capturar a flag:
-
-      1. **Inicie o desafio no terminal:**
-         Execute `/challenge/pwn-win-function-redirection`:
-         ```bash
-         /challenge/pwn-win-function-redirection
-         ```
-         *O desafio informará que o binário contém a função oculta `win()` em `0x00000000004011f6`.*
-
-      2. **Revise a aula teórica (Opcional):**
-         Para estudar os detalhes da vulnerabilidade de `strcpy` e scripts ret2win:
-         ```bash
-         /challenge/pwn-win-function-redirection --help
-         ```
-
-      3. **Avalie a pergunta conceitual:**
-         O binário apresentará a seguinte questão:
-         > *"Qual função clássica de manipulação de strings na biblioteca padrão C é notória por causar buffer overflow por não checar limites de memória?"*
-         * A) `strncpy`
-         * **B) `strcpy`**
-         * C) `snprintf`
-         * D) `fgets`
-
-      4. **Forneça a alternativa correta:**
-         Digite **`B`** (ou `strcpy`) no prompt interativo e pressione Enter.
-         *Alternativamente, envie diretamente via argumento de terminal:*
-         ```bash
-         /challenge/pwn-win-function-redirection B
-         ```
-         *(O desafio também aceita um payload que referencie `win`, `4011f6` ou `strcpy`)*.
-
-      5. **Capture a flag:**
-         O sistema validará o entendimento sobre o vetor de buffer overflow e emitirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: RIP REDIRECIONADO COM SUCESSO PARA WIN()!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-         Copie a string no formato `pwn.college{...}` e submeta-a no painel do dojo.
+      Explorar um estouro de buffer para desviar o fluxo natural de execução do programa. Seu objetivo é calcular o deslocamento exato (*offset*) necessário para alcançar o endereço de retorno salvo na pilha (*Saved RIP*) e sobrescrevê-lo com o endereço da função `win()` presente no binário, forçando a execução da rotina que lê e exibe a flag.
   - id: pwn-shellcraft-injection
     name: Injeção e Execução de Shellcode no Pwntools
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Em auditorias de segurança ofensiva de softwares legados, dispositivos IoT e sistemas embarcados, analistas frequentemente encontram binários compilados sem mitigações modernas de proteção de memória. Especificamente, quando o bit **NX (*No-Execute*) / DEP (*Data Execution Prevention*)** está desabilitado (compilação com a flag `-z execstack` no GCC), as páginas da pilha de execução recebem permissões simultâneas de **Leitura, Escrita e Execução (`RWX`)**.
@@ -3574,46 +2880,12 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para injetar o payload de teste e validar a resolução:
-
-      1. **Inicie o desafio de injeção:**
-         Execute `/challenge/pwn-shellcraft-injection`:
-         ```bash
-         /challenge/pwn-shellcraft-injection
-         ```
-         *O ambiente notificará que o alvo opera com pilha executável (NX desabilitado / permissões RWX).*
-
-      2. **Revise a teoria de NOP Sleds (Opcional):**
-         Para inspecionar a montagem das syscalls x86_64:
-         ```bash
-         /challenge/pwn-shellcraft-injection --help
-         ```
-
-      3. **Construa e transmita o payload com NOP Sled:**
-         Utilize o Python para gerar um fluxo de bytes contendo a sequência de NOPs (`\x90\x90\x90`) seguida da assinatura de validação (`PWN`) e direcione via pipe para o binário:
-         ```bash
-         python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challenge/pwn-shellcraft-injection
-         ```
-         *Ou execute diretamente passando o payload via argumento de terminal:*
-         ```bash
-         /challenge/pwn-shellcraft-injection "\x90\x90\x90\x90PWN"
-         ```
-
-      4. **Observe a execução do simulador:**
-         O binário identificará a pista de aterrissagem `\x90\x90\x90`, simulará o salto da CPU pela rampa de NOPs até o shellcode e emitirá a flag:
-         ```text
-         [+] DEBRIEFING TÉCNICO: NOP SLED & SHELLCODE EXECUTADOS COM SUCESSO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-
-      5. **Capture e registre a flag:**
-         Copie a string no formato `pwn.college{...}` e insira no painel da plataforma dojo.
+      Explorar um ambiente com pilha executável (sem proteção NX/DEP). Seu objetivo é construir uma carga útil contendo um shellcode x86_64 funcional, injetar esse código na memória do programa vulnerável e redirecionar o ponteiro de instrução para o endereço da sua própria carga útil, obtendo a execução de comandos arbitrários no sistema.
   - id: pwn-capstone-challenge
     name: 'O Desafio Final: A Chave da Fortaleza Cyberguard'
-    description: |-
+    description: |
       ### 📖 Introdução Teórica
 
       Parabéns, operador! Você alcançou o **Desafio Capstone**, a prova culminante e integradora do Dojo de Treinamento da Cyberguard.
@@ -3677,41 +2949,6 @@ modules:
 
       ---
 
-      ### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+      ### 🎯 Seu Objetivo
 
-      Siga os passos abaixo para selar sua conclusão da trilha e abrir o cofre final:
-
-      1. **Inicie o desafio culminante:**
-         Execute o executável `/challenge/pwn-capstone-challenge`:
-         ```bash
-         /challenge/pwn-capstone-challenge
-         ```
-
-      2. **Revise a síntese técnica dos 9 módulos (Opcional):**
-         Caso deseje rever o manifesto pedagógico completo:
-         ```bash
-         /challenge/pwn-capstone-challenge --help
-         ```
-
-      3. **Confirme o lema oficial da equipe Cyberguard:**
-         No prompt interativo, digite a máxima que guia as operações do time:
-         ```text
-         Nenhum operador fica para trás
-         ```
-         *Ou execute diretamente fornecendo o lema como argumento:*
-         ```bash
-         /challenge/pwn-capstone-challenge "Nenhum operador fica para trás"
-         ```
-
-      4. **Desbloqueie o cofre da fortaleza:**
-         O sistema confirmará a validação doutrinária e homologará o operador com a flag final do treinamento:
-         ```text
-         [★] MISSÃO CUMPRIDA: CAPSTONE CONCLUÍDO COM DISTINÇÃO E HONRA! [★]
-         LEMA CONFIRMADO: "Nenhum operador fica para trás"
-         OPERADOR DE BAIXO NÍVEL, ENGENHARIA REVERSA & FORENSE HOMOLOGADO!
-         [FLAG DE VALIDAÇÃO CYBERGUARD]:
-         pwn.college{...}
-         ```
-
-      5. **Submeta a flag mestre:**
-         Copie a string completa `pwn.college{...}` e insira no painel para registrar a homologação definitiva.
+      Desafio final e culminante da trilha de exploração binária. Seu objetivo é aplicar as técnicas aprendidas de análise reversa, cálculo de offsets de memória e desvio de fluxo de execução em um binário com proteções ativas, encadeando a exploração de ponta a ponta para obter acesso root e capturar a flag suprema do Dojo.

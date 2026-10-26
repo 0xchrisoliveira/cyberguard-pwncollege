@@ -72,41 +72,6 @@ A biblioteca Pwntools opera através de métodos intuitivos de controle de fluxo
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para orquestrar a comunicação com o binário e extrair a flag:
-
-1. **Inspecione o comportamento do programa:**
-   Execute `/challenge/script-pwntools-interaction` no terminal:
-   ```bash
-   /challenge/script-pwntools-interaction
-   ```
-   *O programa emitirá a linha de sincronismo `PWNTOOLS_CHALLENGE_READY` e aguardará o token de confirmação via `stdin`.*
-
-2. **Crie o script de automação em `/tmp/solve_pwn.py`:**
-   Grave o código de interação no diretório temporário:
-   ```bash
-   cat << 'EOF' > /tmp/solve_pwn.py
-   #!/usr/bin/env python3
-   from pwn import *
-
-   io = process("/challenge/script-pwntools-interaction")
-   io.recvuntil(b"PWNTOOLS_CHALLENGE_READY")
-   io.sendline(b"CYBERGUARD_PWNTOOLS_OK")
-   print(io.recvall().decode("utf-8"))
-   EOF
-   ```
-
-3. **Execute o script:**
-   Execute o script com o interpretador Python:
-   ```bash
-   python3 /tmp/solve_pwn.py
-   ```
-
-4. **Capture e submeta a flag:**
-   O programa receberá a mensagem no momento exato e emitirá a confirmação acompanhada da flag:
-   ```text
-   [+] Conexao via pwntools confirmada!
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no portal da Cyberguard.
+Criar um script de automação e exploração utilizando a consagrada biblioteca `pwntools`. Seu objetivo é conectar-se ao programa ou serviço via `process()` ou `remote()`, tratar o fluxo de dados recebidos com funções como `recvuntil()` e responder automaticamente com `sendline()`, garantindo uma comunicação rápida, confiável e programática para extrair a flag.

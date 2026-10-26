@@ -84,39 +84,6 @@ python3 -c "print('A' * 80)" | /challenge/pwn-stack-anatomy-crash
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga rigorosamente as instruções abaixo para causar o estouro de buffer e obter a flag:
-
-1. **Inicie o binário do desafio:**
-   Execute `/challenge/pwn-stack-anatomy-crash` no terminal:
-   ```bash
-   /challenge/pwn-stack-anatomy-crash
-   ```
-   *Observe que o binário relata um buffer estático alocado na pilha de exatamente 64 bytes.*
-
-2. **Consulte a aula didática integrada (Opcional):**
-   Para inspecionar o diagrama completo da pilha e a teoria de buffer overflow:
-   ```bash
-   /challenge/pwn-stack-anatomy-crash --help
-   ```
-
-3. **Gere um payload de entrada superior a 64 bytes:**
-   Utilize o Python para gerar uma cadeia de 80 caracteres (`'A' * 80`), garantindo que 16 bytes excedam a capacidade do buffer e saturem a pilha:
-   ```bash
-   python3 -c "print('A' * 80)" | /challenge/pwn-stack-anatomy-crash
-   ```
-   *Ou execute passando via argumento:*
-   ```bash
-   /challenge/pwn-stack-anatomy-crash $(python3 -c "print('A'*80)")
-   ```
-
-4. **Observe a resposta do simulador:**
-   O binário identificará o recebimento de 80 bytes, reportará a corrupção do `Saved RBP` e do `Saved RIP`, simulará a falha de segmentação (SIGSEGV) e emitirá a flag de homologação:
-   ```text
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-
-5. **Submeta a flag:**
-   Copie a sequência completa `pwn.college{...}` e insira no painel da plataforma.
+Compreender a estrutura do Stack Frame de uma função na arquitetura x86_64. Seu objetivo é fornecer ao programa uma entrada com tamanho superior ao buffer alocado na pilha, provocando um transbordamento de memória intencional (*buffer overflow*) que sobrescreva dados de controle e resulte em uma falha de segmentação (*Segmentation Fault / Crash*), comprovando a vulnerabilidade.

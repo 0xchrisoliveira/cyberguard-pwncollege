@@ -55,39 +55,6 @@ Diferente de um ataque de força bruta online (que dispara requisições contra 
    * `-m 13100`: Kerberos 5 TGS-REP (Kerberoasting)
    * `-m 3200`: Bcrypt
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio:
-   ```bash
-   /challenge/crypto-john-cracking
-   ```
-   O programa exibirá o hash MD5 alvo:
-   ```text
-   e10adc3949ba59abbe56e057f20f883e
-   ```
-2. **Quebrar o Hash com John the Ripper no Terminal:**
-   Em uma janela de terminal, salve o hash e invoque o John:
-   ```bash
-   echo "e10adc3949ba59abbe56e057f20f883e" > /tmp/hash.txt
-   john --format=raw-md5 /tmp/hash.txt
-   john --show --format=raw-md5 /tmp/hash.txt
-   ```
-   O John the Ripper identificará que a senha em texto claro é:
-   ```text
-   123456
-   ```
-3. **Submeter a Senha Recuperada:**
-   No prompt do desafio (`>> `), digite a senha decifrada:
-   ```text
-   123456
-   ```
-   *Alternativa:* Invoque o binário diretamente com o parâmetro:
-   ```bash
-   /challenge/crypto-john-cracking 123456
-   ```
-4. **Capturar e Submeter a Flag:**
-   O programa validará que o hash MD5 de `123456` confere com o alvo e exibirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e registre a pontuação no portal.
+### 🎯 Seu Objetivo
+
+Realizar um ataque de dicionário offline contra um arquivo de hashes de senhas. Seu objetivo é utilizar a ferramenta John the Ripper em conjunto com uma lista de senhas conhecidas para quebrar o hash de uma credencial fraca, descobrindo a senha em texto claro e utilizando-a para autenticar no desafio e liberar a flag.

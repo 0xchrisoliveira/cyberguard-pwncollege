@@ -85,42 +85,6 @@ ss -tulpan
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga rigorosamente as instruções abaixo dentro do container para demonstrar o domínio sobre a RFC 3227 e desbloquear a flag:
-
-1. **Invoque o binário do desafio:**
-   No terminal, execute o desafio de triagem forense:
-   ```bash
-   /challenge/dfir-volatility-order
-   ```
-
-2. **Revise a aula teórica integrada (Opcional):**
-   Caso deseje rever os parâmetros normativos da RFC 3227 diretamente no terminal:
-   ```bash
-   /challenge/dfir-volatility-order --help
-   ```
-
-3. **Avalie o cenário operacional apresentado:**
-   O binário apresentará a seguinte questão:
-   > *"Diante de um servidor ativo sob ataque, qual evidência deve ser adquirida EM PRIMEIRO LUGAR conforme a RFC 3227?"*
-   * A) Disco Rígido e Logs salvos (/var/log/auth.log)
-   * **B) Memória RAM física volátil (processos vivos, chaves, sockets)**
-   * C) Fitas de Backup externo e imagens de restauração
-   * D) Arquivos de configuração do sistema em /etc/
-
-4. **Forneça a resposta correta:**
-   Digite **`B`** (ou `RAM`) no prompt interativo e pressione Enter.
-   *Alternativamente, passe a resposta diretamente como argumento:*
-   ```bash
-   /challenge/dfir-volatility-order B
-   ```
-
-5. **Capture e submeta a flag:**
-   O sistema validará a resposta, confirmará a anexação da imagem da RAM à cadeia de custódia e imprimirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: RESPOSTA EXATA! OPERAÇÃO BEM-SUCEDIDA.
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a string completa `pwn.college{...}` e submeta-a para pontuar.
+Aplicar as diretrizes metodológicas da norma RFC 3227 sobre preservação de evidências digitais. Seu objetivo é organizar as diferentes fontes de evidência do sistema (registradores, memória RAM, tráfego de rede, armazenamento em disco e backups) em ordem estrita de volatilidade, garantindo que os dados mais efêmeros sejam coletados primeiro para validar a perícia e receber a flag.

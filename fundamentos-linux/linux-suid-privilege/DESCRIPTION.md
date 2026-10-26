@@ -68,37 +68,6 @@ A auditoria e identificação de binários SUID são realizadas através de coma
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para concluir a missão e extrair a flag no container pwn.college:
-
-1. **Inspecione os atributos do executável:**
-   Verifique as permissões de `/challenge/linux-suid-privilege`:
-   ```bash
-   ls -la /challenge/linux-suid-privilege
-   ```
-   *Observe o bit `s` e o usuário proprietário `root`.*
-
-2. **Execute uma varredura para auditar outros binários SUID do sistema:**
-   Pratique a localização de binários privilegiados:
-   ```bash
-   find /challenge -perm -4000 -type f 2>/dev/null
-   ```
-
-3. **Invoque o binário do desafio:**
-   Execute o programa no terminal:
-   ```bash
-   /challenge/linux-suid-privilege
-   ```
-
-4. **Analise o diagnóstico de identidade emitido pelo processo:**
-   O binário exibirá as identidades consultadas diretamente via chamadas de sistema `getuid()` e `geteuid()`:
-   ```text
-   [*] Seu Real UID: 1000 | Effective UID: 0
-   [+] Executando com privilegios de root via SUID!
-   pwn.college{...}
-   ```
-   *Constata-se que o Real UID pertence ao usuário `hacker` (1000), mas o Effective UID foi elevado pelo kernel para `root` (0), viabilizando a leitura de `/flag`.*
-
-5. **Capture e submeta a flag:**
-   Copie a sequência no padrão `pwn.college{...}` e submeta-a na plataforma.
+Compreender na prática como binários com o bit especial SUID (`Set User ID`) permitem a execução com privilégios temporários do usuário root. Seu objetivo é inspecionar as permissões do executável `/challenge/linux-suid-privilege` (notando o bit `s` no campo de execução do proprietário) e executá-lo para que ele exerça esses privilégios elevados para ler e exibir a `/flag` do sistema.

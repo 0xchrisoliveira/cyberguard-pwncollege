@@ -83,40 +83,6 @@ python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challen
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para injetar o payload de teste e validar a resolução:
-
-1. **Inicie o desafio de injeção:**
-   Execute `/challenge/pwn-shellcraft-injection`:
-   ```bash
-   /challenge/pwn-shellcraft-injection
-   ```
-   *O ambiente notificará que o alvo opera com pilha executável (NX desabilitado / permissões RWX).*
-
-2. **Revise a teoria de NOP Sleds (Opcional):**
-   Para inspecionar a montagem das syscalls x86_64:
-   ```bash
-   /challenge/pwn-shellcraft-injection --help
-   ```
-
-3. **Construa e transmita o payload com NOP Sled:**
-   Utilize o Python para gerar um fluxo de bytes contendo a sequência de NOPs (`\x90\x90\x90`) seguida da assinatura de validação (`PWN`) e direcione via pipe para o binário:
-   ```bash
-   python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challenge/pwn-shellcraft-injection
-   ```
-   *Ou execute diretamente passando o payload via argumento de terminal:*
-   ```bash
-   /challenge/pwn-shellcraft-injection "\x90\x90\x90\x90PWN"
-   ```
-
-4. **Observe a execução do simulador:**
-   O binário identificará a pista de aterrissagem `\x90\x90\x90`, simulará o salto da CPU pela rampa de NOPs até o shellcode e emitirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: NOP SLED & SHELLCODE EXECUTADOS COM SUCESSO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-
-5. **Capture e registre a flag:**
-   Copie a string no formato `pwn.college{...}` e insira no painel da plataforma dojo.
+Explorar um ambiente com pilha executável (sem proteção NX/DEP). Seu objetivo é construir uma carga útil contendo um shellcode x86_64 funcional, injetar esse código na memória do programa vulnerável e redirecionar o ponteiro de instrução para o endereço da sua própria carga útil, obtendo a execução de comandos arbitrários no sistema.

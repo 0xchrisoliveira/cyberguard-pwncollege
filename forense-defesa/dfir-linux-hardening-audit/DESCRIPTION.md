@@ -80,48 +80,6 @@ ClientAliveCountMax 2
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para auditar a configuração e responder corretamente ao desafio:
-
-1. **Inicie o desafio de auditoria:**
-   Execute o executável `/challenge/dfir-linux-hardening-audit`:
-   ```bash
-   /challenge/dfir-linux-hardening-audit
-   ```
-   *O desafio gerará o arquivo simulado de auditoria em `/tmp/sshd_config_audit`.*
-
-2. **Inspecione o arquivo auditado:**
-   Examine o arquivo de configuração gerado para identificar as fragilidades:
-   ```bash
-   cat /tmp/sshd_config_audit
-   ```
-   *Observe as diretrizes permissivas:*
-   ```text
-   PermitRootLogin yes
-   PasswordAuthentication yes
-   MaxAuthTries 10
-   ```
-
-3. **Avalie as opções de remediação:**
-   O desafio questionará qual conjunto de diretrizes no `sshd_config` eleva substancialmente a segurança do host e aplica conformidade CIS:
-   * 1) `PermitRootLogin yes` e `PasswordAuthentication yes`
-   * **2) `PermitRootLogin no` e `PasswordAuthentication no` (exigindo chaves criptográficas)**
-   * 3) `MaxAuthTries 100` e `PermitEmptyPasswords yes`
-   * 4) `Port 22` sem qualquer restrição de usuário ou chave
-
-4. **Forneça a alternativa correta:**
-   Digite **`2`** no prompt interativo e pressione Enter.
-   *Alternativamente, envie como argumento de linha de comando:*
-   ```bash
-   /challenge/dfir-linux-hardening-audit 2
-   ```
-
-5. **Capture e registre a flag:**
-   O sistema confirmará a validação da política de hardening CIS e imprimirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: POLÍTICA DE HARDENING SSH CONFIRMADA!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a string completa `pwn.college{...}` e submeta-a para pontuar.
+Auditar a postura de segurança e as configurações de um servidor Linux corporativo. Seu objetivo é inspecionar arquivos críticos de configuração do sistema (como `/etc/ssh/sshd_config`, permissões de arquivos de senhas e políticas de contas) para identificar a vulnerabilidade ou falha de hardening presente no ambiente e reportá-la para receber a flag.

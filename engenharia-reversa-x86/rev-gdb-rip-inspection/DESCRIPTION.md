@@ -94,42 +94,6 @@ $2 = 0x401127
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga as instruções abaixo para validar a compreensão conceitual do registrador RIP:
-
-1. **Invoque o binário do desafio:**
-   No terminal, execute o desafio de arquitetura x86_64:
-   ```bash
-   /challenge/rev-gdb-rip-inspection
-   ```
-
-2. **Revise a aula teórica (Opcional):**
-   Caso deseje visualizar a dissecação completa dos registradores da CPU:
-   ```bash
-   /challenge/rev-gdb-rip-inspection --help
-   ```
-
-3. **Analise a questão apresentada:**
-   O desafio exibirá a seguinte pergunta:
-   > *"Em processadores de arquitetura x86 e x86_64, qual é a função exata do registrador EIP / RIP?"*
-   * 1) Armazenar o resultado de operações lógicas e de comparação (Zero Flag)
-   * **2) Armazenar o endereço de memória da PRÓXIMA instrução a ser executada pela CPU**
-   * 3) Armazenar o valor retornado pela última chamada de função executada
-   * 4) Armazenar o endereço fixo da base do quadro de pilha (Stack Frame)
-
-4. **Responda com a opção correta:**
-   Digite **`2`** no prompt interativo e pressione Enter.
-   *Alternativamente, envie diretamente como argumento:*
-   ```bash
-   /challenge/rev-gdb-rip-inspection 2
-   ```
-
-5. **Capture a flag:**
-   O sistema confirmará a consolidação do conceito de ponteiro de instrução e imprimirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: CONCEITO DE RIP CONSOLIDADO COM PERFEIÇÃO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a flag no formato `pwn.college{...}` e submeta-a para registrar sua pontuação.
+Analisar a execução de um programa x86_64 em tempo real utilizando o depurador GDB. Seu objetivo é definir pontos de parada (*breakpoints*), acompanhar o valor dos registradores da CPU — em especial o registrador `RIP`, que aponta soberanamente para a próxima instrução a ser executada — e inspecionar os valores na memória no instante em que as verificações de acesso são avaliadas.

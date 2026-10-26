@@ -72,42 +72,6 @@ A eficácia do Ghidra reside na conversão de montagens complexas de assembly em
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para consolidar os conceitos de descompilação e análise de binários:
-
-1. **Inicie o executável do desafio:**
-   No terminal, execute o binário `/challenge/rev-ghidra-decompilation`:
-   ```bash
-   /challenge/rev-ghidra-decompilation
-   ```
-
-2. **Consulte a aula didática (Opcional):**
-   Caso queira revisar as diretrizes de descompilação da NSA:
-   ```bash
-   /challenge/rev-ghidra-decompilation --help
-   ```
-
-3. **Avalie a pergunta conceitual:**
-   O binário apresentará a seguinte questão:
-   > *"Qual é a diferença fundamental entre Análise Estática e Análise Dinâmica?"*
-   * 1) A estática executa o binário com múltiplos parâmetros; a dinâmica lê apenas o assembly gravado no disco rígido sem carregar na memória
-   * **2) A estática examina o binário e seu pseudocódigo SEM executá-lo; a dinâmica observa e manipula o comportamento durante a execução ativa**
-   * 3) A estática é exclusiva para sistemas Windows; a dinâmica é restrita ao Linux
-   * 4) Ambas executam o código, diferindo apenas pelo uso ou não de interface gráfica
-
-4. **Envie a alternativa correta:**
-   Digite **`2`** no prompt interativo e pressione Enter.
-   *Ou envie diretamente via linha de comando:*
-   ```bash
-   /challenge/rev-ghidra-decompilation 2
-   ```
-
-5. **Capture a flag de conclusão:**
-   O sistema confirmará o fechamento conceitual do Módulo 8 e emitirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: DISTINÇÃO ESTÁTICA VS DINÂMICA FIXADA COM SUCESSO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação da plataforma.
+Utilizar um descompilador profissional (como Ghidra) para traduzir o código de máquina de um binário complexo de volta para uma representação legível em pseudo-código C. Seu objetivo é analisar os loops, manipulações de arrays e operações de transformação implementadas na função de verificação para deduzir o segredo esperado e solucionar o desafio.

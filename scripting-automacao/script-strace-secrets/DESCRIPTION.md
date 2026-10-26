@@ -68,55 +68,13 @@ O uso cirúrgico do `strace` envolve filtros e controle de buffer de leitura:
 
 2. **Linhas de Saída Típicas Emitidas pelo Kernel:**
    ```text
-   openat(AT_FDCWD, "/tmp/.cyberguard_strace_secret.key", O_RDONLY) = 3
+   openat(AT_FDCWD, "/tmp/.<senha_interceptada_aqui>.key", O_RDONLY) = 3
    read(3, "strace_sys_secret_778", 256) = 21
    ```
    *O `openat` retornou o File Descriptor número 3, e o `read` seguinte leu 21 bytes correspondentes à chave secreta:* `strace_sys_secret_778`.
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para interceptar a chave secreta com o strace e resgatar a flag:
-
-1. **Inspecione a execução normal do binário:**
-   Execute `/challenge/script-strace-secrets` diretamente:
-   ```bash
-   /challenge/script-strace-secrets
-   ```
-   *O programa solicitará interativamente:*
-   ```text
-   [?] Digite a chave lida durante a chamada openat/read: 
-   ```
-
-2. **Execute o binário sob o controle do `strace`:**
-   Dispare o binário filtrando chamadas de sistema `openat` e `read`, expandindo o buffer com `-s 256`:
-   ```bash
-   strace -s 256 -e trace=openat,read /challenge/script-strace-secrets
-   ```
-
-3. **Analise as chamadas interceptadas no terminal:**
-   Procure na saída gerada pelo kernel a leitura do arquivo secreto em `/tmp`:
-   ```text
-   openat(AT_FDCWD, "/tmp/.cyberguard_strace_secret.key", O_RDONLY) = 3
-   read(3, "strace_sys_secret_778", 256) = 21
-   ```
-
-4. **Submeta a chave capturada:**
-   A chave lida diretamente pelo descritor de arquivo é `strace_sys_secret_778`.
-   Digite a chave no prompt e pressione `Enter`:
-   ```text
-   strace_sys_secret_778
-   ```
-   *Ou execute diretamente passando o segredo como argumento:*
-   ```bash
-   /challenge/script-strace-secrets strace_sys_secret_778
-   ```
-
-5. **Capture e submeta a flag:**
-   O verificador validará o segredo e exibirá a flag autorizada:
-   ```text
-   [+] Excelente analise com strace!
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no painel da plataforma.
+O executável `/challenge/script-strace-secrets` valida uma senha secreta internamente em memória sem jamais exibi-la na tela. Seu objetivo é monitorar a execução do programa em nível de chamadas de sistema utilizando o utilitário `strace`, interceptar as syscalls (como `read` ou `open`) no momento em que o segredo é manipulado pelo kernel e utilizá-lo para solucionar o desafio.

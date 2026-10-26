@@ -76,39 +76,6 @@ A execução metódica de varreduras com Nmap exige a combinação adequada de p
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para localizar o serviço escondido entre as portas 8080 e 8090 e capturar a flag:
-
-1. **Inicie o daemon alvo do desafio:**
-   O binário `/challenge/net-nmap-recon` vincula um serviço em uma porta aleatória dentro do intervalo 8080-8090. Execute-o em segundo plano:
-   ```bash
-   /challenge/net-nmap-recon &
-   ```
-   *O programa notificará:*
-   ```text
-   [*] Um servico foi iniciado em 127.0.0.1 entre as portas 8080 e 8090.
-   [*] Faca um scan com 'nmap -p 8080-8090 127.0.0.1' e conecte-se a porta correta.
-   ```
-
-2. **Execute a varredura com o Nmap:**
-   Sonde o intervalo de portas especificado na interface local:
-   ```bash
-   nmap -p 8080-8090 127.0.0.1
-   ```
-
-3. **Identifique a porta aberta:**
-   Na tabela de resultados do Nmap, localize a linha cujo estado seja `open`. Você notará que a porta é a `8085/tcp`.
-
-4. **Conecte-se à porta aberta com o Netcat:**
-   Dialogue diretamente com o serviço na porta descoberta:
-   ```bash
-   nc 127.0.0.1 8085
-   ```
-
-5. **Capture e submeta a flag:**
-   Ao aceitar a conexão na porta correta, o serviço transmitirá a validação e exibirá a flag:
-   ```text
-   [+] Porta localizada com sucesso! Flag: pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no painel da plataforma para confirmar a conclusão do desafio.
+Realizar o reconhecimento de serviços em execução no host local. Seu objetivo é utilizar o `nmap` para varrer as portas abertas do container, identificar em qual porta não padrão um serviço misterioso está escutando, determinar a versão ou banner desse serviço e interagir com ele para capturar a flag.

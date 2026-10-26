@@ -68,43 +68,6 @@ O domínio do Netcat exige conhecer seus modos de operação como cliente e como
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para concluir o desafio e capturar a flag no container pwn.college:
-
-1. **Inicie o serviço do desafio:**
-   O binário `/challenge/net-nc-raw-socket` abre um servidor TCP na porta `31337`. Como ele ocupa o terminal aguardando conexões, execute-o em segundo plano (*background*) adicionando um `&` ao final, ou utilize um segundo terminal:
-   ```bash
-   /challenge/net-nc-raw-socket &
-   ```
-   *O serviço imprimirá: `[*] Servidor escutando na porta 127.0.0.1:31337...`.*
-
-2. **Conecte-se à porta do serviço utilizando o Netcat:**
-   No mesmo terminal (ou no segundo terminal), invoque o `nc`:
-   ```bash
-   nc 127.0.0.1 31337
-   ```
-
-3. **Interaja com o protocolo do servidor:**
-   Assim que o canal for aberto, o servidor enviará a mensagem de boas-vindas:
-   ```text
-   Bem-vindo ao netcat raw socket da Cyberguard!
-   Envie 'PING': 
-   ```
-
-4. **Transmita a saudação exigida:**
-   Digite exatamente `PING` e pressione `Enter`:
-   ```text
-   PING
-   ```
-
-5. **Capture e submeta a flag:**
-   O servidor responderá com `PONG!` e emitirá a flag autorizada:
-   ```text
-   [+] PONG! Flag: pwn.college{...}
-   ```
-   *Dica avançada: Você também pode resolver o desafio em uma única linha:*
-   ```bash
-   echo "PING" | nc 127.0.0.1 31337
-   ```
-   Copie a sequência no padrão `pwn.college{...}` e insira no portal para pontuar.
+Um serviço de rede está escutando em uma porta TCP local no container. Seu objetivo é utilizar o utilitário `nc` (netcat) para abrir uma conexão de socket bruta diretamente com o serviço, interagir com o protocolo textual simples implementado por ele e enviar o comando ou resposta solicitada para receber a flag de volta pela conexão.

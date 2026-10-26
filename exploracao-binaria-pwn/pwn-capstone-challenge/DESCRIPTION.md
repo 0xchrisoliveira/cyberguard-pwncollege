@@ -63,41 +63,6 @@ A tabela a seguir consolida o arsenal técnico dominado pelo operador ao longo d
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para selar sua conclusão da trilha e abrir o cofre final:
-
-1. **Inicie o desafio culminante:**
-   Execute o executável `/challenge/pwn-capstone-challenge`:
-   ```bash
-   /challenge/pwn-capstone-challenge
-   ```
-
-2. **Revise a síntese técnica dos 9 módulos (Opcional):**
-   Caso deseje rever o manifesto pedagógico completo:
-   ```bash
-   /challenge/pwn-capstone-challenge --help
-   ```
-
-3. **Confirme o lema oficial da equipe Cyberguard:**
-   No prompt interativo, digite a máxima que guia as operações do time:
-   ```text
-   Nenhum operador fica para trás
-   ```
-   *Ou execute diretamente fornecendo o lema como argumento:*
-   ```bash
-   /challenge/pwn-capstone-challenge "Nenhum operador fica para trás"
-   ```
-
-4. **Desbloqueie o cofre da fortaleza:**
-   O sistema confirmará a validação doutrinária e homologará o operador com a flag final do treinamento:
-   ```text
-   [★] MISSÃO CUMPRIDA: CAPSTONE CONCLUÍDO COM DISTINÇÃO E HONRA! [★]
-   LEMA CONFIRMADO: "Nenhum operador fica para trás"
-   OPERADOR DE BAIXO NÍVEL, ENGENHARIA REVERSA & FORENSE HOMOLOGADO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-
-5. **Submeta a flag mestre:**
-   Copie a string completa `pwn.college{...}` e insira no painel para registrar a homologação definitiva.
+Desafio final e culminante da trilha de exploração binária. Seu objetivo é aplicar as técnicas aprendidas de análise reversa, cálculo de offsets de memória e desvio de fluxo de execução em um binário com proteções ativas, encadeando a exploração de ponta a ponta para obter acesso root e capturar a flag suprema do Dojo.

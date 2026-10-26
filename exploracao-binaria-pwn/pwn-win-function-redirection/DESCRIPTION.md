@@ -92,44 +92,6 @@ Em sistemas Linux x86_64 modernos, certas funções da `glibc` (como `printf` ou
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para resolver a missão e capturar a flag:
-
-1. **Inicie o desafio no terminal:**
-   Execute `/challenge/pwn-win-function-redirection`:
-   ```bash
-   /challenge/pwn-win-function-redirection
-   ```
-   *O desafio informará que o binário contém a função oculta `win()` em `0x00000000004011f6`.*
-
-2. **Revise a aula teórica (Opcional):**
-   Para estudar os detalhes da vulnerabilidade de `strcpy` e scripts ret2win:
-   ```bash
-   /challenge/pwn-win-function-redirection --help
-   ```
-
-3. **Avalie a pergunta conceitual:**
-   O binário apresentará a seguinte questão:
-   > *"Qual função clássica de manipulação de strings na biblioteca padrão C é notória por causar buffer overflow por não checar limites de memória?"*
-   * A) `strncpy`
-   * **B) `strcpy`**
-   * C) `snprintf`
-   * D) `fgets`
-
-4. **Forneça a alternativa correta:**
-   Digite **`B`** (ou `strcpy`) no prompt interativo e pressione Enter.
-   *Alternativamente, envie diretamente via argumento de terminal:*
-   ```bash
-   /challenge/pwn-win-function-redirection B
-   ```
-   *(O desafio também aceita um payload que referencie `win`, `4011f6` ou `strcpy`)*.
-
-5. **Capture a flag:**
-   O sistema validará o entendimento sobre o vetor de buffer overflow e emitirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: RIP REDIRECIONADO COM SUCESSO PARA WIN()!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e submeta-a no painel do dojo.
+Explorar um estouro de buffer para desviar o fluxo natural de execução do programa. Seu objetivo é calcular o deslocamento exato (*offset*) necessário para alcançar o endereço de retorno salvo na pilha (*Saved RIP*) e sobrescrevê-lo com o endereço da função `win()` presente no binário, forçando a execução da rotina que lê e exibe a flag.

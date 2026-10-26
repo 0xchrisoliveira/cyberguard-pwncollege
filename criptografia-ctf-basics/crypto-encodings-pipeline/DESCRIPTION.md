@@ -67,34 +67,6 @@ Utilitários essenciais no terminal Linux para manipulação de encodings:
    print("Texto recuperado:", resultado)
    ```
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o executável do desafio:
-   ```bash
-   /challenge/crypto-encodings-pipeline
-   ```
-   O binário apresentará a string interceptada: `ZmxhZ3t0ZXN0ZX0=`.
-2. **Decodificar o Payload no Terminal:**
-   Em uma linha de comando do Linux, decodifique a string com o utilitário nativo:
-   ```bash
-   echo -n "ZmxhZ3t0ZXN0ZX0=" | base64 -d
-   ```
-   O comando exibirá o texto original em claro:
-   ```text
-   flag{teste}
-   ```
-3. **Enviar a Resposta ao Desafio:**
-   No prompt do binário (`>> `), digite o texto em claro recuperado:
-   ```text
-   flag{teste}
-   ```
-   *Alternativa rápida:* Você pode executar o binário passando a resposta diretamente:
-   ```bash
-   /challenge/crypto-encodings-pipeline "flag{teste}"
-   ```
-4. **Capturar e Submeter a Flag:**
-   O programa validará a decodificação da string Base64 e imprimirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e registre a pontuação na plataforma.
+### 🎯 Seu Objetivo
+
+Uma mensagem confidencial foi submetida a uma cadeia sequencial de múltiplos formatos de representação e encoding (Hexadecimal, Base64, etc.). Seu objetivo é analisar a estrutura dos dados, reconhecer cada formato presente na cadeia e reverter o processo etapa por etapa até restaurar o texto em claro original da flag.

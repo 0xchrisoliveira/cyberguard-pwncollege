@@ -75,51 +75,6 @@ readelf -S /tmp/malware_sample.elf
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para conduzir a análise estática e extrair a chave do binário:
-
-1. **Inicie o desafio para disponibilizar a amostra:**
-   Execute `/challenge/rev-static-strings-objdump`:
-   ```bash
-   /challenge/rev-static-strings-objdump
-   ```
-   *O ambiente gerará o binário simulado para análise em `/tmp/malware_sample.elf`.*
-
-2. **Inspecione a arquitetura do artefato com `file`:**
-   Confirme que se trata de um binário ELF de 64 bits:
-   ```bash
-   file /tmp/malware_sample.elf
-   ```
-
-3. **Extraia as cadeias de texto da seção de dados com `strings`:**
-   Execute o utilitário `strings` filtrando palavras-chave de interesse:
-   ```bash
-   strings -a /tmp/malware_sample.elf | grep REVERSE
-   ```
-   *Você também pode inspecionar diretamente o dump da seção `.rodata`:*
-   ```bash
-   objdump -s -j .rodata /tmp/malware_sample.elf
-   ```
-
-4. **Identifique a chave estática:**
-   O terminal revelará a constante gravada na seção de dados:
-   ```text
-   REVERSE_STATIC_KEY_984
-   ```
-
-5. **Submeta a chave ao validador da missão:**
-   Envie a chave encontrada como parâmetro de execução do desafio:
-   ```bash
-   /challenge/rev-static-strings-objdump REVERSE_STATIC_KEY_984
-   ```
-   *Ou insira-a no prompt interativo se invocado sem argumentos.*
-
-6. **Capture e registre a flag:**
-   O binário homologará o resultado da análise estática e exibirá a flag:
-   ```text
-   [+] DEBRIEFING TÉCNICO: CHAVE ESTÁTICA LOCALIZADA COM SUCESSO!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação.
+Realizar a engenharia reversa estática de um binário compilado sem código-fonte. Seu objetivo é utilizar ferramentas como `strings` e `objdump` para inspecionar os símbolos, as seções de texto e as instruções em assembly do executável, identificando como o programa processa a entrada do usuário e descobrindo a chave necessária para acionar o fluxo de sucesso.

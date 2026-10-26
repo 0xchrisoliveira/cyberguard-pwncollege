@@ -61,34 +61,6 @@ Ferramentas essenciais no terminal Linux para triagem esteganográfica:
    xxd -l 64 /tmp/suspicious.bin
    ```
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio de esteganografia:
-   ```bash
-   /challenge/crypto-stego-basics
-   ```
-   O binário criará e depositará o artefato suspeito no sistema de arquivos temporário:
-   ```text
-   /tmp/suspicious.bin
-   ```
-2. **Inspecionar as Strings do Artefato:**
-   Em uma sessão do terminal, filtre as sequências de texto do arquivo gerado procurando pelo padrão `FLAG_HIDDEN_STEGO`:
-   ```bash
-   strings /tmp/suspicious.bin | grep FLAG_HIDDEN_STEGO
-   ```
-   A ferramenta revelará a linha embutida nos bytes do binário:
-   ```text
-   ### METADATA_PAYLOAD: FLAG_HIDDEN_STEGO_cyberguard2026 ###
-   ```
-3. **Submeter a Chave Esteganografada:**
-   No prompt do desafio (`>> `), forneça a chave secreta extraída:
-   ```text
-   cyberguard2026
-   ```
-   *(Ou submeta diretamente via CLI: `/challenge/crypto-stego-basics cyberguard2026`).*
-4. **Capturar e Submeter a Flag:**
-   O programa homologará a chave extraída da estrutura de bytes e exibirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Submeta a flag na plataforma para concluir o módulo de criptografia.
+### 🎯 Seu Objetivo
+
+Investigar um arquivo de mídia digital (imagem) que oculta dados confidenciais em sua estrutura interna. Seu objetivo é aplicar técnicas básicas de esteganografia e análise de artefatos (como inspeção de sequências de strings imprimíveis ou extração de metadados e blocos anexados) para revelar a mensagem secreta oculta na imagem e obter a flag.

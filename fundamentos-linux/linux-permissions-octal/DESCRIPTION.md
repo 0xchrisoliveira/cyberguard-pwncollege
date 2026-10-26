@@ -71,42 +71,6 @@ A gestão e verificação de permissões exigem o domínio dos utilitários `chm
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para satisfazer os critérios do verificador `/challenge/linux-permissions-octal`:
-
-1. **Compreenda o objetivo:**
-   O binário do desafio exige que o arquivo `/tmp/config.conf` exista e esteja protegido com a máscara octal exata `640`.
-
-2. **Crie o arquivo alvo em `/tmp`:**
-   Utilize o comando `touch` para instanciar o arquivo:
-   ```bash
-   touch /tmp/config.conf
-   ```
-
-3. **Configure as permissões octais para 640:**
-   Aplique o comando `chmod`:
-   ```bash
-   chmod 640 /tmp/config.conf
-   ```
-
-4. **Confirme as permissões aplicadas:**
-   Certifique-se de que o arquivo reflete `-rw-r-----`:
-   ```bash
-   stat -c "%a %A %n" /tmp/config.conf
-   # Deve retornar: 640 -rw-r----- /tmp/config.conf
-   ```
-
-5. **Execute o binário de validação:**
-   Dispare o auditor para avaliar o arquivo e emitir a flag:
-   ```bash
-   /challenge/linux-permissions-octal
-   ```
-
-6. **Capture e submeta a flag:**
-   Ao detectar a permissão `640`, o programa imprimirá a confirmação de conformidade e a flag:
-   ```text
-   [+] Permissao 640 confirmada: Dono rw, Grupo r, Outros nada!
-   pwn.college{...}
-   ```
-   Copie a sequência `pwn.college{...}` e submeta-a no painel do dojo.
+Existe um arquivo sensível no ambiente do desafio que atualmente possui permissões inseguras ou incorretas. Seu objetivo é auditar as permissões atuais utilizando `ls -l` e aplicar a máscara de permissões octais restritiva `640` (leitura/escrita para o proprietário, leitura para o grupo e nenhum acesso a outros usuários) utilizando o utilitário `chmod`. Em seguida, execute `/challenge/linux-permissions-octal` para que ele verifique a política de acesso e conceda a flag.

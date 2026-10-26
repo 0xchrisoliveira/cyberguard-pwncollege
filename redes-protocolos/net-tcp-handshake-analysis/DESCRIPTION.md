@@ -81,48 +81,6 @@ A inspeção e o diagnóstico do handshake TCP no Linux dependem dos utilitário
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para comprovar seu domínio teórico do protocolo TCP e liberar a flag:
-
-1. **Invoque o binário do desafio:**
-   Execute `/challenge/net-tcp-handshake-analysis` no terminal:
-   ```bash
-   /challenge/net-tcp-handshake-analysis
-   ```
-
-2. **Avalie o questionário interativo:**
-   O binário apresentará a seguinte questão:
-   ```text
-   === DESAFIO DO THREE-WAY HANDSHAKE TCP ===
-   Qual e a sequencia exata dos 3 pacotes que iniciam uma conexao TCP?
-   1) SYN, ACK, SYN-ACK
-   2) SYN, SYN-ACK, ACK
-   3) ACK, SYN, SYN-ACK
-   Sua resposta (1, 2 ou 3): 
-   ```
-
-3. **Submeta a resposta correta:**
-   A única sequência canônica universal é:
-   - Pacote 1: **SYN** (Cliente -> Servidor)
-   - Pacote 2: **SYN-ACK** (Servidor -> Cliente)
-   - Pacote 3: **ACK** (Cliente -> Servidor)
-
-   Digite o número `2` e pressione `Enter`:
-   ```text
-   2
-   ```
-
-4. **Alternativa via argumento direto:**
-   Você também pode resolver passando a resposta como argumento:
-   ```bash
-   /challenge/net-tcp-handshake-analysis 2
-   ```
-
-5. **Capture e submeta a flag:**
-   O sistema validará sua resposta e exibirá a flag do desafio:
-   ```text
-   [+] Exato! SYN (cliente -> servidor) -> SYN-ACK (servidor -> cliente) -> ACK (cliente -> servidor).
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no portal da Cyberguard.
+Analisar detalhadamente o mecanismo de sincronização de conexões TCP (Three-Way Handshake: SYN -> SYN-ACK -> ACK). Seu objetivo é executar `/challenge/net-tcp-handshake-analysis` e responder corretamente às perguntas sobre as flags ativas, números de sequência (`SEQ`) e números de confirmação (`ACK`) durante a negociação da conexão para validar seus conhecimentos teóricos e resgatar a flag.

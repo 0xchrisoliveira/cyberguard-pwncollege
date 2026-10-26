@@ -67,50 +67,6 @@ print(io.recvall().decode("utf-8"))
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para contornar o timeout estrito e capturar a flag:
-
-1. **Teste a execução manual inicial (comprove a impossibilidade):**
-   Execute o programa no terminal:
-   ```bash
-   /challenge/script-python-socket-math
-   ```
-   *Observe que tentar calcular e digitar a resposta manualmente acarreta a mensagem `[X] Tempo esgotado! Voce precisa automatizar com Python.` após 1.5 segundos.*
-
-2. **Crie o script de automação em `/tmp/solve_math.py`:**
-   Utilize o editor de sua preferência ou o utilitário `cat` para salvar o script em `/tmp`:
-   ```bash
-   cat << 'EOF' > /tmp/solve_math.py
-   #!/usr/bin/env python3
-   import re
-   from pwn import *
-
-   io = process("/challenge/script-python-socket-math")
-   for i in range(1, 11):
-       prompt = io.recvuntil(b"? ").decode("utf-8")
-       match = re.search(r"Quanto e (\d+) \+ (\d+)", prompt)
-       if match:
-           res = str(int(match.group(1)) + int(match.group(2)))
-           io.sendline(res.encode("utf-8"))
-
-   print(io.recvall().decode("utf-8"))
-   EOF
-   ```
-
-3. **Execute o script de automação:**
-   Dispare o resolvedor em Python:
-   ```bash
-   python3 /tmp/solve_math.py
-   ```
-
-4. **Observe a resolução instantânea:**
-   O script resolverá as 10 operações matemáticas consecutivas em milissegundos, superando com facilidade o temporizador.
-
-5. **Capture e submeta a flag:**
-   Ao final da décima rodada, o programa imprimirá a confirmação e a flag:
-   ```text
-   [+] Incrivel! Automacao rapida bem-sucedida.
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no painel da Cyberguard.
+Um serviço de rede exige que o cliente resolva uma sequência de cálculos matemáticos dinâmicos em um tempo extremamente curto (fração de segundo por cálculo), tornando a resolução manual impossível. Seu objetivo é criar um script em Python utilizando o módulo `socket` para automatizar a leitura dos enunciados, o cálculo das operações e o envio das respostas em tempo real até completar todas as rodadas e receber a flag.

@@ -78,46 +78,6 @@ O Bash oferece múltiplas maneiras elegantes de construir repetições e cálcul
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Para satisfazer a validação do verificador e capturar a flag:
-
-1. **Inspecione a requisição do binário:**
-   Execute `/challenge/script-bash-loop` no terminal:
-   ```bash
-   /challenge/script-bash-loop
-   ```
-   *O programa solicitará interativamente:*
-   ```text
-   [?] Digite a soma dos numeros pares de 2 a 100: 
-   ```
-
-2. **Calcule a soma via linha de comando:**
-   Utilize o pipeline com `seq`, `paste` e `bc` para obter o valor exato:
-   ```bash
-   seq 2 2 100 | paste -sd+ - | bc
-   # Resultado: 2550
-   ```
-
-3. **Submeta a resposta calculada:**
-   * **Método Interativo:** Digite `2550` no prompt e pressione `Enter`.
-   * **Método via Pipeline (Recomendado):**
-     ```bash
-     echo "2550" | /challenge/script-bash-loop
-     ```
-   * **Método via Command Substitution:**
-     ```bash
-     echo $(seq 2 2 100 | paste -sd+ - | bc) | /challenge/script-bash-loop
-     ```
-   * **Método via Argumento:**
-     ```bash
-     /challenge/script-bash-loop 2550
-     ```
-
-4. **Capture e submeta a flag:**
-   Ao receber o valor `2550`, o programa validará a computação e exibirá a flag autorizada:
-   ```text
-   [+] Calculo correto via Bash!
-   pwn.college{...}
-   ```
-   Copie a string no formato `pwn.college{...}` e insira no portal da Cyberguard.
+O binário `/challenge/script-bash-loop` implementa uma proteção que exige um código numérico (PIN) específico. Como testar manualmente centenas ou milhares de combinações é inviável, seu objetivo é escrever um script em Bash utilizando loops (`for` ou `while`) para automatizar o envio dos valores até encontrar o PIN correto e extrair a flag.

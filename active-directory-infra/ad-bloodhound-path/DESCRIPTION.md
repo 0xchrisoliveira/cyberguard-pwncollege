@@ -63,28 +63,6 @@ Considere a rota extraída pelo BloodHound:
    A Microsoft recomenda o isolamento estrito de ativos:
    * **Tier 0:** Domain Controllers, contas de Domain Admins e servidores PKI. Contas de Tier inferior (HelpDesk, estações comuns) jamais podem ter qualquer direito de escrita ou acesso sobre objetos de Tier 0.
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
-1. **Localizar e Iniciar o Binário:**
-   No terminal do container, execute o desafio de análise de grafos:
-   ```bash
-   /challenge/ad-bloodhound-path
-   ```
-2. **Examinar o Grafo Exibido no Terminal:**
-   O programa exibirá a rota de permissões transitivas mapeada:
-   ```text
-   [User: bob] -> MemberOf -> [Group: HelpDesk] -> GenericAll -> [User: srv_backup] -> WriteDacl -> [Group: Domain Admins]
-   ```
-   E fará a pergunta:
-   "Qual é o usuário comum inicial que pode explorar essa cadeia transitiva de permissões para escalar privilégios até o grupo 'Domain Admins'?"
-3. **Identificar e Submeter o Usuário Inicial:**
-   No prompt interativo `>> `, digite o identificador da conta de origem:
-   ```text
-   bob
-   ```
-   *(Ou execute diretamente via CLI: `/challenge/ad-bloodhound-path bob`).*
-4. **Capturar e Submeter a Flag:**
-   O binário confirmará a análise correta da rota do BloodHound e exibirá a flag no formato:
-   ```text
-   pwn.college{...}
-   ```
-   Copie a flag e registre a pontuação no portal.
+### 🎯 Seu Objetivo
+
+Mapear e analisar caminhos de escalação de privilégios em um ambiente de Active Directory modelado como grafo. Seu objetivo é investigar as relações de controle, direitos de escrita (GenericAll, WriteDacl) e sessões ativas para descobrir o caminho mais curto (*shortest path*) que permite a uma conta sem privilégios obter controle total sobre o domínio (*Domain Admin*).

@@ -13,7 +13,7 @@ Em sistemas operacionais modernos, cada processo em execução recebe um espaço
 ```
 +-----------------------------------------------------------------------------------------+
 |                               IMAGEM BRUTA DA MEMÓRIA RAM                               |
-|                              (/tmp/cyberguard_ram_dump.raw)                             |
+|                              (/tmp/<token_encontrado_na_memoria>.raw)                             |
 +-----------------------------------------------------------------------------------------+
 |  Kernel Structures: task_struct (PID 1337, Comm: "rev_tunnel.elf")                      |
 |  Active Socket:     192.168.10.45:4444 -> 10.0.0.1:8443 (Túnel C2 Ativo)               |
@@ -45,29 +45,29 @@ A investigação de imagens de memória combina ferramentas especializadas (Vola
 #### 1. Varredura com Volatility 3
 ```bash
 # Listar processos em execução na imagem de memória:
-vol -f /tmp/cyberguard_ram_dump.raw linux.pslist
+vol -f /tmp/<token_encontrado_na_memoria>.raw linux.pslist
 
 # Localizar injeções de código e regiões RWX:
-vol -f /tmp/cyberguard_ram_dump.raw linux.malfind
+vol -f /tmp/<token_encontrado_na_memoria>.raw linux.malfind
 
 # Inspecionar sockets de rede abertos:
-vol -f /tmp/cyberguard_ram_dump.raw linux.netscan
+vol -f /tmp/<token_encontrado_na_memoria>.raw linux.netscan
 
 # Recuperar linhas de comando digitadas:
-vol -f /tmp/cyberguard_ram_dump.raw linux.bash
+vol -f /tmp/<token_encontrado_na_memoria>.raw linux.bash
 ```
 
 #### 2. Extração Rápida de Strings e Chaves em Dumps Brutos (Raw)
 Quando o perfil do kernel não está imediatamente disponível, utilitários GNU permitem localizar padrões textuais conhecidos:
 ```bash
 # Extrair todas as cadeias de texto imprimíveis e filtrar termos de chave:
-strings -a /tmp/cyberguard_ram_dump.raw | grep -i MEM_KEY
+strings -a /tmp/<token_encontrado_na_memoria>.raw | grep -i MEM_KEY
 
 # Extrair padrões com regex direta sobre o binário:
-grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
+grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/<token_encontrado_na_memoria>.raw
 
 # Inspecionar o offset com contexto de bytes em hexadecimal (xxd):
-xxd -s 0x200 -l 128 /tmp/cyberguard_ram_dump.raw
+xxd -s 0x200 -l 128 /tmp/<token_encontrado_na_memoria>.raw
 ```
 
 #### 3. Saída Esperada no Terminal
@@ -82,45 +82,6 @@ VAD_PROTECTION: PAGE_EXECUTE_READWRITE
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga os passos abaixo para analisar a imagem de memória e validar a resolução:
-
-1. **Inicie o laboratório do desafio:**
-   Execute o executável `/challenge/dfir-memory-dump-inspection`:
-   ```bash
-   /challenge/dfir-memory-dump-inspection
-   ```
-   *O desafio gerará a imagem simulada de memória em `/tmp/cyberguard_ram_dump.raw`.*
-
-2. **Inspecione a imagem de memória gerada em `/tmp`:**
-   Utilize o comando `strings` ou `grep` para vasculhar o arquivo de despejo de memória em busca do artefato criptográfico:
-   ```bash
-   strings /tmp/cyberguard_ram_dump.raw | grep MEM_KEY
-   ```
-   *Alternativa com grep de bytes:*
-   ```bash
-   grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
-   ```
-
-3. **Identifique a chave volátil:**
-   A inspeção revelará o token de cifragem AES-256 do malware:
-   ```text
-   MEM_KEY_AES_256_CYBERGUARD_LIVE
-   ```
-
-4. **Submeta a chave ao binário validador:**
-   Passe a chave identificada como argumento para o desafio:
-   ```bash
-   /challenge/dfir-memory-dump-inspection MEM_KEY_AES_256_CYBERGUARD_LIVE
-   ```
-   *Ou digite-a no prompt interativo caso execute sem argumentos.*
-
-5. **Capture a flag:**
-   O sistema validará o artefato recuperado e liberará a flag de conclusão:
-   ```text
-   [+] DEBRIEFING TÉCNICO: CHAVE AES-256 RECUPERADA DA MEMÓRIA VOLÁTIL!
-   [FLAG DE VALIDAÇÃO CYBERGUARD]:
-   pwn.college{...}
-   ```
-   Copie a flag no formato `pwn.college{...}` para submissão.
+Realizar a análise forense de um despejo (*dump*) de memória volátil de um sistema comprometido. Seu objetivo é investigar o estado dos processos em execução, conexões de rede e comandos executados para rastrear as ações do invasor, isolar o artefato malicioso persistido na memória e capturar a flag.

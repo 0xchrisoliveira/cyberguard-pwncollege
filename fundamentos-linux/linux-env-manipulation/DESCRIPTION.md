@@ -76,38 +76,6 @@ O gerenciamento de variáveis de ambiente no Linux envolve os seguintes comandos
 
 ---
 
-### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+### 🎯 Seu Objetivo
 
-Siga estas instruções para suprir a variável esperada e resgatar a flag:
-
-1. **Inspecione a exigência do binário:**
-   Execute `/challenge/linux-env-manipulation` sem alterar o ambiente:
-   ```bash
-   /challenge/linux-env-manipulation
-   ```
-   *O programa indicará que a variável `CYBERGUARD_TOKEN` está ausente ou com valor incorreto.*
-
-2. **Método 1: Resolução Elegante com Injeção Inline (Recomendado):**
-   Defina a variável imediatamente antes do comando em uma única linha:
-   ```bash
-   CYBERGUARD_TOKEN="treinamento_2026" /challenge/linux-env-manipulation
-   ```
-
-3. **Método 2: Resolução com `export` na Sessão:**
-   Exporte a variável para a shell e execute o binário:
-   ```bash
-   export CYBERGUARD_TOKEN="treinamento_2026"
-   /challenge/linux-env-manipulation
-   ```
-   *(Opcional) Verifique se a variável está ativa antes da execução:*
-   ```bash
-   printenv CYBERGUARD_TOKEN
-   ```
-
-4. **Capture e submeta a flag:**
-   O binário validará a variável no dicionário de ambiente e liberará a flag:
-   ```text
-   [+] Variavel de ambiente CYBERGUARD_TOKEN identificada!
-   pwn.college{...}
-   ```
-   Copie a sequência no padrão `pwn.college{...}` e insira no portal de treinamento.
+O binário `/challenge/linux-env-manipulation` espera encontrar variáveis de ambiente específicas configuradas na sessão do processo para validar a identidade do operador. Seu objetivo é identificar quais variáveis e valores são exigidos (execute o binário para ver as instruções de verificação), configurá-los no seu shell atual utilizando o comando `export` e executar o programa novamente com o ambiente devidamente preparado para liberar a flag.
