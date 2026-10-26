@@ -1,0 +1,319 @@
+Relatório do diagnóstico — Cyberguard Hub
+Questionário;Teste de Conhecimentos Prévios
+Ciclo;2026.2
+Gerado em;"26/10/2026, 13:17:30"
+Respondentes;8
+Questões;20
+
+MEMBRO: Arthur Gabriel Teotonio Stellato
+Resumo;Acertos: 14 de 20 respostas
+Maiores gaps;"Engenharia Reversa e Binários · Blue Team (SIEM, Logs, Detecção) · OSINT (Inteligência em Fontes Abertas)"
+Área;Nota;Nível;Autoavaliação;Teste
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+"Blue Team (SIEM, Logs, Detecção)";0;INICIANTE;0;0
+OSINT (Inteligência em Fontes Abertas);0;INICIANTE;0;0
+Prática e Resolução de CTF;10;INICIANTE;25;0
+Infraestrutura e Active Directory;60;INTERMEDIARIO;0;100
+"Fundamentos (Linux, Windows, Redes)";70;INTERMEDIARIO;25;100
+"Programação e Scripting (Python, C, Bash)";70;INTERMEDIARIO;25;100
+Web Pentest (OWASP Top 10);70;INTERMEDIARIO;25;100
+Forense Digital e Resposta a Incidentes;70;INTERMEDIARIO;25;100
+Análise de Malware em Sandbox;70;INTERMEDIARIO;25;100
+Hardening e Defesa de Sistemas;70;INTERMEDIARIO;25;100
+Criptografia Aplicada;70;INTERMEDIARIO;25;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Acerto
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;"A) SYN, SYN-ACK, ACK";"A) SYN, SYN-ACK, ACK";Acerto
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;B) Consultas parametrizadas (prepared statements);B) Consultas parametrizadas (prepared statements);Acerto
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Acerto
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";C) Autenticar usuários e manter a base de dados do diretório do domínio;C) Autenticar usuários e manter a base de dados do diretório do domínio;Acerto
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Acerto
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Acerto
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;E) Não sei/não conheço sobre o assunto;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Erro
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;E) Não sei/não conheço sobre o assunto;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Erro
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Acerto
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;"D) Desabilitar login do root e autenticação por senha, usando chaves";"D) Desabilitar login do root e autenticação por senha, usando chaves";Acerto
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Acerto
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Acerto
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";A) O conteúdo da memória RAM;A) O conteúdo da memória RAM;Acerto
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;E) Não sei/não conheço sobre o assunto;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Erro
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";A) Hash MD5;B) Base64;Erro
+
+MEMBRO: Giovanni Mastelaro Marin
+Resumo;Acertos: 17 de 20 respostas
+Maiores gaps;Web Pentest (OWASP Top 10) · Forense Digital e Resposta a Incidentes · Engenharia Reversa e Binários
+Área;Nota;Nível;Autoavaliação;Teste
+Web Pentest (OWASP Top 10);20;INICIANTE;50;0
+Forense Digital e Resposta a Incidentes;30;BASICO;0;50
+Engenharia Reversa e Binários;40;BASICO;25;50
+"Blue Team (SIEM, Logs, Detecção)";60;INTERMEDIARIO;0;100
+Hardening e Defesa de Sistemas;60;INTERMEDIARIO;0;100
+OSINT (Inteligência em Fontes Abertas);60;INTERMEDIARIO;0;100
+Infraestrutura e Active Directory;70;INTERMEDIARIO;25;100
+Criptografia Aplicada;70;INTERMEDIARIO;25;100
+"Fundamentos (Linux, Windows, Redes)";80;AVANCADO;50;100
+Análise de Malware em Sandbox;80;AVANCADO;50;100
+"Programação e Scripting (Python, C, Bash)";90;AVANCADO;75;100
+Prática e Resolução de CTF;100;AVANCADO;não informada;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Acerto
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;"A) SYN, SYN-ACK, ACK";"A) SYN, SYN-ACK, ACK";Acerto
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;"D) Bloquear apenas a palavra ""SELECT"" nos formulários";B) Consultas parametrizadas (prepared statements);Erro
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Acerto
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";C) Autenticar usuários e manter a base de dados do diretório do domínio;C) Autenticar usuários e manter a base de dados do diretório do domínio;Acerto
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Acerto
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Acerto
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";D) Armazena as flags das comparações;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Acerto
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Acerto
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Acerto
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Acerto
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;"D) Desabilitar login do root e autenticação por senha, usando chaves";"D) Desabilitar login do root e autenticação por senha, usando chaves";Acerto
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Acerto
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Acerto
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";D) Os logs arquivados em outro local;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Acerto
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";B) Base64;B) Base64;Acerto
+
+MEMBRO: Ismael Rodrigues Gonçalves Neto
+Resumo;Acertos: 2 de 20 respostas
+Maiores gaps;"Fundamentos (Linux, Windows, Redes) · Web Pentest (OWASP Top 10) · Forense Digital e Resposta a Incidentes"
+Área;Nota;Nível;Autoavaliação;Teste
+"Fundamentos (Linux, Windows, Redes)";0;INICIANTE;0;0
+Web Pentest (OWASP Top 10);0;INICIANTE;0;0
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Infraestrutura e Active Directory;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+"Blue Team (SIEM, Logs, Detecção)";0;INICIANTE;0;0
+Hardening e Defesa de Sistemas;0;INICIANTE;0;0
+Criptografia Aplicada;0;INICIANTE;0;0
+OSINT (Inteligência em Fontes Abertas);0;INICIANTE;0;0
+Prática e Resolução de CTF;0;INICIANTE;0;0
+Análise de Malware em Sandbox;40;BASICO;25;50
+"Programação e Scripting (Python, C, Bash)";70;INTERMEDIARIO;25;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";E) Não sei/não conheço sobre o assunto;"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Erro
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;E) Não sei/não conheço sobre o assunto;"A) SYN, SYN-ACK, ACK";Erro
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;E) Não sei/não conheço sobre o assunto;B) Consultas parametrizadas (prepared statements);Erro
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;E) Não sei/não conheço sobre o assunto;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Erro
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";E) Não sei/não conheço sobre o assunto;C) Autenticar usuários e manter a base de dados do diretório do domínio;Erro
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;E) Não sei/não conheço sobre o assunto;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;E) Não sei/não conheço sobre o assunto;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Erro
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;E) Não sei/não conheço sobre o assunto;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Erro
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;E) Não sei/não conheço sobre o assunto;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Erro
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;E) Não sei/não conheço sobre o assunto;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Erro
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;E) Não sei/não conheço sobre o assunto;"D) Desabilitar login do root e autenticação por senha, usando chaves";Erro
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;E) Não sei/não conheço sobre o assunto;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Erro
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;E) Não sei/não conheço sobre o assunto;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Erro
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";E) Não sei/não conheço sobre o assunto;B) Base64;Erro
+
+MEMBRO: Joao Vitor Cordeiro
+Resumo;Acertos: 4 de 20 respostas
+Maiores gaps;Web Pentest (OWASP Top 10) · Forense Digital e Resposta a Incidentes · Infraestrutura e Active Directory
+Área;Nota;Nível;Autoavaliação;Teste
+Web Pentest (OWASP Top 10);0;INICIANTE;0;0
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Infraestrutura e Active Directory;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+"Blue Team (SIEM, Logs, Detecção)";0;INICIANTE;0;0
+Hardening e Defesa de Sistemas;0;INICIANTE;0;0
+Criptografia Aplicada;0;INICIANTE;0;0
+OSINT (Inteligência em Fontes Abertas);0;INICIANTE;0;0
+Prática e Resolução de CTF;0;INICIANTE;0;0
+"Fundamentos (Linux, Windows, Redes)";30;BASICO;25;33
+"Programação e Scripting (Python, C, Bash)";80;AVANCADO;50;100
+Análise de Malware em Sandbox;80;AVANCADO;50;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";E) Não sei/não conheço sobre o assunto;"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Erro
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;E) Não sei/não conheço sobre o assunto;"A) SYN, SYN-ACK, ACK";Erro
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;E) Não sei/não conheço sobre o assunto;B) Consultas parametrizadas (prepared statements);Erro
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Acerto
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";E) Não sei/não conheço sobre o assunto;C) Autenticar usuários e manter a base de dados do diretório do domínio;Erro
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;E) Não sei/não conheço sobre o assunto;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Acerto
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;E) Não sei/não conheço sobre o assunto;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Erro
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;E) Não sei/não conheço sobre o assunto;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Erro
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;E) Não sei/não conheço sobre o assunto;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Erro
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;E) Não sei/não conheço sobre o assunto;"D) Desabilitar login do root e autenticação por senha, usando chaves";Erro
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;E) Não sei/não conheço sobre o assunto;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Erro
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;E) Não sei/não conheço sobre o assunto;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Erro
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";E) Não sei/não conheço sobre o assunto;B) Base64;Erro
+
+MEMBRO: Lauren Marçulo
+Resumo;Acertos: 9 de 20 respostas
+Maiores gaps;Web Pentest (OWASP Top 10) · Forense Digital e Resposta a Incidentes · Infraestrutura e Active Directory
+Área;Nota;Nível;Autoavaliação;Teste
+Web Pentest (OWASP Top 10);0;INICIANTE;0;0
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Infraestrutura e Active Directory;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+Criptografia Aplicada;0;INICIANTE;0;0
+Prática e Resolução de CTF;0;INICIANTE;0;0
+Análise de Malware em Sandbox;30;BASICO;0;50
+"Fundamentos (Linux, Windows, Redes)";50;INTERMEDIARIO;25;67
+"Blue Team (SIEM, Logs, Detecção)";70;INTERMEDIARIO;25;100
+Hardening e Defesa de Sistemas;70;INTERMEDIARIO;25;100
+OSINT (Inteligência em Fontes Abertas);70;INTERMEDIARIO;25;100
+"Programação e Scripting (Python, C, Bash)";80;AVANCADO;50;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Acerto
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;E) Não sei/não conheço sobre o assunto;"A) SYN, SYN-ACK, ACK";Erro
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;E) Não sei/não conheço sobre o assunto;B) Consultas parametrizadas (prepared statements);Erro
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Acerto
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";E) Não sei/não conheço sobre o assunto;C) Autenticar usuários e manter a base de dados do diretório do domínio;Erro
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;E) Não sei/não conheço sobre o assunto;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;E) Não sei/não conheço sobre o assunto;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Erro
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Acerto
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Acerto
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Acerto
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;"D) Desabilitar login do root e autenticação por senha, usando chaves";"D) Desabilitar login do root e autenticação por senha, usando chaves";Acerto
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;E) Não sei/não conheço sobre o assunto;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Erro
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Acerto
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";E) Não sei/não conheço sobre o assunto;B) Base64;Erro
+
+MEMBRO: luiz paulo tonini guerra
+Resumo;Acertos: 1 de 20 respostas
+Maiores gaps;"Fundamentos (Linux, Windows, Redes) · Web Pentest (OWASP Top 10) · Forense Digital e Resposta a Incidentes"
+Área;Nota;Nível;Autoavaliação;Teste
+"Fundamentos (Linux, Windows, Redes)";0;INICIANTE;0;0
+Web Pentest (OWASP Top 10);0;INICIANTE;0;0
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Infraestrutura e Active Directory;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+Análise de Malware em Sandbox;0;INICIANTE;0;0
+"Blue Team (SIEM, Logs, Detecção)";0;INICIANTE;0;0
+Hardening e Defesa de Sistemas;0;INICIANTE;0;0
+Criptografia Aplicada;0;INICIANTE;0;0
+OSINT (Inteligência em Fontes Abertas);0;INICIANTE;0;0
+Prática e Resolução de CTF;0;INICIANTE;0;0
+"Programação e Scripting (Python, C, Bash)";80;AVANCADO;50;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";E) Não sei/não conheço sobre o assunto;"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Erro
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;E) Não sei/não conheço sobre o assunto;"A) SYN, SYN-ACK, ACK";Erro
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;E) Não sei/não conheço sobre o assunto;B) Consultas parametrizadas (prepared statements);Erro
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;E) Não sei/não conheço sobre o assunto;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Erro
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";E) Não sei/não conheço sobre o assunto;C) Autenticar usuários e manter a base de dados do diretório do domínio;Erro
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;E) Não sei/não conheço sobre o assunto;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;E) Não sei/não conheço sobre o assunto;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Erro
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;E) Não sei/não conheço sobre o assunto;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Erro
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;E) Não sei/não conheço sobre o assunto;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Erro
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;E) Não sei/não conheço sobre o assunto;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Erro
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;E) Não sei/não conheço sobre o assunto;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Erro
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;E) Não sei/não conheço sobre o assunto;"D) Desabilitar login do root e autenticação por senha, usando chaves";Erro
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;E) Não sei/não conheço sobre o assunto;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Erro
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;E) Não sei/não conheço sobre o assunto;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Erro
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";E) Não sei/não conheço sobre o assunto;B) Base64;Erro
+
+MEMBRO: Matheus Hirose Rodrigues
+Resumo;Acertos: 2 de 20 respostas
+Maiores gaps;"Fundamentos (Linux, Windows, Redes) · Forense Digital e Resposta a Incidentes · Infraestrutura e Active Directory"
+Área;Nota;Nível;Autoavaliação;Teste
+"Fundamentos (Linux, Windows, Redes)";0;INICIANTE;0;0
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Infraestrutura e Active Directory;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+Análise de Malware em Sandbox;0;INICIANTE;0;0
+"Blue Team (SIEM, Logs, Detecção)";0;INICIANTE;0;0
+Hardening e Defesa de Sistemas;0;INICIANTE;0;0
+Criptografia Aplicada;0;INICIANTE;0;0
+OSINT (Inteligência em Fontes Abertas);0;INICIANTE;0;0
+Prática e Resolução de CTF;10;INICIANTE;25;0
+"Programação e Scripting (Python, C, Bash)";70;INTERMEDIARIO;25;100
+Web Pentest (OWASP Top 10);70;INTERMEDIARIO;25;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";E) Não sei/não conheço sobre o assunto;"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Erro
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;E) Não sei/não conheço sobre o assunto;"A) SYN, SYN-ACK, ACK";Erro
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;B) Consultas parametrizadas (prepared statements);B) Consultas parametrizadas (prepared statements);Acerto
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;E) Não sei/não conheço sobre o assunto;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Erro
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";E) Não sei/não conheço sobre o assunto;C) Autenticar usuários e manter a base de dados do diretório do domínio;Erro
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;E) Não sei/não conheço sobre o assunto;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;E) Não sei/não conheço sobre o assunto;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Erro
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;E) Não sei/não conheço sobre o assunto;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Erro
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;E) Não sei/não conheço sobre o assunto;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Erro
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;E) Não sei/não conheço sobre o assunto;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Erro
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;E) Não sei/não conheço sobre o assunto;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Erro
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;E) Não sei/não conheço sobre o assunto;"D) Desabilitar login do root e autenticação por senha, usando chaves";Erro
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;E) Não sei/não conheço sobre o assunto;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Erro
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;E) Não sei/não conheço sobre o assunto;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Erro
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";E) Não sei/não conheço sobre o assunto;B) Base64;Erro
+
+MEMBRO: Silvio Henrique Mendes Dos Santos
+Resumo;Acertos: 14 de 20 respostas
+Maiores gaps;Forense Digital e Resposta a Incidentes · Engenharia Reversa e Binários · Infraestrutura e Active Directory
+Área;Nota;Nível;Autoavaliação;Teste
+Forense Digital e Resposta a Incidentes;0;INICIANTE;0;0
+Engenharia Reversa e Binários;0;INICIANTE;0;0
+Infraestrutura e Active Directory;50;INTERMEDIARIO;50;50
+"Fundamentos (Linux, Windows, Redes)";67;INTERMEDIARIO;não informada;67
+"Programação e Scripting (Python, C, Bash)";80;AVANCADO;50;100
+Análise de Malware em Sandbox;80;AVANCADO;50;100
+"Blue Team (SIEM, Logs, Detecção)";80;AVANCADO;50;100
+Hardening e Defesa de Sistemas;80;AVANCADO;50;100
+Criptografia Aplicada;80;AVANCADO;50;100
+OSINT (Inteligência em Fontes Abertas);80;AVANCADO;50;100
+Prática e Resolução de CTF;80;AVANCADO;50;100
+Web Pentest (OWASP Top 10);100;AVANCADO;não informada;100
+Questão por questão
+Área;Pergunta;Sua resposta;Correta;Resultado
+"Fundamentos (Linux, Windows, Redes)";"No Linux, o que significa a permissão 640 aplicada a um arquivo (chmod 640)?";A) Todos os usuários podem ler e escrever;"C) O dono lê e escreve, o grupo apenas lê e os outros não têm acesso";Erro
+"Fundamentos (Linux, Windows, Redes)";Qual é a sequência do three-way handshake do TCP?;"A) SYN, SYN-ACK, ACK";"A) SYN, SYN-ACK, ACK";Acerto
+"Programação e Scripting (Python, C, Bash)";Por que a função strcpy da linguagem C é considerada perigosa?;"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";"D) Não verifica o tamanho do destino, o que pode causar estouro de buffer";Acerto
+Web Pentest (OWASP Top 10);Qual é a mitigação mais eficaz e recomendada contra SQL Injection?;B) Consultas parametrizadas (prepared statements);B) Consultas parametrizadas (prepared statements);Acerto
+"Fundamentos (Linux, Windows, Redes)";O que caracteriza uma vulnerabilidade de SSRF (Server-Side Request Forgery)?;"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";"A) Induzir o servidor a fazer requisições para destinos escolhidos pelo atacante, como serviços internos que não são expostos à internet";Acerto
+Infraestrutura e Active Directory;"No Active Directory, qual é a função de um controlador de domínio (DC)?";C) Autenticar usuários e manter a base de dados do diretório do domínio;C) Autenticar usuários e manter a base de dados do diretório do domínio;Acerto
+Infraestrutura e Active Directory;Qual descrição corresponde ao ataque conhecido como Kerberoasting?;A) Esgotar o servidor DNS do domínio;D) Solicitar tickets de serviço de contas com SPN e tentar descobrir a senha da conta offline;Erro
+Engenharia Reversa e Binários;Qual afirmação diferencia corretamente análise estática de análise dinâmica de um binário?;E) Não sei/não conheço sobre o assunto;"B) A estática examina o binário sem executá-lo; a dinâmica observa seu comportamento durante a execução em ambiente controlado";Erro
+Engenharia Reversa e Binários;"Em arquiteturas x86/x64, qual é a função do registrador EIP/RIP?";E) Não sei/não conheço sobre o assunto;A) Armazena o endereço da próxima instrução a ser executada;Erro
+Análise de Malware em Sandbox;Qual é a prática mais adequada ao analisar dinamicamente uma amostra suspeita de malware?;"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";"C) Executar em uma máquina virtual isolada, com snapshot e sem acesso à rede de produção";Acerto
+Análise de Malware em Sandbox;Por que autores de malware utilizam packers?;"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";"D) Para compactar e ofuscar o código, dificultando a análise estática e a detecção por assinatura";Acerto
+"Blue Team (SIEM, Logs, Detecção)";Qual é a função principal de um SIEM?;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;B) Coletar e correlacionar logs e eventos de várias fontes para detectar e investigar incidentes;Acerto
+"Blue Team (SIEM, Logs, Detecção)";O que é o MITRE ATT&CK?;"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";"A) Uma base de conhecimento de táticas e técnicas de adversários, usada para mapear ataques e orientar detecções";Acerto
+Hardening e Defesa de Sistemas;O que é hardening de sistemas?;"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";"C) Reduzir a superfície de ataque, desativando o que é desnecessário e aplicando configurações seguras e atualizações";Acerto
+Hardening e Defesa de Sistemas;Qual configuração aumenta a segurança de um servidor SSH?;"D) Desabilitar login do root e autenticação por senha, usando chaves";"D) Desabilitar login do root e autenticação por senha, usando chaves";Acerto
+Criptografia Aplicada;Por que senhas devem ser armazenadas com hash lento e salt (como bcrypt ou Argon2) em vez de criptografia reversível?;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;B) Porque o hash lento com salt não é reversível e dificulta ataques com tabelas pré-computadas e força bruta;Acerto
+Forense Digital e Resposta a Incidentes;O que é a cadeia de custódia em uma investigação forense?;E) Não sei/não conheço sobre o assunto;"C) O registro documentado de quem manuseou a evidência, quando e como, garantindo sua integridade";Erro
+Forense Digital e Resposta a Incidentes;"Segundo a ordem de volatilidade, qual evidência deve ser coletada primeiro em um host comprometido?";E) Não sei/não conheço sobre o assunto;A) O conteúdo da memória RAM;Erro
+OSINT (Inteligência em Fontes Abertas);Qual das opções é um exemplo de OSINT passivo?;"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";"D) Consulta a registros WHOIS, DNS e certificados públicos sem interagir com a infraestrutura do alvo";Acerto
+Prática e Resolução de CTF;"Em um CTF, você encontra a string ZmxhZ3t0ZXN0ZX0=. Qual é a codificação mais provável?";B) Base64;B) Base64;Acerto
+

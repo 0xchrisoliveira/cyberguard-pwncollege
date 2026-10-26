@@ -1,0 +1,546 @@
+id: cyberguard-ethical-hacking
+name: "Cyberguard: Trilha Completa de Hacking Ético"
+type: public
+award:
+  emoji: "🛡️"
+
+description: |
+  Bem-vindo ao **Dojo Oficial de Treinamento da Cyberguard** na plataforma **pwn.college**.
+  
+  Desenvolvido sob medida para nivelar, consolidar e elevar as habilidades técnicas da nossa equipe, este dojo oferece uma progressão pedagógica estruturada que vai desde os fundamentos de linha de comando no Linux e redes de computadores até tópicos avançados de engenharia reversa x86_64, exploração de vulnerabilidades de memória (pwn), segurança defensiva (Blue Team/DFIR) e infraestrutura corporativa (Active Directory).
+  
+  Cada módulo foi calibrado com base no diagnóstico técnico de competências do time, atacando gargalos críticos (como arquitetura de CPU, registradores EIP/RIP, análise estática vs. dinâmica, ordem de volatilidade RFC 3227 e modelo de permissões Unix).
+  
+  Explore as aulas, estude as leituras teóricas e resolva os desafios práticos diretamente nos containers do pwn.college.
+
+modules:
+  - id: fundamentos-linux
+    name: "Módulo 1: Fundamentos de Linux & Linha de Comando"
+    description: |
+      O Linux é a espinha dorsal da segurança ofensiva e defensiva contemporânea. Este módulo constrói a fluência essencial no terminal do pwn.college: navegação eficiente pela hierarquia de arquivos, operadores de redirecionamento de entrada/saída (stdin, stdout, stderr), concatenação de comandos com pipes (|), manipulação de variáveis de ambiente e o modelo rigoroso de permissões POSIX.
+      
+      Serão desmistificados os cálculos octais e simbólicos (como a diferença entre chmod 640 e 755), a posse de arquivos (chown/chgrp) e os bits especiais SUID, SGID e Sticky Bit, fundamentais para a compreensão de escalação de privilégios.
+    resources:
+      - name: "Linux Luminarium: Fundamentos da Linha de Comando"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=kY3s4BDhhq8"
+        slides: "https://pwn.college/linux-luminarium"
+      - name: "Guia Teórico: Anatomia de Permissões Unix, Notação Octal e SUID"
+        type: markdown
+        content: |
+          ### Estrutura de Permissões no Linux
+          
+          No ecossistema Unix/Linux, todo arquivo e diretório possui permissões divididas em três escopos de usuários:
+          1. **Usuário proprietário (User - u)**
+          2. **Grupo proprietário (Group - g)**
+          3. **Outros usuários do sistema (Others - o)**
+          
+          Cada escopo é composto por três operações básicas representadas por valores binários e octais:
+          * **Leitura (`r` - Read):** Valor octal **4** (binário `100`). Permite visualizar o conteúdo do arquivo ou listar entradas de um diretório.
+          * **Escrita (`w` - Write):** Valor octal **2** (binário `010`). Permite modificar/excluir arquivos ou criar/deletar itens em um diretório.
+          * **Execução (`x` - Execute):** Valor octal **1** (binário `001`). Permite rodar o arquivo como programa ou navegar (`cd`) em um diretório.
+          
+          #### O Caso Crítico: `chmod 640` vs `chmod 755`
+          * **`chmod 640 arquivo.txt`**:
+            - **User (6 = 4+2):** Leitura (`r`) e Escrita (`w`).
+            - **Group (4 = 4):** Apenas Leitura (`r`).
+            - **Others (0 = 0):** **Nenhum acesso** (`---`). Outros usuários no sistema não podem ler nem modificar o arquivo.
+            *Atenção:* Confundir `640` com acesso irrestrito é uma falha grave de segurança operacional.
+          * **`chmod 755 script.sh`**:
+            - **User (7 = 4+2+1):** Leitura, Escrita e Execução (`rwx`).
+            - **Group (5 = 4+1):** Leitura e Execução (`r-x`).
+            - **Others (5 = 4+1):** Leitura e Execução (`r-x`).
+          
+          #### Bits Especiais de Execução: SUID e SGID
+          * **SUID (Set User ID - octal 4000, representado por `s` no lugar do `x` do dono):** Quando um binário possui o bit SUID ativado (ex: `-rwsr-xr-x`), ele executa temporariamente com os privilégios do usuário proprietário do arquivo (frequentemente o `root`), independente de qual usuário o disparou. No pwn.college, os desafios de exploração utilizam binários SUID para ler a `/flag`.
+          * **SGID (Set Group ID - octal 2000):** Executa com os privilégios do grupo proprietário.
+    challenges:
+      - id: linux-nav-files
+        name: "Expedição no Sistema de Arquivos"
+        description: |
+          Aprenda a navegar pelo sistema de arquivos Linux utilizando caminhos absolutos e relativos (`cd`, `ls -la`, `pwd`). Encontre o arquivo oculto que contém a chave para a primeira flag.
+      - id: linux-io-redirection
+        name: "Mestria em Redirecionamento (I/O e Pipes)"
+        description: |
+          Manipule descritores de arquivo padrão (0: stdin, 1: stdout, 2: stderr). Pratique o uso de `>`, `>>`, `<`, `2>` e utilize pipelines `|` com `grep`, `sort` e `head` para filtrar a saída de um processo ruidoso e extrair a flag.
+      - id: linux-env-manipulation
+        name: "Engenharia de Variáveis de Ambiente"
+        description: |
+          Entenda como processos herdam o ambiente operacional. Configure variáveis de ambiente específicas (`export TARGET_VAR=...`), inspecione o `env` e modifique o `PATH` do sistema para disparar a rotina de validação e recuperar a flag.
+      - id: linux-permissions-octal
+        name: "Auditoria e Cálculo de Permissões Octais"
+        description: |
+          Um arquivo de configuração crucial está protegido com permissões restritivas. Calcule a máscara de permissões octais correta (`chmod 640`, `chmod 755`) e ajuste o arquivo conforme as exigências da política de segurança local para que o verificador autorize a leitura.
+      - id: linux-suid-privilege
+        name: "O Poder do SUID (Set User ID)"
+        description: |
+          Identifique binários no sistema com o bit SUID habilitado através do utilitário `find / -perm -4000 2>/dev/null`. Compreenda por que esses binários executam como root e como eles interagem com arquivos restritos como `/flag`.
+
+  - id: redes-protocolos
+    name: "Módulo 2: Redes de Computadores, Protocolos & Reconhecimento"
+    description: |
+      Nenhum ataque ou defesa cibernética ocorre no vácuo. Este módulo consolida a arquitetura da pilha TCP/IP, as portas de serviços canônicos e a anatomia detalhada do handshake de três vias (Three-Way Handshake: SYN -> SYN-ACK -> ACK).
+      
+      Você aprenderá a capturar e decodificar tráfego de rede em tempo real com tcpdump e Wireshark, a estabelecer canais de comunicação brutos com netcat e sockets TCP/UDP, e a realizar varreduras metódicas com nmap identificando banners, firewalls e versões de serviços.
+    resources:
+      - name: "Introdução a Redes e Comunicação por Sockets"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=3QhU9jd03a0"
+        slides: "https://pwn.college/networking"
+      - name: "Guia Teórico: Three-Way Handshake do TCP e Portas Notórias"
+        type: markdown
+        content: |
+          ### O Three-Way Handshake do Protocolo TCP
+          
+          O TCP (Transmission Control Protocol) é um protocolo orientado a conexão, garantindo entrega ordenada e confiável de pacotes. Antes de qualquer dado ser transmitido, o cliente e o servidor sincronizam seus números de sequência (*Sequence Numbers*) através de 3 etapas rigorosas:
+          
+          ```
+          CLIENTE                                      SERVIDOR
+             |                                             |
+             |  1. [SYN] Seq = x                           |
+             |-------------------------------------------->|
+             |                                             |
+             |  2. [SYN-ACK] Seq = y, Ack = x + 1          |
+             |<--------------------------------------------|
+             |                                             |
+             |  3. [ACK] Seq = x + 1, Ack = y + 1          |
+             |-------------------------------------------->|
+             |                                             |
+             |==== CONEXÃO ESTABELECIDA (Dados / PSH) =====|
+          ```
+          
+          #### Passo a Passo das Flags:
+          1. **SYN (Synchronize):** O cliente envia um pacote com a flag `SYN` levantada e um número de sequência inicial aleatório (`ISN = x`). Indica intenção de abrir canal.
+          2. **SYN-ACK (Synchronize-Acknowledgment):** O servidor responde reconhecendo o pacote do cliente (`Ack = x + 1`) e transmitindo seu próprio número de sequência inicial (`Seq = y`).
+          3. **ACK (Acknowledgment):** O cliente confirma o recebimento do SYN do servidor (`Ack = y + 1`). A partir deste momento, o socket está no estado `ESTABLISHED`.
+          
+          #### Principais Portas e Serviços Canônicos:
+          * `21/TCP`: FTP (Transferência de arquivos em texto claro)
+          * `22/TCP`: SSH (Acesso remoto criptografado)
+          * `25/TCP`: SMTP (Envio de e-mails)
+          * `53/UDP/TCP`: DNS (Resolução de nomes de domínio)
+          * `80/TCP`: HTTP (Web em texto claro)
+          * `443/TCP`: HTTPS (HTTP sobre TLS/SSL)
+          * `445/TCP`: SMB (Compartilhamento de arquivos Windows / Active Directory)
+          * `3389/TCP`: RDP (Área de trabalho remota da Microsoft)
+    challenges:
+      - id: net-nc-raw-socket
+        name: "Conexões Manuais com Netcat"
+        description: |
+          Utilize o `nc` (netcat) para se conectar a um serviço escutando em uma porta local alta. Dialogue diretamente com o protocolo do servidor, envie a saudação exigida pela especificação e obtenha a flag.
+      - id: net-tcpdump-sniffing
+        name: "Sniffing de Pacotes com Tcpdump"
+        description: |
+          Um processo local está transmitindo dados confidenciais através da interface de loopback (`lo`). Utilize o comando `tcpdump -i lo -A -nn` para interceptar os pacotes, filtrar o tráfego relevante e reconstruir a flag.
+      - id: net-tcp-handshake-analysis
+        name: "Dissecando o Handshake TCP no Wireshark/Tshark"
+        description: |
+          Analise um arquivo `.pcap` contendo múltiplas conexões de rede. Identifique a conexão que completou perfeitamente o Three-Way Handshake (SYN, SYN-ACK, ACK), determine os números de sequência iniciais (ISN) e extraia a carga útil (payload).
+      - id: net-nmap-recon
+        name: "Reconhecimento Ativo com Nmap"
+        description: |
+          Realize uma varredura metódica com o `nmap` contra uma sub-rede interna. Utilize flags de detecção de versão (`-sV`), scripts NSE padrão (`-sC`) e varredura SYN stealth (`-sS`) para descobrir um serviço escondido em uma porta não padronizada.
+
+  - id: scripting-automacao
+    name: "Módulo 3: Programação e Scripting Ofensivo (Python & Bash)"
+    description: |
+      O diferencial de um profissional de elite em segurança é a capacidade de criar ferramentas personalizadas e automatizar interações complexas. Este módulo capacita você a programar scripts em Python e Bash para comunicação via sockets, manipulação de streams de texto e automação de exploits usando a renomada biblioteca `pwntools`.
+      
+      Além disso, você dominará o uso de `strace` e `ltrace` para rastrear chamadas de sistema (syscalls) e funções de biblioteca compartilhada em tempo de execução.
+    resources:
+      - name: "Pwntools e Automação de Binários"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=Fj7n0P4W64M"
+        slides: "https://pwn.college/program-interaction"
+      - name: "Guia Teórico: Arquitetura de Sockets em Python e Syscalls com Strace"
+        type: markdown
+        content: |
+          ### Automação com Python e Sockets
+          
+          A biblioteca padrão `socket` permite interações diretas de baixo nível sobre TCP e UDP:
+          
+          ```python
+          import socket
+
+          s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          s.connect(('127.0.0.1', 1337))
+          
+          # Leitura do banner
+          banner = s.recv(1024).decode()
+          print("[*] Recebido:", banner)
+          
+          # Envio de resposta calculada
+          resposta = "resposta_calculada\n"
+          s.sendall(resposta.encode())
+          
+          flag = s.recv(1024).decode()
+          print("[+] Flag:", flag)
+          s.close()
+          ```
+          
+          ### Acelerando com Pwntools
+          Para tarefas interativas e CTFs, a biblioteca `pwntools` reduz dezenas de linhas a instruções expressivas:
+          ```python
+          from pwn import *
+
+          io = remote('127.0.0.1', 1337)
+          io.recvuntil(b"Calcule: ")
+          expressao = io.recvline().strip().decode()
+          resultado = str(eval(expressao)).encode()
+          io.sendline(resultado)
+          print(io.recvall().decode())
+          ```
+          
+          ### Depuração com Strace e Ltrace
+          * **`strace` (System Call Trace):** Intercepta e registra todas as chamadas que o programa faz diretamente ao kernel Linux (`open`, `read`, `write`, `socket`, `connect`, `execve`). Se um binário tenta ler um arquivo secreto, o `strace` revelará o caminho exato!
+          * **`ltrace` (Library Call Trace):** Intercepta chamadas a bibliotecas dinâmicas em C (`strcmp`, `printf`, `malloc`, `strlen`). Muito útil para comparar senhas passadas em funções de verificação ingênuas.
+    challenges:
+      - id: script-bash-loop
+        name: "Automação em Bash e Manipulação de Arquivos"
+        description: |
+          Crie um script em shell Bash que processe centenas de pequenos arquivos de log, filtre linhas com padrões regulares específicos e agregue os pedaços para montar a string final da flag.
+      - id: script-python-socket-math
+        name: "Desafio Matemático em Alta Velocidade com Sockets"
+        description: |
+          Um serviço de rede exige que você resolva 100 operações matemáticas complexas em menos de 3 segundos após o handshake. Escreva um script em Python com `socket` para ler, computar e responder a cada desafio em tempo hábil.
+      - id: script-pwntools-interaction
+        name: "Orquestração de Processos com Pwntools"
+        description: |
+          Interaja com um executável local através da interface `process()` do pwntools. Formate entradas com precisão de bytes, contorne prompts interativos e capture o output privilegiado.
+      - id: script-strace-secrets
+        name: "Rastreamento de Chamadas de Sistema (Strace)"
+        description: |
+          Um binário compilado sem código-fonte fecha abruptamente sem exibir mensagens. Execute o binário sob o controle do `strace -e trace=open,openat,read` para descobrir qual arquivo ele tenta acessar e decodifique o mistério.
+
+  - id: web-pentest-owasp
+    name: "Módulo 4: Segurança Web & OWASP Top 10"
+    description: |
+      As aplicações web são a principal porta de entrada para vetores de intrusão no mundo real. Este módulo desvenda as falhas mais críticas listadas pela OWASP, com ênfase prática em Injeção de SQL (SQLi), Server-Side Request Forgery (SSRF) e gestão frágil de sessões/cookies HTTP.
+      
+      Será detalhada a mecânica por trás do SQLi clássico e como remediá-lo em definitivo através de Consultas Parametrizadas (Prepared Statements), demonstrando o porquê da filtragem ingênua por lista negra ("blacklist") ser ineficaz.
+    resources:
+      - name: "Talking Web: Protocolo HTTP e Injeções"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=FfG24e7Q1d4"
+        slides: "https://pwn.college/talking-web"
+      - name: "Guia Teórico: SQL Injection, Prepared Statements e Anatomia do SSRF"
+        type: markdown
+        content: |
+          ### SQL Injection (SQLi) e a Verdadeira Mitigação
+          
+          O SQL Injection ocorre quando dados não confiáveis inseridos pelo usuário são concatenados diretamente na estrutura de comando da consulta enviada ao banco de dados:
+          
+          ```sql
+          -- Consulta Insegura por Concatenação:
+          query = "SELECT * FROM users WHERE username = '" + user_input + "' AND password = '" + pass_input + "'";
+          ```
+          Se o atacante inserir `' OR '1'='1' -- `, a semântica da query é alterada, forçando o retorno de registros privilegiados sem senha.
+          
+          #### O Erro das Listas Negras (Blacklisting):
+          Muitos desenvolvedores e analistas sugerem "bloquear a palavra `SELECT` ou aspas". Isso é **completamente falho**:
+          * Injeções podem utilizar encodings (URL, Hexadecimal, Unicode).
+          * Podem intercalar comentários (`SEL/*bypass*/ECT`).
+          * Podem explorar operadores sem comandos literais explícitos dependendo da consulta.
+          
+          #### A Solução Canônica: Prepared Statements (Consultas Parametrizadas)
+          Em *prepared statements*, a estrutura sintática da consulta é pré-compilada pelo SGBD. Os dados do usuário são enviados separadamente como meros valores de parâmetros, sendo impossível ao banco interpretar texto como código SQL:
+          ```python
+          # Mitigação Correta em Python (ex: sqlite3 / psycopg2):
+          cursor.execute("SELECT id, role FROM users WHERE username = ? AND password = ?", (username, password_hash))
+          ```
+          
+          ### SSRF (Server-Side Request Forgery)
+          O SSRF acontece quando uma aplicação web vulnérável busca um recurso remoto a partir de uma URL fornecida pelo usuário sem validar o destino. O atacante abusa da confiança do servidor para forçar o backend a fazer requisições contra recursos internos protegidos (como serviços em `127.0.0.1`, APIs de metadados em nuvem como `http://169.254.169.254` ou instâncias internas sem autenticação).
+    challenges:
+      - id: web-http-headers-cookies
+        name: "Manipulação de Sessões e Cabeçalhos HTTP"
+        description: |
+          Inspecione requisições HTTP utilizando curl ou proxies como o Burp Suite. Altere cabeçalhos como `User-Agent`, manipule cookies de sessão codificados e forje permissões administrativas para visualizar a página restrita.
+      - id: web-sqli-login-bypass
+        name: "Bypass de Autenticação via SQL Injection Clássico"
+        description: |
+          Explore um formulário de login vulnerável a concatenação de strings SQL. Utilize payloads booleanos como `' OR 1=1 --` para autenticar-se como o usuário `admin` sem conhecer a senha.
+      - id: web-sqli-remediation
+        name: "Laboratório de Defesa: Implementando Prepared Statements"
+        description: |
+          Analise o código-fonte vulnerável em Python/Flask de uma aplicação de busca de produtos. Reescreva a rotina de consulta ao banco SQLite utilizando parâmetros parametrizados (`?`), garantindo que nenhum payload de injeção altere a lógica de execução.
+      - id: web-ssrf-internal-recon
+        name: "Exploração de SSRF para Acesso à Rede Interna"
+        description: |
+          A aplicação web oferece uma funcionalidade de pré-visualização de links externos. Aponte o mecanismo para o endereço de loopback interno (`http://127.0.0.1:8080/admin/status`) inacessível externamente e extraia os dados protegidos.
+
+  - id: criptografia-ctf-basics
+    name: "Módulo 5: Criptografia Aplicada & Fundamentos CTF"
+    description: |
+      Uma das distinções mais vitais na cibersegurança é a diferença entre Codificação (Encoding), Hashing Unidirecional e Criptografia Bidirecional. Este módulo desfaz confusões frequentes entre formatos de representação (Base64, Hexadecimal, ASCII), algoritmos de hash criptográfico rápido (MD5, SHA-256) e funções de derivação lenta para armazenamento de senhas (Bcrypt, Argon2 com salt).
+      
+      Você também praticará técnicas de identificação de formatos e análise de esteganografia em arquivos de imagem e tráfego de rede.
+    resources:
+      - name: "Fundamentos de Criptografia e Decodificação"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=sIBA7p96F4A"
+        slides: "https://pwn.college/cryptography"
+      - name: "Guia Teórico: Encodings, Hashes, Salting e Criptografia"
+        type: markdown
+        content: |
+          ### Codificação (Encoding) vs Hashing vs Criptografia
+          
+          | Conceito | Finalidade | Reversível? | Chave Secreta? | Exemplos Notórios |
+          | :--- | :--- | :---: | :---: | :--- |
+          | **Encoding** | Compatibilidade e transmissão de dados binários em canais de texto | Sim (trivial) | **Não** | Base64, ASCII, Hexadecimal, URL-Encoding |
+          | **Hashing** | Garantir integridade de dados; geração de impressão digital fixa | **Não** (unidirecional) | Não (função pura) | SHA-256, MD5, SHA-3 |
+          | **KDF / Password Hash** | Armazenamento de senhas resistente a ataques de força bruta | **Não** (unidirecional) | Usa **Salt** e **Custo** | Bcrypt, Argon2id, PBKDF2, Scrypt |
+          | **Criptografia** | Confidencialidade de mensagens | Sim (se possuir a chave) | **Sim** (Simétrica ou Assimétrica) | AES-GCM, ChaCha20, RSA, ECC |
+          
+          #### O Formato Base64 e o Padding `=`
+          * O Base64 utiliza um alfabeto de 64 caracteres (`A-Z`, `a-z`, `0-9`, `+`, `/`).
+          * Cada caractere Base64 representa exatamente 6 bits.
+          * Se o total de bytes da entrada original não for múltiplo de 3, adiciona-se o caractere `=` no final como caractere de preenchimento (*padding*).
+          * Exemplo: `ZmxhZ3t0ZXN0ZX0=` (termina com `=` indicando padding, e contém letras maiúsculas e minúsculas).
+          * **Diferença de um Hash MD5:** O MD5 possui sempre exatamente 32 caracteres hexadecimais (`0-9`, `a-f`), sem padding e sem letras além de `f`.
+          
+          #### Por que Bcrypt e Argon2 para Senhas?
+          Hashes comuns como MD5 e SHA-256 foram projetados para serem extremamente rápidos (computam bilhões de operações por segundo em GPUs modernas), tornando-os péssimos para senhas.  
+          Algoritmos como **Argon2** e **Bcrypt** introduzem parâmetros de lentidão proposital (*work factor / memory cost*) e exigem um **Salt** exclusivo por usuário, inviabilizando Rainbow Tables e ataques acelerados por hardware.
+    challenges:
+      - id: crypto-encodings-pipeline
+        name: "Decodificando Encodings em Cascata"
+        description: |
+          Uma mensagem capturada foi sucessivamente convertida em ASCII, Hexadecimal e Base64 com padding. Identifique as assinaturas visuais de cada encoding e crie uma linha de comando em Linux (`base64 -d`, `xxd -r -p`) para restaurar o texto em claro.
+      - id: crypto-hash-identification
+        name: "Identificação e Análise de Hashes"
+        description: |
+          Receba uma lista mista de artefatos. Diferencie strings codificadas de hashes criptográficos rápidos (MD5/SHA1/SHA256) e hashes seguros de senha contendo salt e custo (como strings `$2b$12$...` do Bcrypt).
+      - id: crypto-john-cracking
+        name: "Quebra de Hashes com John the Ripper / Hashcat"
+        description: |
+          Utilize o `john` ou `hashcat` com uma wordlist conhecida (`rockyou.txt`) para recuperar a senha em texto claro de um hash MD5 e um hash NTLM corporativo.
+      - id: crypto-stego-basics
+        name: "Esteganografia e Análise de Metadados em Imagens"
+        description: |
+          Uma imagem PNG aparentemente inofensiva oculta a flag. Utilize ferramentas como `file`, `strings`, `exiftool` e `binwalk` para extrair arquivos compactados e metadados ocultos na estrutura dos bytes.
+
+  - id: forense-defesa
+    name: "Módulo 6: Forense Digital, Resposta a Incidentes (DFIR) & Hardening"
+    description: |
+      Quando um incidente de segurança é deflagrado, a precisão e a velocidade de resposta definem a sobrevivência da organização. Este módulo foca no respeito irrevogável à Ordem de Volatilidade (RFC 3227), priorizando a aquisição da memória RAM sobre discos estáticos, garantindo a integridade da Cadeia de Custódia.
+      
+      Você aprenderá os princípios de hardening de servidores Linux e SSH (chaves criptográficas, desativação de root, fail2ban), além dos alicerces de detecção em Blue Team com SIEM e mapeamento tático através da matriz MITRE ATT&CK.
+    resources:
+      - name: "Análise Forense e Investigação de Incidentes"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=JmCq9v1XoX4"
+        slides: "https://pwn.college/forensics"
+      - name: "Guia Teórico: RFC 3227 (Ordem de Volatilidade), Custódia e Hardening"
+        type: markdown
+        content: |
+          ### A Ordem de Volatilidade (RFC 3227)
+          
+          Ao responder a uma intrusão em um sistema computacional ativo, **nunca desligue o equipamento puxando da tomada ou executando `shutdown` antes de coletar as evidências mais voláteis**. A RFC 3227 estabelece a ordem prioritária de aquisição, do mais volátil para o menos volátil:
+          
+          1. **Registradores da CPU e Memória Cache:** Informações duram apenas microssegundos.
+          2. **Tabelas de Roteamento, Tabela ARP, Conexões de Rede Ativas e Cache do Kernel.**
+          3. **Memória Principal (RAM):** Contém processos em execução, chaves de criptografia em memória, senhas decodificadas, conexões estabelecidas e códigos maliciosos injetados sem arquivo (*fileless malware*). Se desligada a energia, a DRAM apaga-se imediatamente!
+          4. **Sistemas de Arquivos Temporários (Swap, /tmp em memória).**
+          5. **Discos Não Voláteis (HDD, SSD):** Logs armazenados no disco, arquivos de configuração.
+          6. **Logs Remotos e Históricos de Rede:** Gravados em SIEM ou servidores externos.
+          7. **Mídias de Backup Físicas e Fitas Magnéticas.**
+          
+          ### Cadeia de Custódia (Chain of Custody)
+          A Cadeia de Custódia é o registro documental e cronológico minucioso que comprova quem coletou, manuseou, transportou, analisou e armazenou cada evidência digital. Todo artefato deve possuir seu hash criptográfico (ex: SHA-256) calculado imediatamente após a coleta para provar em juízo ou auditoria que a evidência não foi alterada.
+          
+          ### Hardening de Servidores Linux e SSH
+          * Desabilitar login direto como `root` via SSH (`PermitRootLogin no`).
+          * Desabilitar autenticação por senha (`PasswordAuthentication no`), exigindo exclusivamente chaves públicas ED25519 ou RSA 4096 bits.
+          * Alterar porta padrão ou implementar controle de firewall com `ufw`/`iptables` e prevenção de força bruta com `fail2ban`.
+          
+          ### SIEM e MITRE ATT&CK
+          * **SIEM (Security Information and Event Management):** Plataforma centralizadora que agrega, normaliza e correlaciona eventos de segurança de múltiplas fontes em tempo real, gerando alertas de anomalia.
+          * **MITRE ATT&CK:** Base de conhecimento globalmente acessível que cataloga táticas, técnicas e procedimentos (TTPs) reais utilizados por adversários avançados (APTs), servindo de referência para caça a ameaças (*threat hunting*).
+    challenges:
+      - id: dfir-volatility-order
+        name: "Triage Emergencial: Respeitando a RFC 3227"
+        description: |
+          Um servidor em produção foi comprometido e está executando conexões suspeitas. Ordene e execute os procedimentos de triagem corretos, realizando o dump da memória volátil antes de manipular logs e arquivos de disco.
+      - id: dfir-memory-dump-inspection
+        name: "Análise de Imagem de Memória RAM com Volatility"
+        description: |
+          Carregue um dump de memória de um sistema Linux/Windows. Identifique a árvore de processos maliciosos ativos (`pslist`/`pstree`), recupere o socket de rede conectado e descubra a credencial que residia na memória.
+      - id: dfir-linux-hardening-audit
+        name: "Hardening de Bastion Host e Serviço SSH"
+        description: |
+          Receba um servidor Linux configurado de forma insegura. Audite o arquivo `/etc/ssh/sshd_config`, configure chaves de autenticação, desative o acesso do superusuário root e verifique a conformidade com as diretrizes CIS Benchmarks.
+      - id: dfir-log-correlation-mitre
+        name: "Correlação de Logs e Mapeamento MITRE ATT&CK"
+        description: |
+          Analise centenas de entradas de log de auditoria do Linux (`auditd` e `/var/log/auth.log`). Correlacione as ações do invasor, identifique a técnica de persistência utilizada e mapeie o ID correspondente da matriz MITRE ATT&CK.
+
+  - id: active-directory-infra
+    name: "Módulo 7: Infraestrutura Corporativa & Active Directory"
+    description: |
+      O Active Directory (AD) da Microsoft gerencia identidades, acessos e permissões em mais de 90% das redes corporativas globais. Este módulo introduz a arquitetura de Domínio Windows, o papel central dos Domain Controllers (DC), os protocolos LDAP/Kerberos e os vetores de ataque mais prevalentes no ecossistema de redes empresariais.
+      
+      Será explorada em detalhes a técnica de Kerberoasting, ensinando como contas com Service Principal Names (SPN) podem ser requisitadas e quebradas offline sem privilégios administrativos.
+    resources:
+      - name: "Active Directory Attacks & Defenses"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=kY3s4BDhhq8"
+        slides: "https://pwn.college/infrastructure"
+      - name: "Guia Teórico: Arquitetura de Domínio, Kerberos e Kerberoasting"
+        type: markdown
+        content: |
+          ### Arquitetura de Domínio e o Domain Controller (DC)
+          
+          O **Domain Controller (DC)** é o servidor que centraliza a base de dados do Active Directory (`ntds.dit`) e autentica todos os usuários, computadores e serviços em um ambiente corporativo através do protocolo **Kerberos**.
+          
+          ### O Mecanismo do Kerberoasting
+          O Kerberoasting é um ataque de extração de credenciais que não requer privilégios elevados no domínio — qualquer conta de usuário comum válida pode executá-lo:
+          
+          ```
+          1. Atacante autenticado no domínio pesquisa contas de serviço que possuem 
+             um Service Principal Name (SPN) configurado via LDAP.
+             
+          2. O atacante solicita ao Domain Controller (KDC) um Ticket Granting Service (TGS) 
+             para esse SPN específico (ex: MSSQLSvc/db01.corp.local).
+             
+          3. O Domain Controller emite o bilhete TGS criptografado com o hash da senha 
+             da conta de serviço associada.
+             
+          4. O atacante extrai o bilhete TGS da memória local de sua máquina e inicia um ataque 
+             de força bruta offline (com Hashcat modo 13100 ou John the Ripper).
+             
+          5. Como a senha da conta de serviço é frequentemente fraca e não expira, o atacante 
+             recupera a senha em texto claro sem gerar alertas de bloqueio no DC!
+          ```
+          
+          #### Mitigação de Kerberoasting:
+          * Utilizar contas de serviço gerenciadas por grupo (**gMSA - Group Managed Service Accounts**), cujas senhas possuem 128 caracteres aleatórios e são rotacionadas automaticamente pelo Windows.
+          * Garantir que contas tradicionais de serviço possuam senhas de complexidade extrema (> 25 caracteres).
+    challenges:
+      - id: ad-ldap-enumeration
+        name: "Enumeração de Objetos via LDAP"
+        description: |
+          Utilize scripts em Python com `ldap3` ou utilitários de linha de comando para consultar uma base de diretório simulada. Encontre os usuários com atributos de privilégio e identifique os controladores de domínio.
+      - id: ad-kerberoasting-offline
+        name: "Identificação de SPNs e Ataque Kerberoasting"
+        description: |
+          Identifique contas de serviço registradas com Service Principal Names (SPNs). Extraia os bilhetes TGS concedidos pelo KDC simulado e utilize ferramentas de força bruta para recuperar a credencial da conta de serviço.
+      - id: ad-bloodhound-path
+        name: "Mapeamento de Rotas de Ataque com BloodHound"
+        description: |
+          Analise um grafo de relacionamentos do Active Directory gerado pelo BloodHound/SharpHound. Encontre a cadeia mais curta de privilégios transitivos (`MemberOf`, `GenericAll`, `WriteDacl`) que leva um usuário comum ao grupo `Domain Admins`.
+
+  - id: engenharia-reversa-x86
+    name: "Módulo 8: Engenharia Reversa x86/x64 & Arquitetura de CPU"
+    description: |
+      O divisor de águas entre analistas teóricos e verdadeiros especialistas técnicos é o domínio da arquitetura de computadores e da linguagem Assembly x86_64. Este módulo ataca diretamente o maior gap identificado no diagnóstico: a compreensão do ciclo de execução da CPU e o papel crucial de registradores como RIP/EIP, RSP/ESP e RBP/EBP.
+      
+      Você aprenderá a diferenciar Análise Estática (leitura de código com Ghidra, objdump, strings) de Análise Dinâmica (depuração interativa com GDB/GEF e rastreamento de runtime), decodificando estruturas condicionais, laços de repetição e convenções de chamada em assembly.
+    resources:
+      - name: "Assembly Crash Course: Registradores e Instruções x86_64"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=rshj6Wsmrk4"
+        slides: "https://pwn.college/assembly-crash-course"
+      - name: "Guia Teórico: Mapa de Registradores x86_64, RIP vs EFLAGS e Análise Estática/Dinâmica"
+        type: markdown
+        content: |
+          ### Registradores da Arquitetura x86_64
+          
+          A CPU executa instruções sequenciais na memória orientada por registradores dedicados:
+          
+          #### 1. Registrador de Instrução: RIP (Instruction Pointer / EIP em 32-bit)
+          * **O que é:** O registrador mais importante para controle de fluxo.
+          * **Função Exclusiva:** **Aponta para o endereço de memória da PRÓXIMA instrução que será executada pela CPU**.
+          * *Atenção Crítica:* EIP/RIP **NÃO armazena o resultado de comparações lógicas** (quem faz isso é o registrador `EFLAGS/RFLAGS`). Controlar o valor de RIP significa desviar a execução do programa para onde o atacante desejar!
+          
+          #### 2. Registradores de Pilha (Stack):
+          * **`RSP` (Stack Pointer / ESP em 32-bit):** Aponta para o topo atual da pilha de execução. Cresce em direção a endereços menores de memória.
+          * **`RBP` (Base Pointer / EBP em 32-bit):** Aponta para a base do quadro de pilha atual (*stack frame*), servindo de âncora fixa para acessar variáveis locais e argumentos.
+          
+          #### 3. Registradores de Uso Geral:
+          * `RAX`: Acumulador; comumente utilizado para armazenar o valor de retorno de funções e número da syscall.
+          * `RBX`: Registrador base.
+          * `RCX`: Contador em laços de repetição (`loop`).
+          * `RDX`: Dados e operações aritméticas.
+          * `RDI`, `RSI`, `RDX`, `RCX`, `R8`, `R9`: Registradores usados na convenção System V AMD64 para passar os primeiros 6 argumentos para funções em C.
+          
+          ### Análise Estática vs Análise Dinâmica
+          * **Análise Estática:** Exame do binário **sem executá-lo**. Inspeciona-se o cabeçalho ELF/PE, seções de código descompiladas no Ghidra/IDA Pro, cadeias de texto (`strings`), chamadas a bibliotecas e fluxo de controle estático. Vantagem: seguro para malware; Desvantagem: difícil de resolver código ofuscado ou empacotado.
+          * **Análise Dinâmica:** Observação do comportamento do programa **durante sua execução ativa** em um ambiente isolado (sandbox ou GDB). Monitora-se a memória em tempo real, registradores, chamadas de sistema (`strace`) e valores de variáveis em breakpoints.
+    challenges:
+      - id: rev-static-strings-objdump
+        name: "Análise Estática Fundamental (Strings & Objdump)"
+        description: |
+          Analise um binário compilado sem executá-lo. Utilize `strings`, `file` e `objdump -d -M intel` para localizar uma senha hardcoded na seção `.rodata` e compreender a primeira rotina de validação.
+      - id: rev-gdb-rip-inspection
+        name: "Depuração Dinâmica com GDB: Inspecionando o RIP"
+        description: |
+          Carregue o binário no depurador GDB. Configure breakpoints (`b *main`), avance instrução por instrução (`si`/`ni`), examine os registradores com `info registers` e observe como o `rip` se altera a cada ciclo de clock.
+      - id: rev-control-flow-cmp-jmp
+        name: "Revertendo Desvios Condicionais (CMP, JZ, JNZ)"
+        description: |
+          Identifique uma instrução de comparação `cmp` seguida de um desvio condicional `jnz`. Inspecione como as flags do processador no registrador `rflags` (ex: Zero Flag ZF) decidem se o programa salta para a rotina de erro ou para a entrega da flag.
+      - id: rev-ghidra-decompilation
+        name: "Descompilação Avançada com Ghidra"
+        description: |
+          Abra o executável na suíte Ghidra. Analise o pseudocódigo em C reconstruído pelo descompilador, renomeie variáveis e tipos de dados opacos e descubra o algoritmo que gera a chave correta.
+
+  - id: exploracao-binaria-pwn
+    name: "Módulo 9: Exploração Binária (Pwn) & Corrupção de Memória"
+    description: |
+      O ápice técnico da segurança ofensiva de baixo nível. Este módulo une todos os conhecimentos anteriores para demonstrar como falhas clássicas de gerenciamento de memória em C (como o uso negligente de `strcpy`, `gets` e `scanf`) permitem transbordar buffers na pilha (*stack buffer overflow*).
+      
+      Você aprenderá a calcular o offset exato de memória, sobrescrever o endereço de retorno salvo, sequestrar o controle do registrador RIP/EIP e executar código arbitrário injetando shellcode personalizado.
+    resources:
+      - name: "Program Security & Binary Exploitation Fundamentals"
+        type: lecture
+        video: "https://www.youtube.com/watch?v=cMKeXk3w7v8"
+        slides: "https://pwn.college/program-security"
+      - name: "Guia Teórico: Anatomia do Stack Frame, Strcpy Inseguro e Hijacking de RIP"
+        type: markdown
+        content: |
+          ### Por que a Função `strcpy` em C é Notoriamente Insegura?
+          
+          A assinatura da função `strcpy` na biblioteca padrão do C é:
+          ```c
+          char *strcpy(char *dest, const char *src);
+          ```
+          O perigo fatal reside no fato de que `strcpy` **não realiza nenhuma checagem do tamanho do buffer de destino**. Ela continua copiando bytes ininterruptamente da origem `src` até encontrar um byte nulo terminador (`\0`). Se o buffer de destino tiver 64 bytes e a entrada do usuário fornecer 120 bytes, os 56 bytes excedentes transbordam e corrompem dados adjacentes na pilha de execução!
+          
+          ### Anatomia da Pilha (Stack Frame):
+          ```
+          [ Endereços Maiores de Memória ]
+          +------------------------------------+
+          | Endereço de Retorno Salvo (Saved RIP)|  <-- ALVO DO ATAQUE!
+          +------------------------------------+
+          | RBP Salvo (Base Pointer Antigo)    |
+          +------------------------------------+
+          | Variáveis Locais / Buffer (ex: 64B)|  <-- Início do preenchimento
+          +------------------------------------+
+          [ Endereços Menores de Memória (RSP) ]
+          ```
+          
+          #### O Ataque de Buffer Overflow:
+          1. O atacante envia uma cadeia de caracteres controlada (ex: padrão cíclico De Bruijn gerado por `cyclic 100`).
+          2. O buffer local é preenchido.
+          3. O `Saved RBP` é sobrescrito.
+          4. O **`Saved RIP`** é sobrescrito pelo endereço de memória desejado pelo atacante.
+          5. Quando a função executa a instrução `ret` (Return), a CPU lê o endereço salvo do topo da pilha e o carrega diretamente no registrador `RIP`.
+          6. **A execução salta para o código do atacante** (Shellcode ou rotina `win()` que executa `cat /flag`).
+    challenges:
+      - id: pwn-stack-anatomy-crash
+        name: "Anatomia do Crash e Medição de Offset na Pilha"
+        description: |
+          Interaja com um binário em C vulnerável a `gets()`. Gere payloads de tamanho progressivo para provocar uma falha de segmentação (Segmentation Fault / SIGSEGV) e determine o número exato de bytes necessários para atingir o registrador RIP.
+      - id: pwn-win-function-redirection
+        name: "Sequestrando o RIP para a Função Win()"
+        description: |
+          O binário contém uma função interna chamada `win()` que lê a flag, mas que nunca é invocada no fluxo normal. Calcule o offset do buffer e sobrescreva o endereço de retorno para redirecionar o RIP diretamente para o endereço de `win()`.
+      - id: pwn-shellcraft-injection
+        name: "Injeção e Execução de Shellcode no Pwntools"
+        description: |
+          Em um binário compilado sem proteção de pilha não executável (NX desabilitado), posicione um shellcode x86_64 na memória utilizando `asm(shellcraft.sh())` e aponte o RIP para a sua carga útil, conquistando um shell interativo de root.
+      - id: pwn-capstone-challenge
+        name: "O Desafio Final: A Chave da Fortaleza Cyberguard"
+        description: |
+          O teste supremo de integração técnica. Reúna reconhecimento, análise de chamadas de sistema, reversa do algoritmo em Ghidra e exploração precisa de memória para desbloquear a última flag da fortaleza Cyberguard.
