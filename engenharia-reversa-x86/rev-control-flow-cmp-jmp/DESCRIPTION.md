@@ -1,36 +1,30 @@
 # Revertendo Desvios Condicionais (CMP, JZ, JNZ)
 
-## Briefing da Missão
-Em operações de análise de malware e quebra de proteções de software (crackmes), os alvos raramente possuem senhas estáticas em texto claro. Em vez de uma string simples, os binários utilizam transformações matemáticas, verificações de integridade criptográfica e instruções de desvio condicional baseadas nas flags do processador x86_64.
+### 📖 Introdução Teórica
 
-Nesta missão, sua tarefa é analisar um trecho desmontado de assembly x86_64, compreender o impacto da instrução `cmp` sobre a Zero Flag (`ZF`) no registrador `rflags`, calcular o valor reverso de entrada que força a execução pelo caminho correto e liberar a flag da Cyberguard.
+Em operações reais de engenharia reversa — seja para analisar a lógica de validação de um malware, contornar rotinas de licenciamento (*crackmes*) ou auditar controles de integridade — os programas raramente utilizam senhas puras em texto claro. Em vez disso, a lógica de autorização depende de equações aritméticas seguidas por instruções de **controle de fluxo e desvios condicionais** baseados nas flags do processador x86_64.
 
----
-
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
-
-A manipulação de fluxo de controle por comparações e saltos é o mecanismo primordial de ramificação (`if/else`, loops, switches) da arquitetura von Neumann.
-
-### A Mecânica Interna da Instrução `CMP`
-
-A instrução assembly:
+#### A Mecânica Interna da Instrução `CMP`
+Na arquitetura x86_64, a instrução assembly:
 ```assembly
-cmp eax, 0x12d
+cmp destino, origem
 ```
-executa uma operação interna idêntica à instrução `sub eax, 0x12d` (subtração aritmética), **com uma diferença fundamental**:
-* O valor de `eax` **não é modificado**. O resultado é descartado pela ALU (Unidade Lógica e Aritmética).
-* As **flags de status** no registrador de 64 bits `RFLAGS` são atualizadas com base no resultado da subtração.
+executa internamente uma operação aritmética de **subtração**:
+$$\text{Resultado Temporário} = \text{destino} - \text{origem}$$
 
-### Tabela de Flags Relevantes em x86_64
+**O detalhe crucial de engenharia:**
+* O resultado numérico da subtração **é descartado pela Unidade Lógica e Aritmética (ALU)**. Nem o registrador de destino nem o de origem são alterados!
+* A **única finalidade da instrução `cmp`** é atualizar os bits de condição no registrador de status **`RFLAGS`**.
 
-| Flag | Nome | Quando é setada para 1? |
-| :--- | :--- | :--- |
-| **ZF** | **Zero Flag (Bit 6)** | Quando o resultado da operação foi exatamente **ZERO** (ou seja, quando `eax == 0x12d`). |
-| **SF** | **Sign Flag (Bit 7)** | Quando o resultado foi **negativo** (o bit mais significativo do resultado é 1). |
-| **CF** | **Carry Flag (Bit 0)**| Quando ocorreu empréstimo/transbordo em aritmética **não assinada** (`eax < 0x12d`). |
-| **OF** | **Overflow Flag (Bit 11)**| Quando ocorreu transbordo em aritmética **com sinal** (excedeu limites de representação). |
+#### As Flags de Condição no Registrador `RFLAGS`
+O registrador `RFLAGS` de 64 bits contém bits individuais que informam o comportamento da última operação aritmética executada:
 
-### Como as Instruções de Salto (Jumps) Tomam Decisões
+| Flag | Nome | Bit | Condição em que é Ativada (`1`) |
+| :--- | :--- | :---: | :--- |
+| **`ZF`** | **Zero Flag** | 6 | Quando o resultado da operação foi exatamente **ZERO** ($\text{destino} == \text{origem}$). |
+| **`SF`** | **Sign Flag** | 7 | Quando o resultado foi **negativo** (bit mais significativo é 1). |
+| **`CF`** | **Carry Flag**| 0 | Quando ocorreu transbordo ou empréstimo em aritmética **não assinada** ($\text{destino} < \text{origem}$). |
+| **`OF`** | **Overflow Flag** | 11 | Quando ocorreu estouro de capacidade em aritmética **com sinal**. |
 
 ```
                       +-------------------+
@@ -53,59 +47,89 @@ executa uma operação interna idêntica à instrução `sub eax, 0x12d` (subtra
      [ SALTA PARA O ERRO ]                 [ CONTINUA PARA A FLAG! ]
 ```
 
-### Análise Matemática Reversa
-O desmonte da rotina do desafio apresenta a seguinte lógica:
-1. `imul eax, eax, 0x7`: o número fornecido pelo usuário é multiplicado por 7.
-2. `cmp eax, 0x12d`: o resultado da multiplicação é comparado com o valor hexadecimal `0x12d`.
-3. Conversão de base: `0x12d = (1 * 256) + (2 * 16) + 13 = 256 + 32 + 13 = 301`.
-4. Equação: `x * 7 = 301` => `x = 301 / 7 = 43`.
-5. Logo, quando o input é `43`, `43 * 7 = 301`, tornando a diferença zero e forçando `ZF = 1`, o que impede o desvio `jne` de saltar para o erro!
+#### Como os Saltos Condicionais Decidem o Caminho
+As instruções de desvio condicional consultam diretamente os bits do `RFLAGS`:
+* **`je` / `jz` (*Jump if Equal / Jump if Zero*):** Salta se $\text{ZF} == 1$.
+* **`jne` / `jnz` (*Jump if Not Equal / Jump if Not Zero*):** Salta se $\text{ZF} == 0$.
+* **`jg` (*Jump if Greater*):** Salta se $\text{ZF} == 0 \text{ e } \text{SF} == \text{OF}$.
+* **`jl` (*Jump if Less*):** Salta se $\text{SF} \neq \text{OF}$.
+
+#### Análise Matemática Reversa do Alvo
+O trecho de assembly desmontado da rotina deste desafio implementa o seguinte cálculo:
+1. `imul eax, eax, 0x7`: O valor numérico fornecido pelo usuário é multiplicado por 7.
+2. `cmp eax, 0x12d`: O produto é comparado com o valor hexadecimal `0x12d`.
+3. Conversão de base: $0x12d = (1 \times 256) + (2 \times 16) + 13 = 256 + 32 + 13 = 301$.
+4. Equação reversa:
+$$x \times 7 = 301 \implies x = \frac{301}{7} = 43$$
+5. Quando o input é **`43`**, temos $43 \times 7 = 301$. A subtração interna de `cmp` resulta em $301 - 301 = 0$, forçando $\text{ZF} = 1$. O desvio `jne` (*salte se diferente de zero*) avalia $\text{ZF} = 1$, **não executa o salto para o erro** e permite que o programa prossiga até a rotina de entrega da flag!
 
 ---
 
-## Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. Execute o desafio para inspecionar os parâmetros operacionais:
+A dissecação de desvios condicionais e manipulação de flags pode ser realizada via análise algébrica ou através de patching dinâmico de registradores no GDB:
+
+#### 1. Código Assembly Intel Anotado
+```assembly
+mov    eax, DWORD PTR [rbp-0x4]   ; Carrega o número fornecido pelo usuário
+imul   eax, eax, 0x7              ; Multiplica eax por 7
+cmp    eax, 0x12d                 ; Compara (eax * 7) com 301 (0x12d)
+jne    0x401250 <rotina_bloqueio> ; Se ZF == 0 (diferente), salta para falha!
+call   0x401180 <sucesso_flag>    ; Se ZF == 1 (igual), LIBERA A FLAG!
+```
+
+#### 2. Bypass Dinâmico de Flags no GDB (Técnica de Engenharia Reversa)
+Mesmo sem conhecer o cálculo matemático reverso, um analista com depurador pode forçar a flag no momento exato do teste condicional:
+```text
+(gdb) break *0x401248             # Breakpoint na instrução jne
+(gdb) run
+(gdb) info registers rflags        # Inspecionar as flags ativas
+(gdb) set $eflags |= (1 << 6)      # Forçar manualmente a Zero Flag (bit 6) para 1!
+(gdb) continue                     # Continuar execução: o programa salta para a flag!
+```
+
+#### 3. Cálculo Algébrico Rápido no Terminal
+```bash
+python3 -c "print(0x12d // 7)"
+```
+*Retorno:* `43`.
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Siga os passos abaixo para resolver a equação assembly e obter a flag:
+
+1. **Inicie o binário do desafio:**
+   Execute `/challenge/rev-control-flow-cmp-jmp`:
    ```bash
    /challenge/rev-control-flow-cmp-jmp
    ```
-2. Caso queira revisar o desmonte das instruções e a tabela de flags:
-   ```bash
-   /challenge/rev-control-flow-cmp-jmp --help
+
+2. **Analise as instruções de máquina desmontadas:**
+   O terminal apresentará o trecho assembly de validação:
+   ```text
+   imul eax, eax, 0x7    ; multiplica entrada por 7
+   cmp  eax, 0x12d       ; compara com 301 em decimal
+   jne  <rotina_bloqueio>
    ```
-3. Realize a operação aritmética inversa:
-   - Divida 301 por 7, obtendo `43`.
-4. Insira o valor **`43`** no terminal:
+
+3. **Calcule o valor reverso:**
+   - Converta `0x12d` para decimal: $1 \times 256 + 2 \times 16 + 13 = 301$.
+   - Divida 301 pelo fator multiplicador 7: $\frac{301}{7} = 43$.
+
+4. **Envie o valor calculado:**
+   Digite **`43`** no prompt interativo e pressione Enter.
+   *Ou execute fornecendo o número diretamente como argumento:*
    ```bash
    /challenge/rev-control-flow-cmp-jmp 43
    ```
-5. O debriefing confirmará a ativação da Zero Flag (ZF=1) e imprimirá a flag.
 
----
-
-## Dicas e Comandos de Terminal no GDB
-
-Se você estivesse depurando dinamicamente este binário no GDB e não conhecesse a chave:
-
-```bash
-# 1. Breakpoint na instrução de comparação ou salto:
-(gdb) break *0x401248
-
-# 2. Rodar fornecendo qualquer número falso:
-(gdb) run <<< "999"
-
-# 3. Inspecionar o valor da Zero Flag (ZF) no registrador eflags:
-(gdb) print/t $eflags
-
-# 4. Forçar a inversão da Zero Flag em runtime (Patch Dinâmico):
-(gdb) set $eflags |= (1 << 6)   # Ativa ZF (bit 6)
-
-# 5. Prosseguir com a execução (o salto jne não será executado!):
-(gdb) continue
-```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Em análises de ameaças de grupos cibercriminosos, o malware frequentemente inclui rotinas de *Anti-Debugging* e *Anti-VM*: ele verifica se o processo está sob depuração chamando a syscall `ptrace` ou checando chaves de registro do VMware/VirtualBox. Se detectar a VM, ele executa um `cmp` e um `jne` que aborta a execução do malware. Analistas de reversa utilizam exatamente o método de inversão de flags (ou patch binário substituindo `jne` por `nop` ou `je`) para neutralizar a evasão do malware e forçá-lo a revelar seu payload real.
+5. **Capture a flag:**
+   O binário confirmará que $43 \times 7 = 301$, ativando a Zero Flag ($\text{ZF} = 1$) e liberando a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: DESVIO CONDICIONAL RESOLVIDO COM SUCESSO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a string completa `pwn.college{...}` e submeta-a no painel do dojo.

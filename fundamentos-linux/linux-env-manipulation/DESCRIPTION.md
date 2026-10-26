@@ -1,80 +1,113 @@
 # Engenharia de Variáveis de Ambiente e Contexto de Execução
 
-## 1. Briefing da Missão
-Operador, durante a auditoria de um serviço de monitoramento interno da Cyberguard, identificou-se que o módulo de validação de integridade requer a presença de uma variável de ambiente operacional contendo o token de autorização da sessão de treinamento.
+### 📖 Introdução Teórica
 
-Sua missão tática é:
-1. Compreender o funcionamento do bloco de ambiente dos processos no Linux (`environ`).
-2. Configurar a variável `CYBERGUARD_TOKEN` com o valor `treinamento_2026`.
-3. Executar o binário `/challenge/linux-env-manipulation` garantindo a herança do parâmetro pelo processo filho para capturar a flag.
-
----
-
-## 2. Teoria Aprofundada
-
-### 2.1 A Estrutura de Ambiente em Processos POSIX
-No padrão POSIX, todo processo em execução possui um ponteiro global para uma matriz de strings terminadas em nulo (`char **environ`). Cada entrada possui o formato canônico `CHAVE=VALOR`:
+No sistema operacional Linux, cada processo possui um bloco de memória reservado para armazenar seu contexto operacional na forma de pares chave-valor denominado **Bloco de Variáveis de Ambiente** (`char **environ`). Quando um processo pai (como a sua shell Bash) cria um processo filho através das chamadas de sistema `fork()` e `execve()`, o ambiente é herdado pelo processo recém-criado.
 
 ```
-Processo Shell (PID 1024)
-├── Tabela de Símbolos Locais (não exportados)
-└── Bloco de Ambiente (environ):
+Processo Pai: Bash (PID 1024)
+├── Variáveis Locais de Shell (não exportadas, restritas à shell)
+└── Bloco de Ambiente Global (environ):
     ├── PATH=/usr/local/bin:/usr/bin:/bin
-    ├── USER=cyberguard
-    ├── HOME=/home/cyberguard
-    └── CYBERGUARD_TOKEN=treinamento_2026   <--- [Herança via fork/execve]
+    ├── USER=hacker
+    ├── HOME=/home/hacker
+    └── CYBERGUARD_TOKEN=treinamento_2026  ──[ Herança via execve() ]──> Processo Filho (PID 1025)
 ```
 
-### 2.2 Ciclo de Vida: Variáveis Locais vs `export`
-Uma das fontes mais comuns de frustração em novos operadores é a distinção entre variáveis da shell e variáveis de ambiente:
+#### Variáveis Locais vs. `export` vs. Injeção Inline
+Uma das falhas mais frequentes em administração e segurança de sistemas é presumir que qualquer variável declarada no terminal será visível aos programas executados a seguir:
 
-| Método | Sintaxe | Visível na Shell Atual? | Herdado por Processos Filhos? |
+| Método | Sintaxe no Terminal | Visível na Shell Atual? | Herdada por Processos Filhos? |
 | :--- | :--- | :---: | :---: |
-| **Definição Local** | `TOKEN="segredo"` | **Sim** | **Não** |
-| **Exportação Global** | `export TOKEN="segredo"` | **Sim** | **Sim** |
-| **Injeção Efêmera** | `TOKEN="segredo" ./binario` | Não (apenas no filho) | **Sim (apenas no binário)** |
+| **Atribuição Local** | `VAR="teste"` | **Sim** | **Não** (invisível para binários externos) |
+| **Exportação Global** | `export VAR="teste"` | **Sim** | **Sim** (herdada por todos os filhos futuros) |
+| **Injeção Efêmera** | `VAR="teste" ./binario` | **Não** (apenas no binário) | **Sim** (isolada estritamente no subprocesso) |
 
-### 2.3 Relação com o Diagnóstico da Cyberguard
-No diagnóstico do ciclo 2026.2, identificou-se que integrantes iniciantes confundiam a atribuição local simples (`VAR=123`) com a diretiva `export`, resultando em scripts de automação que falhavam silenciosamente porque os comandos subsequentes não recebiam as variáveis de configuração esperadas.
+#### Relevância Ofensiva e Defensiva
+* **Segurança Ofensiva (Red Team / PrivEsc):** 
+  - **PATH Hijacking:** Se o `PATH` contiver diretórios graváveis pelo usuário antes dos diretórios do sistema (ex: `PATH=.:$PATH`), binários privilegiados podem ser induzidos a executar binários maliciosos locais em vez dos comandos do sistema.
+  - **Injeção via Variáveis Dinâmicas:** Variáveis como `LD_PRELOAD` ou `LD_LIBRARY_PATH` forçam o carregador dinâmico a carregar bibliotecas arbitrárias antes de qualquer outra. Em regras `sudo` mal configuradas que preservam o ambiente (`env_keep`), isso concede escalação imediata para root.
+* **Segurança Defensiva (Blue Team / Cloud Security):** Em contêineres Docker e orquestrações Kubernetes, segredos de bancos de dados, chaves de API e tokens JWT são costumeiramente injetados via variáveis de ambiente. Qualquer vulnerabilidade de LFI (Local File Inclusion) ou RCE que permita inspecionar o arquivo `/proc/self/environ` pode expor integralmente as credenciais corporativas.
 
 ---
 
-## 3. Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. **Tentativa inicial sem variável configurada:**
-   Execute o binário para observar a validação do ambiente:
+O gerenciamento de variáveis de ambiente no Linux envolve os seguintes comandos e técnicas:
+
+#### Comandos e Sintaxe Operacional
+* `printenv` ou `env`: Lista todas as variáveis de ambiente exportadas na sessão atual.
+* `printenv <VAR>`: Exibe o valor de uma variável específica.
+* `export <VAR>="<valor>"`: Promove a variável para a tabela global de ambiente, garantindo que processos filhos a herdem.
+* `unset <VAR>`: Remove a variável do ambiente da sessão.
+* `<VAR>="<valor>" <comando>`: Executa o comando injetando a variável exclusivamente naquele ciclo de vida, sem poluir a shell atual.
+
+#### Snippets de Terminal e Saídas Observadas
+
+1. **Demonstração de Falha com Variável Apenas Local:**
+   ```bash
+   $ MINHA_VAR="cyberguard"
+   $ python3 -c "import os; print(os.environ.get('MINHA_VAR'))"
+   None
+   ```
+   *Como a variável não foi exportada, o subprocesso Python não a encontrou.*
+
+2. **Demonstração com `export` (Herança Confirmada):**
+   ```bash
+   $ export MINHA_VAR="cyberguard"
+   $ python3 -c "import os; print(os.environ.get('MINHA_VAR'))"
+   cyberguard
+   ```
+
+3. **Injeção Inline sem Poluição de Escopo:**
+   ```bash
+   $ TOKEN="efemero" python3 -c "import os; print(os.environ.get('TOKEN'))"
+   efemero
+   $ echo $TOKEN
+   (vazio)
+   ```
+
+4. **Inspeção Forense via Pseudo-Filesystem `/proc`:**
+   ```bash
+   $ cat /proc/$$/environ | tr '\0' '\n' | grep PATH
+   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+   ```
+   *O pseudofilesystem armazena variáveis terminadas pelo byte nulo (`\0`); o comando `tr` as substitui por quebras de linha.*
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Siga estas instruções para suprir a variável esperada e resgatar a flag:
+
+1. **Inspecione a exigência do binário:**
+   Execute `/challenge/linux-env-manipulation` sem alterar o ambiente:
    ```bash
    /challenge/linux-env-manipulation
    ```
-   *Resultado:* O sistema exibirá a aula didática alertando sobre a ausência da variável `CYBERGUARD_TOKEN`.
+   *O programa indicará que a variável `CYBERGUARD_TOKEN` está ausente ou com valor incorreto.*
 
-2. **Opção Recomendada (Injeção em Linha Única):**
+2. **Método 1: Resolução Elegante com Injeção Inline (Recomendado):**
+   Defina a variável imediatamente antes do comando em uma única linha:
    ```bash
    CYBERGUARD_TOKEN="treinamento_2026" /challenge/linux-env-manipulation
    ```
-   *Vantagem:* A variável é instanciada apenas durante o ciclo de vida daquele processo específico, mantendo a shell limpa e sem poluição de ambiente.
 
-3. **Opção Alternativa (Via `export` persistente na sessão):**
+3. **Método 2: Resolução com `export` na Sessão:**
+   Exporte a variável para a shell e execute o binário:
    ```bash
    export CYBERGUARD_TOKEN="treinamento_2026"
-   env | grep CYBERGUARD
    /challenge/linux-env-manipulation
    ```
+   *(Opcional) Verifique se a variável está ativa antes da execução:*
+   ```bash
+   printenv CYBERGUARD_TOKEN
+   ```
 
----
-
-## 4. Dicas e Comandos de Terminal
-
-| Comando | Descrição Operacional |
-| :--- | :--- |
-| `env` ou `printenv` | Lista todas as variáveis de ambiente ativas na sessão. |
-| `export VAR=valor` | Torna a variável visível para todos os processos gerados a partir da shell atual. |
-| `unset VAR` | Remove a variável do ambiente da sessão. |
-| `cat /proc/$$/environ \| tr '\0' '\n'` | Inspeciona o bloco raw de ambiente do processo atual (`$$` = PID da shell). |
-
----
-
-## 5. Aplicação Prática no Mundo Real
-
-* **Cloud Security e Containers:** Em arquiteturas Kubernetes e Docker, segredos e tokens de banco de dados são injetados diretamente via variáveis de ambiente (`ENV`). Se a aplicação sofrer um ataque de execução remota de código (RCE) ou Server-Side Request Forgery (SSRF), o invasor poderá extrair todo o conteúdo de `/proc/self/environ`.
-* **Privilege Escalation:** No Linux, administradores desatentos que configuram regras `sudo` com a diretiva `env_keep` ou `sudo -E` permitem que usuários comuns preservem variáveis como `LD_PRELOAD`, abrindo portas para escalação imediata para root.
+4. **Capture e submeta a flag:**
+   O binário validará a variável no dicionário de ambiente e liberará a flag:
+   ```text
+   [+] Variavel de ambiente CYBERGUARD_TOKEN identificada!
+   pwn.college{...}
+   ```
+   Copie a sequência no padrão `pwn.college{...}` e insira no portal de treinamento.

@@ -1,33 +1,13 @@
 # Hardening de Bastion Host e Serviço SSH
 
-## Briefing da Missão
-O Bastion Host de entrada da rede Cyberguard é responsável por isolar a zona desmilitarizada (DMZ) dos servidores internos de produção. Uma auditoria preliminar revelou que o daemon OpenSSH (`sshd`) estava rodando com configurações padrão permissivas, acumulando centenas de conexões rejeitadas por minuto originadas de botnets automatizadas na Internet.
+### 📖 Introdução Teórica
 
-Como analista de segurança defensiva (Blue Team / Hardening), seu objetivo é auditar o arquivo `/tmp/sshd_config_audit`, apontar a configuração remediadora recomendada pelas diretrizes internacionais (CIS Benchmarks) e homologar o isolamento do serviço.
+Em segurança da informação defensiva, **Hardening** (endurecimento de sistemas) é o processo metódico e proativo de mitigação de vulnerabilidades com o objetivo de reduzir ao máximo a superfície de ataque de um sistema operacional, serviço de rede ou aplicação. A premissa central é que instalações padrão de sistemas operacionais privilegiam compatibilidade e facilidade de uso em detrimento da segurança, deixando portas abertas, protocolos legados ativos e parâmetros excessivamente permissivos.
 
----
-
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
-
-No diagnóstico do ciclo 2026.2, **50% dos membros demonstraram insegurança quanto ao conceito de hardening e parametrização do SSH**.
-
-### O que é Hardening?
-Hardening (endurecimento de sistemas) é a prática proativa de proteção da infraestrutura através da:
-1. Eliminação de vetores de ataque desnecessários (fechamento de portas, remoção de pacotes legados como `telnet` e `rsh`).
-2. Configuração estrita de controle de acesso seguindo o Princípio do Menor Privilégio (*Least Privilege*).
-3. Troca de mecanismos de autenticação fracos por controles criptograficamente robustos.
-
-### As Diretrizes Críticas do `/etc/ssh/sshd_config`
-
-| Diretriz | Valor Inseguro / Padrão | Valor de Hardening (CIS) | Justificativa de Segurança |
-| :--- | :--- | :--- | :--- |
-| **`PermitRootLogin`** | `yes` | **`no`** | O usuário `root` tem UID 0 e existe em todo Linux. Permitir seu login direto estimula ataques de força bruta contra o superusuário. Com `no`, o atacante deve descobrir um usuário comum e depois escalar privilégios. |
-| **`PasswordAuthentication`**| `yes` | **`no`** | Autenticação por senha é suscetível a ataques de dicionário, phishing e vazamentos de credenciais. Apenas chaves criptográficas assimétricas (mínimo RSA 4096 bits ou Ed25519) devem ser autorizadas. |
-| **`MaxAuthTries`** | `6` (ou maior) | **`3`** | Limita as tentativas de autenticação antes de encerrar o socket, mitigando softwares de força bruta automatizados. |
-| **`X11Forwarding`** | `yes` | **`no`** | Evita que clientes remotos sequestrem sessões de interface gráfica X11 no servidor. |
-| **`ClientAliveInterval`** | `0` | **`300`** | Envia mensagens de keepalive e derruba conexões inativas após inatividade prolongada. |
-
-### Diagrama de Fluxo de Autenticação Hardened
+#### Frameworks e Padrões Internacionais: CIS Benchmarks e Lynis
+Para evitar configurações empíricas ou arbitrárias, a indústria adota padrões formais de conformidade como os **CIS Benchmarks** (*Center for Internet Security*), o **NIST SP 800-123** (*Guide to General Server Security*) e ferramentas automatizadas de auditoria como o **Lynis**:
+* **Lynis:** Scanner de auditoria de segurança open-source para sistemas Unix/Linux. Ele varre centenas de pontos do sistema (kernel, serviços de rede, regras de firewall, permissões de arquivos, contas de usuário) e gera um índice de conformidade (*Hardening Index*), indicando parâmetros fora das diretrizes CIS.
+* **Bastion Host (Jump Server):** Servidor dedicado posicionado na fronteira da rede (DMZ) com a finalidade exclusiva de intermediar e monitorar o acesso administrativo remoto aos servidores internos de produção. Comprometer o Bastion Host concede ao invasor as chaves da rede interna.
 
 ```
 [ ATACANTE NA INTERNET ]              [ BASTION HOST CYBERGUARD ]
@@ -40,50 +20,108 @@ Hardening (endurecimento de sistemas) é a prática proativa de proteção da in
          │                                        │
 [ OPERADOR AUTORIZADO ]                           │
          │                                        │
-         │-- Apresenta Chave Privada Ed25519 ---->│
-         │                                        ├-- [Authorized_Keys Validado] --> ACESSO CONCEDIDO!
+         │-- Apresenta Chave Criptográfica ------>│
+         │   (Ed25519 / RSA 4096 bits)            ├-- [authorized_keys Validado] --> SESSÃO CONCEDIDA!
+```
+
+#### As Diretrizes Críticas do OpenSSH (`/etc/ssh/sshd_config`)
+O serviço SSH (porta TCP 22) é a principal porta de entrada administrativa de servidores Linux na Internet. Se exposto com parâmetros padrão, ele é bombardeado continuamente por botnets automatizadas executando ataques de dicionário e força bruta.
+
+| Parâmetro no `sshd_config` | Valor Padrão / Inseguro | Valor Hardened (CIS) | Justificativa de Segurança |
+| :--- | :--- | :--- | :--- |
+| **`PermitRootLogin`** | `yes` | **`no`** | O superusuário `root` (UID 0) existe em 100% dos sistemas Linux. Permitir seu login direto elimina a necessidade de o atacante adivinhar o nome de usuário. Com `no`, o invasor deve descobrir um usuário não privilegiado e, posteriormente, encontrar uma falha para escalar privilégios. |
+| **`PasswordAuthentication`** | `yes` | **`no`** | Senhas são suscetíveis a ataques de força bruta, phishing e reutilização de credenciais vazadas. A política CIS exige **autenticação estrita por chaves criptográficas assimétricas** (Ed25519 ou RSA 4096 bits). |
+| **`MaxAuthTries`** | `6` (ou maior) | **`3`** | Limita as tentativas incorretas de autenticação por conexão TCP antes de desconectar o socket, atrasando severamente varreduras automatizadas. |
+| **`X11Forwarding`** | `yes` | **`no`** | Impede o redirecionamento gráfico de janelas X11, evitando que clientes maliciosos espionem ou interceptem sessões gráficas no host. |
+| **`ClientAliveInterval`** | `0` (desativado) | **`300`** | Envia probes de keepalive a cada 300 segundos e encerra conexões ociosas abandonadas por administradores. |
+
+---
+
+### 💻 Exemplos Práticos e Sintaxe
+
+A auditoria e o endurecimento do serviço SSH exigem validação metódica de sintaxe e comandos dedicados de inspeção:
+
+#### 1. Auditoria Automatizada do Sistema com Lynis
+```bash
+# Executar auditoria rápida com o Lynis gerando relatório de conformidade:
+lynis audit system --quick
+
+# Auditar especificamente a categoria de autenticação e SSH:
+lynis audit --tests-category ssh
+```
+
+#### 2. Comandos Operacionais de Manutenção do SSH
+Antes de reiniciar o daemon SSH em servidores remotos, é fundamental checar a integridade do arquivo de configuração para evitar a desconexão acidental de todos os operadores (*lockout*):
+```bash
+# Validar a sintaxe do arquivo de configuração (retorna silencioso se estiver correto):
+sudo sshd -t
+
+# Exibir os parâmetros ativos consolidados em tempo de execução pelo daemon:
+sudo sshd -T | grep -E "(permitrootlogin|passwordauthentication|maxauthtries)"
+
+# Recarregar as novas regras sem derrubar as sessões ativas dos administradores:
+sudo systemctl reload sshd
+```
+
+#### 3. Modelo de Configuração Hardened (`/etc/ssh/sshd_config`)
+```ini
+# Configuração em conformidade com CIS Benchmarks Level 2:
+Port 22
+Protocol 2
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+MaxAuthTries 3
+X11Forwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
 ```
 
 ---
 
-## Passo a Passo de Resolução
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-1. Execute o binário do desafio para visualizar a auditoria:
+Siga os passos abaixo para auditar a configuração e responder corretamente ao desafio:
+
+1. **Inicie o desafio de auditoria:**
+   Execute o executável `/challenge/dfir-linux-hardening-audit`:
    ```bash
    /challenge/dfir-linux-hardening-audit
    ```
-2. Inspecione o arquivo auditado gerado pelo desafio:
+   *O desafio gerará o arquivo simulado de auditoria em `/tmp/sshd_config_audit`.*
+
+2. **Inspecione o arquivo auditado:**
+   Examine o arquivo de configuração gerado para identificar as fragilidades:
    ```bash
    cat /tmp/sshd_config_audit
    ```
-3. Identifique as diretrizes inseguras no arquivo:
-   - `PermitRootLogin yes`
-   - `PasswordAuthentication yes`
-4. Avalie as alternativas apresentadas pelo desafio. A alternativa correta implementa `PermitRootLogin no` e `PasswordAuthentication no`.
-5. Digite **`2`** no prompt interativo (ou passe `2` como argumento de linha de comando).
-6. O debriefing confirmará a aplicação da política CIS e imprimirá a flag.
+   *Observe as diretrizes permissivas:*
+   ```text
+   PermitRootLogin yes
+   PasswordAuthentication yes
+   MaxAuthTries 10
+   ```
 
----
+3. **Avalie as opções de remediação:**
+   O desafio questionará qual conjunto de diretrizes no `sshd_config` eleva substancialmente a segurança do host e aplica conformidade CIS:
+   * 1) `PermitRootLogin yes` e `PasswordAuthentication yes`
+   * **2) `PermitRootLogin no` e `PasswordAuthentication no` (exigindo chaves criptográficas)**
+   * 3) `MaxAuthTries 100` e `PermitEmptyPasswords yes`
+   * 4) `Port 22` sem qualquer restrição de usuário ou chave
 
-## Dicas e Comandos de Terminal
+4. **Forneça a alternativa correta:**
+   Digite **`2`** no prompt interativo e pressione Enter.
+   *Alternativamente, envie como argumento de linha de comando:*
+   ```bash
+   /challenge/dfir-linux-hardening-audit 2
+   ```
 
-- **Validando a Sintaxe do SSHD:**
-  Sempre que editar `/etc/ssh/sshd_config`, verifique se não há erros de digitação antes de reiniciar o daemon:
-  ```bash
-  sudo sshd -t
-  ```
-- **Conferindo a Configuração em Runtime:**
-  Para ver todas as diretrizes consolidadas pelo servidor em execução:
-  ```bash
-  sudo sshd -T | grep -iE "(permitrootlogin|passwordauthentication|maxauthtries)"
-  ```
-- **Gerando Chaves Ed25519 Fortes:**
-  ```bash
-  ssh-keygen -t ed25519 -C "operador@cyberguard.local"
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Quase todos os incidentes de ransomware que afetam servidores Linux começam com força bruta em credenciais fracas de SSH ou logins desprotegidos de root. Ao implementar `PermitRootLogin no` e `PasswordAuthentication no`, todo o volume de tráfego de dicionário automatizado que atinge a porta 22 torna-se inofensivo, forçando o adversário a buscar vetores de ataque muito mais complexos.
+5. **Capture e registre a flag:**
+   O sistema confirmará a validação da política de hardening CIS e imprimirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: POLÍTICA DE HARDENING SSH CONFIRMADA!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a string completa `pwn.college{...}` e submeta-a para pontuar.

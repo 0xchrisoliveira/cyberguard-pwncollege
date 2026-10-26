@@ -1,89 +1,104 @@
 # O Poder do SUID (Set User ID e Escalação de Privilégios)
 
-## 1. Briefing da Missão
-Operador, a infraestrutura do pwn.college protege a `/flag` definindo permissões restritas exclusivas ao superusuário `root` (`-r-------- 1 root root`). Para que desafios de treinamento permitam a leitura autorizada da flag, o sistema utiliza o recurso mais poderoso do modelo de segurança UNIX: **o bit SUID (Set User ID)**.
+### 📖 Introdução Teórica
 
-Sua missão tática é:
-1. Compreender a mecânica do bit SUID e a distinção fundamental entre Real UID (RUID) e Effective UID (EUID).
-2. Auditar permissões no sistema de arquivos localizando binários com bit SUID.
-3. Executar o binário `/challenge/linux-suid-privilege`, inspecionar o seu EUID operacional e resgatar a flag sob autorização do kernel.
+Em sistemas operacionais Unix/Linux convencionais, um processo em execução herda o identificador do usuário que o disparou, denominado **Real User ID (RUID)**. Se o usuário `hacker` (UID 1000) executa um programa, o processo roda com UID 1000 e fica terminantemente proibido pelo kernel de ler ou modificar recursos reservados ao superusuário `root` (UID 0), como `/etc/shadow` ou `/flag`.
 
----
-
-## 2. Teoria Aprofundada
-
-### 2.1 O que é o Bit SUID?
-Em circunstâncias normais, um processo herda o identificador do usuário que o invocou (RUID). Se você é o usuário `hacker` (UID 1000), o processo roda com UID 1000 e não pode ler arquivos restritos ao `root` (UID 0).
-
-Quando um binário possui o bit **SUID (Set User ID)** configurado:
-* O kernel do Linux substitui o **Effective UID (EUID)** pelo UID do **proprietário do arquivo** durante a chamada `execve()`.
-* Se o dono do arquivo for o `root`, o programa executa com privilégios de superusuário, independentemente de quem o disparou!
+No entanto, diversas tarefas legítimas do sistema operacional exigem privilégios elevados temporários (por exemplo, quando um usuário comum altera sua própria senha com `/usr/bin/passwd`). Para viabilizar esse comportamento sem conceder acesso irrestrito de root, o modelo POSIX introduziu o bit especial **SUID (Set User ID)**.
 
 ```
-[ Usuário: hacker (UID 1000) ]
+[ Usuário Comum: hacker (UID 1000) ]
               │
-              │ Dispara: /usr/bin/passwd (dono: root, bit SUID ativo)
+              │ Dispara: /usr/bin/passwd (Dono: root | Bit SUID ativo: -rwsr-xr-x)
               ▼
     ┌────────────────────────────────────────────────────────┐
     │ Processo em Execução pelo Kernel:                      │
     │   • Real UID (RUID)      = 1000 (hacker)               │
-    │   • Effective UID (EUID) = 0    (root) <--- DECISIVO!  │
+    │   • Effective UID (EUID) = 0    (root) <--- PRIVILÉGIO! │
     └────────────────────────────────────────────────────────┘
               │
-              │ O Kernel permite a escrita restrita:
+              │ O Kernel autoriza a escrita pelo EUID 0:
               ▼
-   [ Arquivo /etc/shadow ] (Acesso Concedido ao EUID 0)
+    [ Arquivo /etc/shadow ]
 ```
 
-### 2.2 Tabela dos Bits Especiais de Execução
+#### Anatomia dos Bits Especiais de Execução
+Além dos bits normais de leitura, escrita e execução (`rwx`), o Linux reserva três bits especiais adicionais, representados pelo quarto dígito (mais significativo) na notação octal de 4 dígitos:
 
-| Bit Especial | Notação Octal | Máscara Simbólica | Efeito Prático | Risco Ofensivo |
+| Bit Especial | Peso Octal | Representação Simbólica | Efeito Prático no Sistema | Impacto de Segurança |
 | :---: | :---: | :---: | :--- | :--- |
-| **SUID** | `4xxx` | `-rwsr-xr-x` | Executa com o UID do dono (geralmente root) | Escalação Local de Privilégio (LPE) |
-| **SGID** | `2xxx` | `-rwxr-sr-x` | Executa com o GID do grupo do arquivo | Herança forçada de grupo |
-| **Sticky Bit**| `1xxx` | `drwxrwxrwt` | Apenas o dono pode apagar seus arquivos na pasta | Segurança em `/tmp` |
+| **SUID** | `4000` | `-rw**s**r-xr-x` | O processo executa com o UID do **proprietário do arquivo** | Escalação de Privilégios (LPE) |
+| **SGID** | `2000` | `-rwxr-**s**r-x` | O processo executa com o GID do **grupo do arquivo** | Herança forçada de grupo |
+| **Sticky Bit**| `1000` | `drwxrwxrw**t**` | Apenas o criador de um arquivo pode apagá-lo na pasta | Proteção de pastas compartilhadas (`/tmp`) |
 
-### 2.3 Relação com o Diagnóstico da Cyberguard
-No relatório diagnóstico, constatou-se que embora integrantes reconhecessem a vulnerabilidade de funções em C, havia uma desconexão total com a forma como o sistema operacional concede acesso efetivo a arquivos protegidos. Compreender SUID é a chave mestra para entender toda a trilha de exploração binária (pwn) e pós-exploração no Linux.
+#### Relevância Ofensiva e Defensiva
+* **Segurança Ofensiva (Red Team / GTFOBins):** Quando um binário possui o bit SUID e pertence ao `root`, qualquer vulnerabilidade em seu código (como buffer overflow, injeção de comandos ou uso inadequado de argumentos de shell) permite a execução de comandos com privilégios de superusuário. Na plataforma **pwn.college**, todos os binários de desafio utilizam o bit SUID para conseguir abrir e ler o arquivo `/flag` restrito ao root.
+* **Segurança Defensiva (Blue Team / Hardening):** Administradores de segurança utilizam o utilitário `find` e regras de auditoria do `auditd` para monitorar qualquer criação de novos binários SUID no sistema, já que a introdução de uma shell com SUID (`chmod 4755 /bin/bash`) é a técnica de backdoor local mais clássica existente.
 
 ---
 
-## 3. Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. **Auditoria do binário do desafio:**
-   Inspecione os atributos do binário:
+A auditoria e identificação de binários SUID são realizadas através de comandos de busca de permissões:
+
+#### Comandos e Sintaxe de Varredura
+* `find / -perm -4000 -type f 2>/dev/null`: Varre todo o sistema de arquivos buscando executáveis que contenham o bit SUID (máscara octal 4000). O `2>/dev/null` descarta erros de acesso.
+* `find / -perm -u=s -type f 2>/dev/null`: Sintaxe simbólica equivalente buscando o bit `s` no escopo do usuário.
+* `ls -la <binario>`: Exibe os atributos do arquivo. Se o bit SUID estiver ativo, a letra `s` aparecerá no lugar do tradicional `x` do proprietário (`-rwsr-xr-x`). Se aparecer `S` maiúsculo, o SUID está ativo mas o bit de execução normal não foi concedido.
+* `id`: Exibe o RUID (`uid`), o RGID (`gid`), e os IDs efetivos (`euid`/`egid`) caso difiram.
+
+#### Snippets de Terminal e Saídas Observadas
+
+1. **Varredura de Binários SUID Nativos no Linux:**
+   ```bash
+   $ find / -perm -4000 -type f 2>/dev/null
+   /usr/bin/passwd
+   /usr/bin/sudo
+   /usr/bin/chsh
+   /usr/bin/newgrp
+   /challenge/linux-suid-privilege
+   ```
+
+2. **Inspeção Detalhada das Permissões do Binário SUID:**
+   ```bash
+   $ ls -la /challenge/linux-suid-privilege
+   -rwsr-xr-x 1 root root 16384 Oct 26 12:00 /challenge/linux-suid-privilege
+   ```
+   *Note o `-rwsr-xr-x`: o proprietário é `root` e o bit `s` confirma a execução com privilégios elevados.*
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Para concluir a missão e extrair a flag no container pwn.college:
+
+1. **Inspecione os atributos do executável:**
+   Verifique as permissões de `/challenge/linux-suid-privilege`:
    ```bash
    ls -la /challenge/linux-suid-privilege
    ```
-   *Note a presença do bit `s` ou o wrapper de execução com permissões privilegiadas.*
+   *Observe o bit `s` e o usuário proprietário `root`.*
 
-2. **Varredura global de binários SUID no sistema:**
-   Descubra quais outros programas no sistema operacional possuem o bit SUID:
+2. **Execute uma varredura para auditar outros binários SUID do sistema:**
+   Pratique a localização de binários privilegiados:
    ```bash
-   find / -perm -4000 -type f 2>/dev/null
+   find /challenge -perm -4000 -type f 2>/dev/null
    ```
-   *Você identificará utilitários como `/usr/bin/passwd`, `/usr/bin/sudo` e o wrapper `/usr/bin/exec-suid`.*
 
-3. **Execução do binário do desafio:**
+3. **Invoque o binário do desafio:**
+   Execute o programa no terminal:
    ```bash
    /challenge/linux-suid-privilege
    ```
-   *O programa exibirá o RUID e o EUID em tempo real, validará a transição de privilégios e imprimirá a flag.*
 
----
+4. **Analise o diagnóstico de identidade emitido pelo processo:**
+   O binário exibirá as identidades consultadas diretamente via chamadas de sistema `getuid()` e `geteuid()`:
+   ```text
+   [*] Seu Real UID: 1000 | Effective UID: 0
+   [+] Executando com privilegios de root via SUID!
+   pwn.college{...}
+   ```
+   *Constata-se que o Real UID pertence ao usuário `hacker` (1000), mas o Effective UID foi elevado pelo kernel para `root` (0), viabilizando a leitura de `/flag`.*
 
-## 4. Dicas e Comandos de Terminal
-
-| Comando | Descrição |
-| :--- | :--- |
-| `id` | Imprime o UID, GID e grupos suplementares do usuário atual. |
-| `chmod u+s <arquivo>` | Adiciona o bit SUID ao arquivo (equivalente a `chmod 4755`). |
-| `chmod u-s <arquivo>` | Remove o bit SUID do arquivo. |
-| `find / -perm -u=s -type f 2>/dev/null` | Sintaxe simbólica alternativa para buscar binários SUID. |
-
----
-
-## 5. Aplicação Prática no Mundo Real
-
-* **Escalação Local de Privilégios (GTFOBins):** No mundo real de testes de invasão e auditorias internas, se um administrador conceder bit SUID indevidamente a utilitários comuns (como `find`, `nmap`, `python`, `cp`), atacantes podem abusar desses binários para ler arquivos confidenciais ou criar shells interativas de root sem precisar de senha.
-* **Defesa e Hardening (CIS Benchmark):** Ambientes corporativos seguros implementam auditorias periódicas via scripts de SIEM para alertar sobre qualquer novo binário SUID introduzido no sistema (`auditd`).
+5. **Capture e submeta a flag:**
+   Copie a sequência no padrão `pwn.college{...}` e submeta-a na plataforma.

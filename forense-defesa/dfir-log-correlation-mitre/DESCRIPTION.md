@@ -1,30 +1,14 @@
 # Correlação de Logs e Mapeamento MITRE ATT&CK
 
-## Briefing da Missão
-O Security Operations Center (SOC) da Cyberguard registrou uma anomalia de correlação nos coletores de telemetria do ambiente de produção. O motor SIEM disparou um incidente de severidade alta após processar múltiplos eventos encadeados: sequências repetidas de autenticação rejeitada seguidas de uma sessão aceita via chave pública para a conta de serviço `svc_backup`, acompanhada do agendamento de uma tarefa Cron suspeita e execução privilegiada de comandos.
+### 📖 Introdução Teórica
 
-Como analista de segurança defensiva e inteligência de ameaças, sua missão é examinar o log em `/tmp/cyberguard_auth_audit.log`, compreender a mecânica de correlação do SIEM e classificar o papel da taxonomia MITRE ATT&CK no ecossistema de resposta a incidentes.
+No ecossistema moderno de defesa cibernética (Blue Team e SOC - *Security Operations Center*), a detecção de ameaças não se limita à análise isolada de eventos. Um único login com falha é um ruído corriqueiro de rede; no entanto, cinquenta logins falhados seguidos de um login bem-sucedido via conta de serviço e o agendamento imediato de uma tarefa no Cron representam um incidente crítico de intrusão e movimentação lateral. A capacidade de conectar esses pontos é a essência do **SIEM** e do **Mapeamento Tático MITRE ATT&CK**.
 
----
-
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
-
-No diagnóstico do ciclo 2026.2 da Cyberguard, **62,5% da equipe errou questões relativas a SIEM e MITRE ATT&CK**, evidenciando a necessidade de consolidar a teoria moderna de Blue Team.
-
-### 1. A Engenharia de um SIEM
-Um SIEM (*Security Information and Event Management*) não é apenas um repositório passivo de arquivos de texto. Ele opera um pipeline contínuo de processamento:
-1. **Ingestão de Dados:** Agentes (Elastic Agent, Splunk Forwarder, Fluentbit) enviam logs de endpoints, firewalls, servidores web e controladores de domínio.
-2. **Normalização (Parsing):** O SIEM converte logs heterogêneos em campos padronizados (ex: `user.name`, `source.ip`, `event.action`).
-3. **Regras de Correlação:** Lógicas booleanas e temporais que detectam cadeias de ataque. Por exemplo:
-   ```text
-   QUANDO (Falhas_de_Login >= 5 em 1 minuto PARA mesmo IP_Origem)
-   E DEPOIS (Sucesso_de_Login PARA mesmo IP_Origem em até 5 minutos)
-   E DEPOIS (Execução_de_Processo com UID 0 originado por esse usuário)
-   ENTÃO DISPARAR: ALERTA CRÍTICO - Compromisso de Conta & Movimentação
-   ```
-
-### 2. A Matriz MITRE ATT&CK
-O **MITRE ATT&CK** (*Adversarial Tactics, Techniques, and Common Knowledge*) é o mapa de navegação do defensor contemporâneo.
+#### A Engenharia de um SIEM (Security Information and Event Management)
+O SIEM é a plataforma centralizadora de inteligência defensiva que processa fluxos contínuos de telemetria através de três etapas sequenciais:
+1. **Ingestão e Normalização (Parsing):** Coletores (como Elastic Agent, Fluentbit ou Splunk Forwarder) capturam logs brutos de roteadores, firewalls, daemons Linux (`sshd`, `auditd`) e controladores de domínio. Esses dados heterogêneos são normalizados em padrões abertos como o **ECS** (*Elastic Common Schema*) ou o **CIM** (*Common Information Model*), padronizando nomes de campos (ex: `source.ip`, `user.name`, `event.action`).
+2. **Motores de Correlação:** Aplicam lógicas temporais e relacionais entre fontes distintas para identificar cadeias complexas de ataque (ex: *Eventos A, B e C ocorrendo dentro de uma janela de 5 minutos com a mesma origem*).
+3. **Triagem e Alerta:** Notificam os analistas do SOC com contexto enriquecido e nível de severidade calibrado.
 
 ```
 +-----------------------------------------------------------------------------------------+
@@ -34,50 +18,109 @@ O **MITRE ATT&CK** (*Adversarial Tactics, Techniques, and Common Knowledge*) é 
 +-------------------+-------------------+------------------------+------------------------+
 | T1078             | T1053.003         | T1548.001              | T1070.004              |
 | Valid Accounts    | Cron / Scheduled  | Setuid / SUID Abuse    | File Deletion          |
-| (Contas de serv.) | (Garante retorno) | (Obtém UID 0 / root)   | (Apaga histórico bash) |
+| (svc_backup)      | (Retorno furtivo) | (Escalação para root)  | (Apaga vestígios)      |
 +-------------------+-------------------+------------------------+------------------------+
 ```
 
-* **Táticas (Tactics):** O objetivo tático do invasor naquele momento (O QUÊ).
-* **Técnicas (Techniques) & Subtécnicas:** O procedimento técnico específico para alcançar a tática (COMO).
-* **Mapeamento Prático:** Cada regra de SIEM é etiquetada com uma técnica (ex: `mitre.technique.id: T1053.003`). Isso permite saber quais táticas estão bem cobertas e quais possuem pontos cegos na organização.
+#### A Taxonomia MITRE ATT&CK
+O framework **MITRE ATT&CK** (*Adversarial Tactics, Techniques, and Common Knowledge*) é a base pública global que cataloga os comportamentos reais observados em ataques de adversários e grupos de espionagem cibernética (APTs). Ele organiza as ações em dois níveis indispensáveis:
+* **Táticas (Tactics):** O objetivo tático do invasor em cada fase da campanha (*"O que o adversário quer alcançar?"*). Exemplos: *Initial Access*, *Persistence*, *Privilege Escalation*, *Defense Evasion*, *Credential Access*.
+* **Técnicas e Subtécnicas (Techniques):** O método técnico específico utilizado para atingir o objetivo (*"Como ele executa a ação?"*). Cada técnica possui um identificador canônico (ex: `T1053.003` para Cron no Linux).
+
+Ao etiquetar cada regra do SIEM com o ID correspondente da matriz ATT&CK, o SOC quantifica com precisão sua cobertura defensiva e identifica pontos cegos na infraestrutura.
 
 ---
 
-## Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. Execute o desafio para iniciar a análise:
+A investigação prática de incidentes em ambiente Linux combina ferramentas de correlação de linha de comando com regras estruturadas de detecção:
+
+#### 1. Filtrando Eventos Relevantes no Linux (`auth.log` e `auditd`)
+```bash
+# Investigar sequências de falhas seguidas de sucessos no serviço SSH:
+grep -E "(Failed password|Accepted publickey)" /var/log/auth.log
+
+# Buscar comandos privilegiados registrados pelo framework de auditoria auditd:
+ausearch -m EXECVE -ts today
+
+# Gerar resumo estatístico das execuções suspeitas:
+aureport -x --summary
+```
+
+#### 2. Amostra de Telemetria Correlacionada (`/tmp/cyberguard_auth_audit.log`)
+```text
+Oct 26 03:14:10 sec-srv-01 sshd[1204]: Failed password for invalid user admin from 192.168.1.100 port 49152 ssh2
+Oct 26 03:14:15 sec-srv-01 sshd[1205]: Failed password for invalid user admin from 192.168.1.100 port 49154 ssh2
+Oct 26 03:15:02 sec-srv-01 sshd[1210]: Accepted publickey for svc_backup from 192.168.1.100 port 49160 ssh2: ED25519 SHA256:7uX9a...
+Oct 26 03:16:00 sec-srv-01 CRON[1250]: (root) CMD (cp /bin/bash /tmp/.pwned && chmod +s /tmp/.pwned)
+Oct 26 03:16:45 sec-srv-01 auditd[900]: type=EXECVE msg=audit(1698300000.120:45): argc=3 a0="/bin/sh" a1="-c" a2="cat /flag"
+```
+
+#### 3. Especificação de Regra de Detecção SIEM (Sigma Rule)
+```yaml
+title: Escalacao de Privilegio via Cron e SUID Apos Login Suspeito
+status: production
+description: Detecta criacao de binario setuid disparado via tarefa Cron logo apos autenticacao
+logsource:
+  product: linux
+  service: syslog
+detection:
+  condition: selection_cron and selection_suid
+  selection_cron:
+    process.name: 'cron'
+  selection_suid:
+    process.command_line|contains: 'chmod +s'
+tags:
+  - attack.persistence
+  - attack.t1053.003
+  - attack.privilege_escalation
+  - attack.t1548.001
+```
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Siga os passos abaixo para analisar os logs e responder ao desafio:
+
+1. **Inicie o desafio de correlação de logs:**
+   Execute `/challenge/dfir-log-correlation-mitre` no terminal:
    ```bash
    /challenge/dfir-log-correlation-mitre
    ```
-2. Examine a amostra de logs gravada em `/tmp/cyberguard_auth_audit.log`:
+   *O simulador criará o arquivo `/tmp/cyberguard_auth_audit.log`.*
+
+2. **Analise o histórico de eventos:**
+   Examine o conteúdo do arquivo gerado para reconstruir a cadeia do ataque:
    ```bash
    cat /tmp/cyberguard_auth_audit.log
    ```
-   Observe a linha de execução do Cron abusando de bit SUID (`chmod +s /tmp/.pwned`).
-3. Analise as opções fornecidas pelo binário sobre a definição e finalidade do MITRE ATT&CK.
-4. Selecione a opção **`2`** (base global de conhecimento de táticas e técnicas adversárias para orientar detecções e SIEM).
-5. O debriefing técnico demonstrará as técnicas MITRE correlacionadas e liberará a flag.
+   *Identifique o encadeamento:*
+   - Falhas consecutivas de senha originadas de `192.168.1.100`.
+   - Sucesso de autenticação via chave pública para a conta `svc_backup`.
+   - Execução via Cron de cópia do `/bin/bash` com atribuição de bit SUID (`chmod +s /tmp/.pwned`).
+   - Leitura privilegiada da `/flag`.
 
----
+3. **Avalie a pergunta conceitual:**
+   O binário apresentará a seguinte questão:
+   > *"O que é a matriz MITRE ATT&CK e para que serve na operação do Blue Team?"*
+   * 1) Um software antivírus open-source para bloqueio de malware em endpoints
+   * **2) Uma base de conhecimento global de táticas e técnicas adversárias utilizada para orientar regras de detecção, mapear campanhas e organizar a telemetria**
+   * 3) Uma linguagem de programação exclusiva para desenvolvimento de exploits
+   * 4) Um protocolo de rede proprietário para transporte de logs cifrados
 
-## Dicas e Comandos de Terminal
+4. **Selecione a resposta correta:**
+   Digite **`2`** no prompt interativo e pressione Enter.
+   *Ou execute passando diretamente o parâmetro:*
+   ```bash
+   /challenge/dfir-log-correlation-mitre 2
+   ```
 
-- **Filtrando Linhas de Auditoria Relevantes com Grep:**
-  ```bash
-  grep -E "(CRON|Accepted|EXECVE)" /tmp/cyberguard_auth_audit.log
-  ```
-- **Pesquisando Técnicas no Portal do MITRE:**
-  Acesse a documentação oficial para entender o contexto de cada técnica:
-  `https://attack.mitre.org/techniques/T1053/003/`
-- **Consultando o Framework Auditd no Linux:**
-  ```bash
-  sudo aureport -u     # Relatório de execuções por usuário
-  sudo ausearch -m USER_AUTH # Busca eventos de autenticação
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Times maduros de Red Team e Blue Team operam em sinergia através do **Purple Teaming**. O Red Team simula uma técnica do MITRE ATT&CK (como T1053.003 de Cron), e os engenheiros de detecção verificam se os logs do Linux geraram o evento no SIEM e se a regra de correlação disparou o alerta no SOC em menos de 5 minutos. Sem o mapeamento MITRE, a defesa opera de forma reativa e desorganizada.
+5. **Capture a flag:**
+   O sistema validará o mapeamento conceitual e emitirá a flag de conclusão:
+   ```text
+   [+] DEBRIEFING TÉCNICO: MAPEAMENTO MITRE ATT&CK CONSOLIDADO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a flag no formato `pwn.college{...}` para pontuar no painel.

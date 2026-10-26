@@ -1,116 +1,94 @@
-# Esteganografia e Análise de Metadados em Arquivos (Crypto Stego Basics)
+# Esteganografia e Análise de Metadados em Imagens
 
-## Briefing da Missão
-* **Codinome:** Operação Invisible Payload
-* **Classificação:** Confidencial / Treinamento de Esteganografia & Forense em Mídia
-* **Alvo:** Arquivo Binário Transportador (`/tmp/suspicious.bin`)
-* **Objetivo:** Inspecionar a estrutura de bytes e metadados de um arquivo suspeito utilizando comandos de análise no terminal Linux (`file`, `strings`, `binwalk`, `exiftool`) para localizar e extrair a chave secreta esteganografada.
+### 📖 Introdução Teórica
+A palavra **Esteganografia** tem origem grega (*steganos* = oculto / protegido e *graphein* = escrita) e designa a técnica de ocultar a existência de uma mensagem dentro de um arquivo portador (*carrier* ou hospedeiro), de tal modo que terceiros não suspeitem de que há dados secretos em trânsito.
 
-Em cenários de CTF e investigações de espionagem cibernética, agentes adversários ocultam dados sensíveis dentro de mídias que aparentam ser arquivos comuns de imagem ou documento. Desenvolver reflexos de linha de comando para rápida triagem de arquivos é indispensável para operadores de segurança.
+**Diferença Crucial entre Esteganografia e Criptografia:**
+* **Criptografia:** Transforma a mensagem legível em um texto incompreensível (*ciphertext*). Qualquer observador sabe que uma mensagem cifrada está passando, mas não consegue ler sem a chave.
+* **Esteganografia:** Dissimula a própria presença da mensagem. O observador vê apenas uma foto inocente, uma música MP3 ou um documento binário legítimo. Frequentemente, equipes ofensivas combinam ambas as técnicas: cifram o payload com AES e depois o esteganografam em uma imagem.
 
----
+**Técnicas Comuns de Ocultação Digital:**
+1. **Dados Injetados após o Marcador de Fim de Arquivo (EOF - End of File):**
+   Formatos de imagem possuem delimitadores estritos de terminação:
+   - Arquivos PNG terminam com o chunk `IEND` (`IEND®B``).
+   - Arquivos JPEG terminam com o marcador hexadecimal `ÿÙ`.
+   Quaisquer bytes anexados após essa assinatura de encerramento são ignorados pelos visualizadores gráficos usuais, mas continuam fisicamente armazenados no disco, permitindo transporte de arquivos compactados e chaves.
+2. **Metadados e Tags EXIF:**
+   Arquivos de mídia contêm seções para informações complementares (modelo da câmera, timestamps, coordenadas de GPS e campos de comentário). Invasores podem embutir textos e comandos codificados diretamente no campo `Comment` ou `Artist`.
+3. **LSB (Least Significant Bit - Bit Menos Significativo):**
+   Substitui o último bit de cada byte de componente de cor (Red, Green, Blue) de uma imagem pelo bit do payload secreto. A alteração de 1 bit no valor do pixel (ex: de 254 para 255) causa uma variação de cor imperceptível ao olho humano, mas possibilita esconder mensagens inteiras nos planos de bits.
+4. **Arquivos Poliglotas e Concatenação:**
+   Técnica de embutir um arquivo ZIP dentro de uma imagem PNG (`cat imagem.png segredo.zip > portador.png`). O arquivo abre perfeitamente como imagem e simultaneamente pode ser descompactado com utilitários de compressão.
 
-## Teoria Aprofundada
+### 💻 Exemplos Práticos e Sintaxe
+Ferramentas essenciais no terminal Linux para triagem esteganográfica:
 
-### 1. Esteganografia vs Criptografia
-Enquanto a criptografia garante que ninguém além do detentor da chave possa compreender o conteúdo de uma mensagem, a **esteganografia esconde a própria existência do canal de comunicação**:
+1. **Inspecionar Magic Bytes e Tipo Real de Arquivo (`file`):**
+   ```bash
+   file /tmp/suspicious.bin
+   ```
+   *Permite saber se um arquivo disfarçado com extensão `.jpg` é na verdade um executável ELF ou um arquivo compactado.*
 
-```
-[ CRIPTOGRAFIA ]
-Mensagem clara: "Ataque as 03h" ──(AES-256)──> Ciphertext: "7a#9!x&L"
-Inimigo intercepta: "Há uma mensagem cifrada aqui, tentem quebrar!"
+2. **Extrair Strings Legíveis com Comprimento Mínimo (`strings`):**
+   ```bash
+   strings -n 6 /tmp/suspicious.bin | grep -i flag
+   ```
+   *A flag `-n 6` filtra apenas sequências imprimíveis com 6 ou mais caracteres consecutivos.*
 
-[ ESTEGANOGRAFIA ]
-Mensagem clara: "Ataque as 03h" ──(Ocultação em Bytes)──> Foto de um Gato (PNG)
-Inimigo intercepta: "Apenas uma foto inofensiva de animal de estimação."
-```
+3. **Inspecionar Assinaturas e Carregadores com `binwalk`:**
+   ```bash
+   # Escanear por assinaturas de arquivos embutidos (ZIP, GZ, ELF, etc.):
+   binwalk /caminho/arquivo.png
 
-### 2. Mecanismos Populares de Esteganografia Digital
+   # Extrair automaticamente qualquer arquivo compactado encontrado dentro da imagem:
+   binwalk -e /caminho/arquivo.png
+   ```
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ 1. DADOS APÓS O FIM DE ARQUIVO (EOF - End Of File)                     │
-│ Imagens possuem delimitadores formais de terminação:                   │
-│ - JPEG: \xFF\xD9                                                       │
-│ - PNG:  IEND \x49\x45\x4E\x44\xAE\x42\x60\x82                         │
-│ Quaisquer bytes concatenados DEPOIS dessa marcação são ignorados       │
-│ pelo visualizador gráfico, mas continuam fisicamente no disco!         │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-┌──────────────────────────────────┴─────────────────────────────────────┐
-│ 2. METADADOS E TAGS EXIF                                               │
-│ Campos de comentário (Comment), Autor, Criador ou coordenadas GPS      │
-│ podem ser usados para transportar strings e chaves codificadas.        │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-┌──────────────────────────────────┴─────────────────────────────────────┐
-│ 3. LSB (LEAST SIGNIFICANT BIT)                                         │
-│ Substitui o último bit de cada canal de cor (Red, Green, Blue).        │
-│ A mudança na cor do pixel é matematicamente indetectável a olho nu.    │
-└────────────────────────────────────────────────────────────────────────┘
-```
+4. **Examinar Metadados Profundos com `exiftool`:**
+   ```bash
+   exiftool /tmp/suspicious.bin
+   ```
+   *Exibe tags EXIF, dados de geolocalização e comentários embutidos.*
 
-### 3. Tabela Comparativa de Utilitários de Linha de Comando
+5. **Análise de Planos LSB em Imagens PNG com `zsteg`:**
+   ```bash
+   zsteg -a imagem.png
+   ```
+   *Testa automaticamente todas as combinações de canais de cor e ordens de bits LSB.*
 
-| Ferramenta | Finalidade Principal | Exemplo de Comando | O que Procura |
-| :--- | :--- | :--- | :--- |
-| **`file`** | Detecção de Magic Bytes | `file /tmp/suspicious.bin` | Verifica se a extensão condiz com o tipo real |
-| **`strings`** | Extração de texto legível | `strings -n 6 arquivo \| grep -i flag` | Segredos em texto plano, comentários embutidos |
-| **`binwalk`** | Busca de assinaturas de arquivos | `binwalk -e arquivo.png` | Arquivos compactados (ZIP, GZ) concatenados |
-| **`exiftool`**| Leitura profunda de metadados | `exiftool foto.jpg` | Câmera, comentários, geolocalização, timestamps |
-| **`zsteg`** | Análise de canais LSB em PNG | `zsteg -a imagem.png` | Payloads ocultos nos planos de bits de cores |
+6. **Inspeção Hexadecimal de Cabeçalhos com `xxd` ou `hexdump`:**
+   ```bash
+   xxd -l 64 /tmp/suspicious.bin
+   ```
 
----
-
-## Passo a Passo de Resolução
-
-1. Execute o desafio para inicializar o ambiente e gerar o artefato transportador:
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+1. **Localizar e Iniciar o Binário:**
+   No terminal do container, execute o desafio de esteganografia:
    ```bash
    /challenge/crypto-stego-basics
    ```
-2. Caso queira consultar a aula técnica:
-   ```bash
-   /challenge/crypto-stego-basics --help
+   O binário criará e depositará o artefato suspeito no sistema de arquivos temporário:
+   ```text
+   /tmp/suspicious.bin
    ```
-3. O desafio gerou o arquivo de análise em `/tmp/suspicious.bin`. Utilize o utilitário `strings` combinado com `grep` para filtrar strings que contenham o identificador `FLAG_HIDDEN_STEGO`:
+2. **Inspecionar as Strings do Artefato:**
+   Em uma sessão do terminal, filtre as sequências de texto do arquivo gerado procurando pelo padrão `FLAG_HIDDEN_STEGO`:
    ```bash
    strings /tmp/suspicious.bin | grep FLAG_HIDDEN_STEGO
    ```
-   A saída exibirá a linha contendo o segredo:
+   A ferramenta revelará a linha embutida nos bytes do binário:
    ```text
    ### METADATA_PAYLOAD: FLAG_HIDDEN_STEGO_cyberguard2026 ###
    ```
-4. No prompt do desafio, informe a chave extraída:
+3. **Submeter a Chave Esteganografada:**
+   No prompt do desafio (`>> `), forneça a chave secreta extraída:
    ```text
    cyberguard2026
    ```
-5. Você também pode submeter o segredo diretamente pela linha de comando:
-   ```bash
-   /challenge/crypto-stego-basics cyberguard2026
+   *(Ou submeta diretamente via CLI: `/challenge/crypto-stego-basics cyberguard2026`).*
+4. **Capturar e Submeter a Flag:**
+   O programa homologará a chave extraída da estrutura de bytes e exibirá a flag no formato:
+   ```text
+   pwn.college{...}
    ```
-6. O sistema confirmará a integridade do artefato e exibirá a flag do desafio.
-
----
-
-## Dicas e Comandos Práticos
-
-* **Inspecionando os Magic Bytes com `hexdump` / `xxd`:**
-  ```bash
-  # Exibir os primeiros 16 bytes do arquivo em hexadecimal e ASCII:
-  xxd -l 32 /tmp/suspicious.bin
-  ```
-  Note a assinatura PNG nos primeiros bytes: `\x89 P N G \r \n \x1a \n`.
-* **Extraindo arquivos ocultos com `binwalk`:**
-  Se um invasor concatenar um arquivo `.zip` dentro de uma imagem `.jpg` (`cat foto.jpg arquivo.zip > payload.jpg`), o visualizador abre a foto normalmente, mas o comando `binwalk -e payload.jpg` detecta a assinatura PKZIP e descompacta o arquivo oculto na pasta `_payload.jpg.extracted/`.
-* **Steghide para arquivos com senha:**
-  ```bash
-  # Extrair dados de fotos protegidas com passphrase via steghide:
-  steghide extract -sf imagem.jpg -p "senha123"
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-Grupos de Ameaça Persistente Avançada (APTs, como o Lazarus Group e Turla) utilizam canais encobertos (*covert channels*) com esteganografia para duas finalidades principais:
-1. **Bypass de Antivírus e EDR:** Fazer o download de shellcodes em partes dentro de logotipos de empresas no formato PNG/BMP hospedados em servidores públicos legítimos (como o GitHub ou Imgur).
-2. **Exfiltração de Segredos:** Dados corporativos confidenciais são embutidos em fotografias de eventos ou produtos e enviados para fora da organização via e-mail ou redes sociais, contornando sistemas corporativos de DLP (*Data Loss Prevention*).
+   Submeta a flag na plataforma para concluir o módulo de criptografia.

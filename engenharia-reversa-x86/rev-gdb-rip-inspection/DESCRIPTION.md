@@ -1,109 +1,135 @@
 # Depuração Dinâmica com GDB: Inspecionando o RIP
 
-## Briefing da Missão
-Bem-vindo ao laboratório central de arquitetura de processadores da Cyberguard. Este desafio ataca diretamente a defasagem mais alarmante identificada na avaliação diagnóstica de nivelamento do ciclo 2026.2.
+### 📖 Introdução Teórica
 
-Durante a depuração de binários ELF em código de máquina, compreender os registradores internos da CPU é o divisor de águas entre um script kiddie e um operador de elite. Sua missão é dissecar o ciclo de busca e execução da CPU x86_64, esclarecer sem ambiguidades o papel do registrador **EIP / RIP** e validar seu entendimento perante o depurador dinâmico GDB.
+A Engenharia Reversa Dinâmica estuda o binário **durante sua execução ativa** em um ambiente controlado e instrumentado por um depurador (*debugger*), como o GDB (*GNU Debugger*). Enquanto a análise estática examina o código gravado no disco, a análise dinâmica permite congelar a execução a cada ciclo de instrução, inspecionar a memória RAM em tempo real e monitorar os registradores internos do processador.
+
+Para compreender a execução de programas em nível de máquina e avançar para a exploração binária (*pwn*), é obrigatório dominar o ciclo de funcionamento da CPU e a hierarquia de registradores da arquitetura x86_64.
+
+#### O Ciclo Perpétuo da CPU (Fetch-Decode-Execute)
+Todo processador moderno opera em um ciclo contínuo de três etapas:
+1. **Busca (*Fetch*):** A CPU lê os bytes da instrução contida no endereço de memória apontado pelo registrador **RIP**.
+2. **Decodificação e Incremento (*Decode*):** O processador decodifica o opcode e atualiza automaticamente o RIP para que ele aponte para o início da próxima instrução contígua na memória.
+3. **Execução (*Execute*):** A CPU executa a operação (aritmética, lógica ou cópia). Se a instrução for um desvio (`jmp`, `call`, `ret`), o processador sobrescreve o RIP com o novo endereço de destino.
+
+```
+       +-------------------------------------------------------+
+       |                  CICLO DE EXECUÇÃO DA CPU             |
+       +-------------------------------------------------------+
+       | 1. FETCH   | Busca instrução no endereço do RIP       |
+       | 2. DECODE  | Decodifica e avança RIP = RIP + tamanho  |
+       | 3. EXECUTE | Executa. Se salto/call, carrega novo RIP |
+       +-------------------------------------------------------+
+                                  │
+                                  ▼
++-----------------------------------------------------------------------------------------+
+|                  MAPA DE REGISTRADORES ESSENCIAIS (x86_64 vs 32-bit)                    |
++-------------------+-------------------+-------------------------------------------------+
+| 64 BITS (x86_64)  | 32 BITS (x86)     | FUNÇÃO REAL NA CPU                              |
++-------------------+-------------------+-------------------------------------------------+
+| RIP               | EIP               | INSTRUCTION POINTER: Guarda o endereço da       |
+|                   |                   | PRÓXIMA instrução que será executada pela CPU.  |
++-------------------+-------------------+-------------------------------------------------+
+| RFLAGS            | EFLAGS            | FLAGS DE STATUS: Guarda os resultados de testes |
+|                   |                   | e comparações (Zero Flag ZF, Carry Flag CF).   |
++-------------------+-------------------+-------------------------------------------------+
+| RSP               | ESP               | STACK POINTER: Aponta para o TOPO da pilha.     |
++-------------------+-------------------+-------------------------------------------------+
+| RBP               | EBP               | BASE POINTER: Âncora fixa do Stack Frame atual. |
++-------------------+-------------------+-------------------------------------------------+
+| RAX               | EAX               | ACUMULADOR: Valor de retorno de funções/syscall.|
++-------------------+-------------------+-------------------------------------------------+
+| RDI, RSI, RDX     | EDI, ESI, EDX     | Passagem dos 3 primeiros argumentos em C (Linux)|
++-------------------+-------------------+-------------------------------------------------+
+```
+
+#### A Distinção Vital: RIP vs. RFLAGS
+Um erro frequente entre analistas iniciantes é confundir o registrador de instrução (**RIP**) com o registrador de flags (**RFLAGS**):
+* **RIP (Instruction Pointer):** É exclusivamente um **ponteiro de endereço de memória de 64 bits** (ex: `0x0000000000401156`). Ele **não guarda resultados lógicos**. Ele é o leme da CPU: quem controla o valor do RIP decide para onde a execução do programa salta!
+* **RFLAGS (Flags Register):** É uma coleção de **bits individuais de status (0 ou 1)** que registram se uma operação anterior resultou em zero (Zero Flag - ZF), em número negativo (Sign Flag - SF) ou em transbordo (Carry/Overflow Flags).
 
 ---
 
-## Teoria Aprofundada & O Abismo do Diagnóstico 2026.2
+### 💻 Exemplos Práticos e Sintaxe
 
-No diagnóstico do ciclo 2026.2:
-* **Taxa de Erro:** **100,0%** (0 acertos em 8 membros avaliados).
-* **Causa Dominante:** 7 integrantes declararam "Não sei" e 1 confundiu a função de RIP com a do registrador `EFLAGS`.
+O depurador GDB permite inspecionar e manipular o registrador RIP passo a passo:
 
-Essa confusão revela uma falha estrutural no modelo mental de como a CPU executa programas. Vamos desmistificar isso em definitivo.
+#### 1. Iniciando o GDB e Configurando Sintaxe Intel
+```bash
+# Iniciar o depurador com o executável alvo:
+gdb ./binario
 
-### O Ciclo Fetch-Decode-Execute e o RIP
-
-Um processador moderno Intel/AMD x86_64 não possui "visão geral" do software. Ele executa uma dança mecânica e cega:
-
-```
-+---------------------------------------------------------------------------------+
-|                                 CICLO DA CPU                                    |
-+---------------------------------------------------------------------------------+
-| 1. FETCH (Busca)       | Lê a instrução no endereço de memória apontado por RIP |
-| 2. INCREMENTO DE RIP   | RIP aponta automaticamente para a instrução seguinte   |
-| 3. DECODE & EXECUTE    | Executa a instrução decodificada (aritmética, salto)   |
-+---------------------------------------------------------------------------------+
+# Configurar o disassembly para sintaxe Intel (mais limpa que AT&T):
+(gdb) set disassembly-flavor intel
 ```
 
-### O Confronto Teórico: RIP vs. RFLAGS
+#### 2. Comandos Essenciais para Inspeção do RIP
+* `break *main` (ou `b *main`): Define um ponto de parada (*breakpoint*) no endereço inicial da função `main`.
+* `run` (ou `r`): Inicia a execução do programa até interceptar o primeiro breakpoint.
+* `info registers rip` (ou `i r rip`): Imprime o valor numérico armazenado no registrador RIP.
+* `print/x $rip`: Exibe o endereço do RIP em formato hexadecimal puro.
+* `x/i $rip`: Desmonta e exibe a instrução exata que está prestes a ser executada em `$rip`.
+* `x/5i $rip`: Desmonta as próximas 5 instruções na memória a partir do RIP atual.
+* `stepi` (ou `si`): Avança a execução do processador em exatamente **uma única instrução de máquina**.
+* `nexti` (ou `ni`): Avança uma instrução sem entrar dentro de chamadas de função (`call`).
 
-| Característica | RIP / EIP | RFLAGS / EFLAGS |
-| :--- | :--- | :--- |
-| **Definição** | **Instruction Pointer** (Ponteiro de Instrução) | **Status & Control Flags** (Flags de Estado) |
-| **Tipo de Dado** | Ponteiro de 64 bits (ex: `0x0000000000401122`) | Registro de bits individuais (cada bit é 0 ou 1) |
-| **Função Exclusiva** | **Aponta para a PRÓXIMA instrução a ser executada** | **Guarda o resultado da última comparação aritmética** |
-| **Comportamento em Saltos**| Sobrescrito pelo destino do salto (`jmp`, `call`, `ret`)| Consultado para decidir se o salto ocorre ou não |
-| **Flags Típicas** | Não possui flags | **ZF** (Zero Flag), **CF** (Carry), **SF** (Sign), **OF** (Overflow) |
-
-### Os Registradores Críticos da Arquitetura x86_64
-
+#### 3. Exemplo Prático de Sessão GDB
+```text
+(gdb) break *main
+Breakpoint 1 at 0x401126
+(gdb) run
+Breakpoint 1, 0x0000000000401126 in main ()
+(gdb) print/x $rip
+$1 = 0x401126
+(gdb) x/i $rip
+=> 0x401126 <main>:    push   rbp
+(gdb) stepi
+0x0000000000401127 in main ()
+(gdb) x/i $rip
+=> 0x401127 <main+1>:  mov    rbp, rsp
+(gdb) print/x $rip
+$2 = 0x401127
 ```
-64-bit       32-bit      Papel Principal
--------------------------------------------------------------------------
-RIP          EIP         Ponteiro da PRÓXIMA Instrução (Controle de Fluxo)
-RSP          ESP         Stack Pointer (Topo atual da Pilha)
-RBP          EBP         Base / Frame Pointer (Base do quadro da função)
-RAX          EAX         Acumulador & Valor de Retorno de Funções
-RDI          EDI         1º Argumento de Função (System V AMD64 ABI)
-RSI          ESI         2º Argumento de Função
-RDX          EDX         3º Argumento de Função
-RFLAGS       EFLAGS      Flags de Comparação Condicional (ZF, CF, SF, OF)
-```
+*Note como o valor de `$rip` avançou de `0x401126` para `0x401127` após a execução do opcode de 1 byte `push rbp`.*
 
 ---
 
-## Passo a Passo de Resolução
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-1. Execute o desafio no terminal:
+Siga as instruções abaixo para validar a compreensão conceitual do registrador RIP:
+
+1. **Invoque o binário do desafio:**
+   No terminal, execute o desafio de arquitetura x86_64:
    ```bash
    /challenge/rev-gdb-rip-inspection
    ```
-2. Para revisar a aula didática completa com os comandos de GDB:
+
+2. **Revise a aula teórica (Opcional):**
+   Caso deseje visualizar a dissecação completa dos registradores da CPU:
    ```bash
    /challenge/rev-gdb-rip-inspection --help
    ```
-3. Leia com atenção a pergunta sobre a função do registrador EIP/RIP:
-   - Opção 1: Flags de comparação (Incorreto - função do RFLAGS).
-   - Opção 2: Endereço de memória da PRÓXIMA instrução a ser executada pela CPU (Correto!).
-   - Opção 3: Valor retornado pela função (Incorreto - função do RAX).
-   - Opção 4: Endereço fixo da base do quadro de pilha (Incorreto - função do RBP).
-4. Informe a alternativa **`2`** no prompt (ou passe `2` como argumento).
-5. O debriefing técnico será emitido e a flag de validação será impressa.
 
----
+3. **Analise a questão apresentada:**
+   O desafio exibirá a seguinte pergunta:
+   > *"Em processadores de arquitetura x86 e x86_64, qual é a função exata do registrador EIP / RIP?"*
+   * 1) Armazenar o resultado de operações lógicas e de comparação (Zero Flag)
+   * **2) Armazenar o endereço de memória da PRÓXIMA instrução a ser executada pela CPU**
+   * 3) Armazenar o valor retornado pela última chamada de função executada
+   * 4) Armazenar o endereço fixo da base do quadro de pilha (Stack Frame)
 
-## Dicas e Comandos de Terminal no GDB
+4. **Responda com a opção correta:**
+   Digite **`2`** no prompt interativo e pressione Enter.
+   *Alternativamente, envie diretamente como argumento:*
+   ```bash
+   /challenge/rev-gdb-rip-inspection 2
+   ```
 
-Pratique a inspeção do RIP em tempo real utilizando o depurador GDB:
-
-```bash
-# 1. Iniciar o binário sob controle do GDB:
-gdb /bin/ls
-
-# 2. Inserir breakpoint no ponto de entrada principal:
-(gdb) break *main
-
-# 3. Iniciar a execução até o breakpoint:
-(gdb) run
-
-# 4. Inspecionar o registrador RIP e a instrução que ele aponta:
-(gdb) info registers rip
-(gdb) x/i $rip
-
-# 5. Avançar exatamente UMA instrução de máquina (Step Instruction):
-(gdb) stepi
-
-# 6. Observar o RIP incrementado para o novo endereço:
-(gdb) print/x $rip
-(gdb) x/i $rip
-```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Na exploração de vulnerabilidades de memória (Binary Exploitation / Pwn), o atacante utiliza transbordamentos de buffer (*stack buffer overflow*) para sobrescrever o `Saved RIP` preservado na pilha. Quando a função retorna (`ret`), a CPU faz o equivalente a `pop rip`, carregando o endereço injetado diretamente no registrador de instrução. A partir desse momento, a CPU executa cegamente o payload do invasor. Dominar o RIP é o primeiro passo para criar e mitigar exploits de controle de fluxo de execução.
+5. **Capture a flag:**
+   O sistema confirmará a consolidação do conceito de ponteiro de instrução e imprimirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: CONCEITO DE RIP CONSOLIDADO COM PERFEIÇÃO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a flag no formato `pwn.college{...}` e submeta-a para registrar sua pontuação.

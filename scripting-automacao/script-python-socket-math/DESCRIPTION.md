@@ -1,22 +1,10 @@
-# Desafio Matemático em Alta Velocidade (Automação de Processos com Python)
+# Desafio Matemático em Alta Velocidade com Sockets (Automação em Python)
 
-## 1. Briefing da Missão
-Operador, a infraestrutura da Cyberguard implementou um mecanismo de integridade anti-automação ingênuo baseado em desafios matemáticos em sequência rápida (*Challenge-Response Protocol*). O sistema exige que você resolva 10 operações de adição consecutivas com um limite rígido de **1.5 segundos por pergunta**.
+### 📖 Introdução Teórica
 
-A velocidade de reflexo e digitação humana é propositalmente incapaz de vencer esse desafio de forma manual. 
+Em competições de cibersegurança (CTFs) e auditorias de sistemas no mundo real, desenvolvedores frequentemente implementam mecanismos de mitigação e proteção baseados em **Protocolos de Desafio-Resposta (Challenge-Response)** com restrições temporais severas. O objetivo desses sistemas é barrar interações humanas manuais forçando o interlocutor a provar que possui capacidade de automação programática (*Proof of Work / Automação*).
 
-Sua missão tática é:
-1. Analisar a estrutura do prompt interativo emitido pelo binário `/challenge/script-python-socket-math`.
-2. Desenvolver um script de automação em Python (utilizando `pwntools` ou o módulo nativo `subprocess`).
-3. Extrair as equações em tempo real com expressões regulares (`re`), calcular o resultado e transmiti-lo de volta antes do estouro do temporizador.
-4. Concluir as 10 rodadas e extrair a flag.
-
----
-
-## 2. Teoria Aprofundada
-
-### 2.1 Latência Humana vs Automação de Máquina
-O tempo médio de reação visual humana somado ao tempo de digitação de números de dois dígitos varia entre 1.8 e 3.0 segundos. Quando um sistema impõe limites abaixo de 1.5 segundos em rodadas múltiplas, a probabilidade de falha manual converge para 100%.
+O tempo médio de reação visual humana somado ao tempo mecânico de digitação em teclado gira em torno de 1.8 a 3.0 segundos. Quando um binário ou serviço de rede impõe um limite estrito de **1.5 segundos por pergunta** ao longo de 10 rodadas consecutivas, a resolução manual torna-se matematicamente inviável.
 
 ```
 [ Sistema: Emite Pergunta ] ───( Linha de Texto )───> [ Script Python ]
@@ -25,114 +13,104 @@ O tempo médio de reação visual humana somado ao tempo de digitação de núme
                                                             │
                                                      [ Cálculo: a + b (Microssegundos) ]
                                                             │
-[ Sistema: Valida em 5ms ]  <──( Envia Resposta )───── [ stdin.write() ]
+[ Sistema: Valida em 5ms ]  <──( Envia Resposta )───── [ p.sendline() / stdout ]
 ```
 
-### 2.2 Estratégias de Automação: Subprocess vs Pwntools
+#### Automação de Streams com Python
+Para vencer esse tipo de barreira, operadores utilizam scripts em Python para gerenciar canais de comunicação com precisão milimétrica. A interação com processos locais pode ser realizada através da biblioteca padrão `subprocess` ou por meio do framework `pwntools`, combinada com o módulo de expressões regulares (`re`) para parsear e extrair os operandos matemáticos em tempo real.
 
-| Abordagem | Dependências | Complexidade | Vantagens |
-| :--- | :---: | :---: | :--- |
-| **`pwntools`** | Requer `pip install pwntools` | Muito Baixa | Sintaxe concisa (`io.recvuntil`, `io.sendline`), controle de buffer perfeito |
-| **`subprocess`** | Nenhuma (Biblioteca padrão Python) | Média | Funciona em qualquer ambiente Python minimalista sem internet |
-| **`pexpect`** | Requer `pip install pexpect` | Baixa | Simula um pseudo-terminal (PTY) completo |
+#### Relevância Ofensiva e Defensiva
+* **Segurança Ofensiva (Red Team / Exploit Automation):** Serviços vulneráveis a ataques de corrupção de memória ou criptografia muitas vezes exigem que o exploit compute respostas dinâmicas em milissegundos antes de disparar o payload principal, contornando mecanismos anti-tampering ou janelas de tempo de *Race Conditions*.
+* **Segurança Defensiva (Blue Team / SOAR):** Analistas de automação defensiva (SOAR — *Security Orchestration, Automation and Response*) programam scripts para interagir com APIs de telemetria, validar hashes em dezenas de feeds de inteligência de ameaças simultaneamente e bloquear incidentes em tempo real sem intervenção humana lenta.
 
 ---
 
-## 3. Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-### Método 1: Resolução com Pwntools (Recomendado)
-Crie um arquivo chamado `/tmp/solve.py`:
+A construção do solver automatizado em Python envolve a extração de dados com expressões regulares e a transmissão de respostas via pipes:
 
+#### Ferramentas e Métodos Críticos
+* `re.search(r"Quanto e (\d+) \+ (\d+)", texto)`: Extrai os números capturados pelos grupos delimitados por parênteses `(\d+)`.
+* `int(m.group(1))` e `int(m.group(2))`: Converte os dígitos extraídos de string para inteiros utilizáveis em operações aritméticas.
+* `pwn.process("/challenge/script-python-socket-math")`: Inicia o processo com controle total de seus canais `stdin`, `stdout` e `stderr`.
+* `io.recvuntil(b"? ")`: Lê o buffer até o ponto exato onde o programa aguarda a entrada, prevenindo impasses de leitura (*deadlocks*).
+* `io.sendline(resposta.encode())`: Envia a resposta calculada seguida pelo caractere de nova linha (`\n`).
+
+#### Snippet Completo de Resolução com Pwntools (`/tmp/solve_math.py`):
 ```python
 #!/usr/bin/env python3
 import re
 from pwn import *
 
-# Inicializa o processo do desafio
+# Inicia o processo do desafio
 io = process("/challenge/script-python-socket-math")
 
-# Processa as 10 rodadas
+# Processa as 10 rodadas consecutivas
 for rodada in range(1, 11):
-  # Aguarda até o final da pergunta ("? ")
-  prompt = io.recvuntil(b"? ").decode("utf-8")
-  print(prompt, end="")
-
-  # Extrai os dois operandos da soma usando expressão regular
-  match = re.search(r"Quanto e (\d+) \+ (\d+)", prompt)
-  if match:
-    num1 = int(match.group(1))
-    num2 = int(match.group(2))
-    resposta = str(num1 + num2)
-    print(resposta)
-    # Envia a resposta com quebra de linha
-    io.sendline(resposta.encode("utf-8"))
+    # Aguarda o prompt da pergunta
+    prompt = io.recvuntil(b"? ").decode("utf-8")
+    
+    # Extrai os dois inteiros da soma via expressão regular
+    match = re.search(r"Quanto e (\d+) \+ (\d+)", prompt)
+    if match:
+        a = int(match.group(1))
+        b = int(match.group(2))
+        resultado = str(a + b)
+        print(f"[+] Rodada {rodada}: {a} + {b} = {resultado}")
+        
+        # Envia a resposta calculada
+        io.sendline(resultado.encode("utf-8"))
 
 # Imprime o debriefing e a flag final
 print(io.recvall().decode("utf-8"))
 ```
 
-Execute o script:
-```bash
-python3 /tmp/solve.py
-```
-
-### Método 2: Resolução com Python Puro (`subprocess`)
-Se o ambiente não possuir `pwntools`, utilize `/tmp/solve_native.py`:
-
-```python
-#!/usr/bin/env python3
-import re
-import subprocess
-
-proc = subprocess.Popen(
-    ["/challenge/script-python-socket-math"],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True,
-    bufsize=1,
-)
-
-while True:
-  # Ler caractere por caractere ou linha
-  output = ""
-  while not output.endswith("? "):
-    char = proc.stdout.read(1)
-    if not char:
-      break
-    output += char
-    print(char, end="", flush=True)
-
-  if not output:
-    break
-
-  match = re.search(r"Quanto e (\d+) \+ (\d+)", output)
-  if match:
-    n1, n2 = int(match.group(1)), int(match.group(2))
-    resp = f"{n1 + n2}\n"
-    print(resp.strip())
-    proc.stdin.write(resp)
-    proc.stdin.flush()
-
-# Capturar resto da saída com a flag
-resto = proc.stdout.read()
-print(resto)
-```
-
 ---
 
-## 4. Dicas e Comandos de Terminal
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-| Recurso | Exemplo | Descrição |
-| :--- | :--- | :--- |
-| `re.search(padrao, texto)` | `re.search(r'\d+', 'ID: 42')` | Localiza a primeira ocorrência do padrão numérico na string. |
-| `group(1)` | `match.group(1)` | Retorna o primeiro grupo de captura entre parênteses da regex. |
-| `flush=True` | `print("...", flush=True)` | Descarrega o buffer imediatamente sem aguardar quebra de linha. |
-| `pwn.process` | `p = process(['cmd', 'arg'])` | Inicia e anexa comunicação bidirecional a um processo local. |
+Para contornar o timeout estrito e capturar a flag:
 
----
+1. **Teste a execução manual inicial (comprove a impossibilidade):**
+   Execute o programa no terminal:
+   ```bash
+   /challenge/script-python-socket-math
+   ```
+   *Observe que tentar calcular e digitar a resposta manualmente acarreta a mensagem `[X] Tempo esgotado! Voce precisa automatizar com Python.` após 1.5 segundos.*
 
-## 5. Aplicação Prática no Mundo Real
+2. **Crie o script de automação em `/tmp/solve_math.py`:**
+   Utilize o editor de sua preferência ou o utilitário `cat` para salvar o script em `/tmp`:
+   ```bash
+   cat << 'EOF' > /tmp/solve_math.py
+   #!/usr/bin/env python3
+   import re
+   from pwn import *
 
-* **Resolução de Provas de Trabalho (Proof of Work - PoW):** Plataformas e CTFs frequentemente introduzem barreiras criptográficas ou matemáticas de PoW antes de liberar conexões a serviços vulneráveis, exigindo automação em código para prosseguir.
-* **Exploração de Race Conditions (Condições de Corrida):** Em vulnerabilidades onde uma brecha de segurança só se abre por microssegundos durante o processamento de transações ou troca de arquivos temporários, scripts automatizados em loop contínuo são o único meio viável de exploração.
+   io = process("/challenge/script-python-socket-math")
+   for i in range(1, 11):
+       prompt = io.recvuntil(b"? ").decode("utf-8")
+       match = re.search(r"Quanto e (\d+) \+ (\d+)", prompt)
+       if match:
+           res = str(int(match.group(1)) + int(match.group(2)))
+           io.sendline(res.encode("utf-8"))
+
+   print(io.recvall().decode("utf-8"))
+   EOF
+   ```
+
+3. **Execute o script de automação:**
+   Dispare o resolvedor em Python:
+   ```bash
+   python3 /tmp/solve_math.py
+   ```
+
+4. **Observe a resolução instantânea:**
+   O script resolverá as 10 operações matemáticas consecutivas em milissegundos, superando com facilidade o temporizador.
+
+5. **Capture e submeta a flag:**
+   Ao final da décima rodada, o programa imprimirá a confirmação e a flag:
+   ```text
+   [+] Incrivel! Automacao rapida bem-sucedida.
+   pwn.college{...}
+   ```
+   Copie a string no formato `pwn.college{...}` e insira no painel da Cyberguard.

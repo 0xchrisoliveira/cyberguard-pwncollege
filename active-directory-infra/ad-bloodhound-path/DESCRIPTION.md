@@ -1,102 +1,90 @@
-# Mapeamento de Rotas de Ataque com BloodHound (AD BloodHound Path)
+# Mapeamento de Rotas de Ataque com BloodHound
 
-## Briefing da Missão
-* **Codinome:** Operação Path to DA
-* **Classificação:** Confidencial / Treinamento de Red Team & Análise de Grafos em AD
-* **Alvo:** Grafo de Controle de Acesso e Permissões Transitivas do Active Directory
-* **Objetivo:** Analisar um grafo de permissões gerado pelo BloodHound/SharpHound, rastrear a cadeia transitiva de direitos (`MemberOf` -> `GenericAll` -> `WriteDacl`) e identificar o nó de usuário inicial capaz de escalar privilégios até o grupo `Domain Admins`.
-
-Em redes corporativas modernas, administradores costumam conceder permissões pontuais ao longo dos anos para resolver demandas emergenciais. Com o tempo, a sobreposição dessas permissões cria pontes invisíveis entre contas sem privilégios e o grupo de administradores do domínio, sem que nenhum patch ou antivírus seja violado.
-
----
-
-## Teoria Aprofundada
-
-### 1. A Filosofia do BloodHound: Atacantes Pensam em Grafos
-John Lambert (arquiteto de segurança da Microsoft) cunhou a célebre frase:
+### 📖 Introdução Teórica
+Nas palavras clássicas de John Lambert (arquiteto distinto de segurança da Microsoft):
 > *"Defenders think in lists. Attackers think in graphs. As long as this is true, attackers win."*
 
-Enquanto a defesa verifica listas de checagem isoladas (ex: *"Quem está no grupo Domain Admins?"*), o invasor busca conexões indiretas:
+Em redes empresariais tradicionais, as equipes de defesa tendem a auditar listas de controle estáticas e isoladas (por exemplo: *"Quem são os usuários listados no grupo Domain Admins?"*). Se essa lista contiver apenas três contas conhecidas, o administrador assume falsamente que o domínio está seguro.
+No entanto, invasores pensam em **grafos de relacionamentos e permissões transitivas**.
 
+**Como Permissões Transitivas Criam Caminhos Invisíveis de Escalação:**
+Ao longo de anos de operação de TI em uma empresa, centenas de permissões pontuais e delegações são concedidas para atender demandas temporárias (chamados de suporte, integrações de sistemas, scripts legados). Quando essas permissões individuais se encadeiam, elas formam pontes que permitem a qualquer colaborador comum assumir o controle total do domínio (*Domain Compromise Path*).
+
+**O Ecossistema BloodHound:**
+O **BloodHound** é uma ferramenta de código aberto que utiliza a teoria dos grafos para mapear relações ocultas de controle de acesso dentro de um Active Directory:
+1. **Coletores / Ingestors (SharpHound / BloodHound.py):** Executam milhares de consultas LDAP, chamadas MSRPC/SAMR e enumerações de sessões SMB na rede, gerando arquivos JSON com todos os nós e permissões.
+2. **Banco de Dados em Grafo (Neo4j):** Modela os dados em nós (usuários, grupos, computadores, OUs) e arestas direcionadas (*edges*, representando privilégios e associações).
+3. **Interface Visual (BloodHound GUI):** Permite calcular rotas mais curtas (*shortest paths*) até grupos de alto privilégio como `Domain Admins`.
+
+**Dicionário das Principais Arestas (Edges) no BloodHound:**
+* **`MemberOf`:** O nó pertence a um grupo e herda todos os direitos daquele grupo.
+* **`GenericAll`:** Controle total e irrestrito sobre o objeto de destino (permite redefinir a senha do usuário, modificar seus atributos ou adicioná-lo a novos grupos).
+* **`WriteDacl`:** Direito de reescrever a lista de controle de acesso discricionário (DACL) do objeto alvo, permitindo ao atacante conceder a si próprio permissão de `GenericAll`.
+* **`WriteOwner`:** Permite tomar posse da propriedade do objeto e subsequentemente alterar suas permissões.
+* **`ForceChangePassword`:** Permite trocar a senha da conta de destino sem precisar conhecer a senha atual.
+* **`AdminTo`:** Usuário tem privilégio de Administrador Local sobre a estação ou servidor.
+
+**Análise da Cadeia de Ataque deste Desafio:**
+Considere a rota extraída pelo BloodHound:
 ```
-[ Usuário Bob ] 
-       │
-   (MemberOf)
-       ▼
-[ Grupo HelpDesk ] ──(GenericAll)──> [ Conta: srv_backup ] ──(WriteDacl)──> [ Grupo Domain Admins ]
+[User: bob] ──(MemberOf)──> [Group: HelpDesk] ──(GenericAll)──> [User: srv_backup] ──(WriteDacl)──> [Group: Domain Admins]
 ```
+1. O usuário comum **`bob`** pertence ao grupo **`HelpDesk`**.
+2. O grupo `HelpDesk` possui permissão total (**`GenericAll`**) sobre a conta de serviço **`srv_backup`**. Bob utiliza esse direito para redefinir a senha de `srv_backup`.
+3. A conta `srv_backup` possui a permissão **`WriteDacl`** sobre o grupo restrito **`Domain Admins`**. Bob utiliza a conta `srv_backup` para alterar a lista de acesso do grupo e adicionar seu próprio usuário (`bob`) aos administradores do domínio.
+4. Escalação concluída com sucesso: o ponto de partida de toda a cadeia é o usuário **`bob`**.
 
-Nenhum desses nós é diretamente um Administrador do Domínio. Porém, quando encadeados, conferem controle absoluto sobre toda a infraestrutura corporativa.
+### 💻 Exemplos Práticos e Sintaxe
+1. **Coleta de Dados em Campo com SharpHound (Windows PowerShell):**
+   ```powershell
+   .\SharpHound.exe --CollectionMethods All --Domain corp.cyberguard.local --ZipFileName ad_coleta.zip
+   ```
 
-### 2. Dicionário das Principais Arestas (Edges) no BloodHound
+2. **Coleta de Dados no Linux com `bloodhound-python`:**
+   ```bash
+   bloodhound-python -u bob -p "Senha123" -d corp.cyberguard.local \
+     -dc dc01.corp.cyberguard.local -c All --zip
+   ```
 
-| Tipo de Aresta (Edge) | Tradução Prática do Privilégio | Impacto Ofensivo de Abuso |
-| :--- | :--- | :--- |
-| **`MemberOf`** | O nó pertence ao grupo de destino | Herda todos os privilégios daquele grupo corporativo |
-| **`GenericAll`** | Controle total e irrestrito sobre o objeto | Redefinir senha, adicionar atributos SPN, alterar dados |
-| **`GenericWrite`** | Permissão de escrita em qualquer atributo | Modificar scripts de logon ou atributos de delegação |
-| **`WriteDacl`** | Direito de reescrever a DACL do objeto | Conceder a si mesmo `GenericAll` sobre a vítima |
-| **`WriteOwner`** | Tomar posse proprietária do objeto | Tornar-se dono e atribuir permissões totais |
-| **`ForceChangePassword`**| Redefinição forçada de credencial | Trocar a senha do alvo sem conhecer a senha atual |
-| **`AdminTo`** | Administrador Local da máquina | Executar dump de memória do processo LSASS |
+3. **Consultas em Linguagem Cypher no Neo4j (Interface do BloodHound):**
+   * *Encontrar o caminho mais curto de qualquer usuário comum até Domain Admins:*
+     ```cypher
+     MATCH (u:User {admincount: 0}), (g:Group {name: "DOMAIN ADMINS@CORP.LOCAL"}),
+           p = shortestPath((u)-[*1..]->(g))
+     RETURN p
+     ```
+   * *Localizar todos os membros de grupos com permissão WriteDacl em Domain Admins:*
+     ```cypher
+     MATCH p=(m)-[:WriteDacl]->(g:Group {name: "DOMAIN ADMINS@CORP.LOCAL"})
+     RETURN p
+     ```
 
-### 3. A Mecânica da Escalação Passo a Passo:
-1. **Passo 1:** Bob é autenticado como usuário padrão e pertence ao grupo de suporte `HelpDesk`.
-2. **Passo 2:** O grupo `HelpDesk` recebeu `GenericAll` sobre a conta de serviço `srv_backup` para manutenção de rotinas de backup. Bob usa essa permissão para alterar a senha da conta `srv_backup`.
-3. **Passo 3:** A conta `srv_backup` possui `WriteDacl` sobre o grupo `Domain Admins`. Bob autentica-se como `srv_backup` e altera a lista de permissões do grupo `Domain Admins`, concedendo a si mesmo o direito de adicionar novos membros.
-4. **Passo 4:** Bob adiciona seu próprio usuário original (`bob`) ao grupo `Domain Admins`. Escalação de privilégios concluída (*Domain Compromise*).
+4. **Defesa Estrutural: Modelo de Camadas Administrativas (Enterprise Tiering):**
+   A Microsoft recomenda o isolamento estrito de ativos:
+   * **Tier 0:** Domain Controllers, contas de Domain Admins e servidores PKI. Contas de Tier inferior (HelpDesk, estações comuns) jamais podem ter qualquer direito de escrita ou acesso sobre objetos de Tier 0.
 
----
-
-## Passo a Passo de Resolução
-
-1. Execute o desafio para visualizar o grafo de permissões:
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+1. **Localizar e Iniciar o Binário:**
+   No terminal do container, execute o desafio de análise de grafos:
    ```bash
    /challenge/ad-bloodhound-path
    ```
-2. Caso deseje consultar a fundamentação técnica sobre teoria dos grafos e BloodHound:
-   ```bash
-   /challenge/ad-bloodhound-path --help
-   ```
-3. O desafio apresentará a rota:
+2. **Examinar o Grafo Exibido no Terminal:**
+   O programa exibirá a rota de permissões transitivas mapeada:
    ```text
    [User: bob] -> MemberOf -> [Group: HelpDesk] -> GenericAll -> [User: srv_backup] -> WriteDacl -> [Group: Domain Admins]
    ```
-4. Identifique o usuário inicial que desencadeia a cadeia de ataque:
+   E fará a pergunta:
+   "Qual é o usuário comum inicial que pode explorar essa cadeia transitiva de permissões para escalar privilégios até o grupo 'Domain Admins'?"
+3. **Identificar e Submeter o Usuário Inicial:**
+   No prompt interativo `>> `, digite o identificador da conta de origem:
    ```text
    bob
    ```
-5. Você também pode disparar a execução passando o nome do usuário como argumento:
-   ```bash
-   /challenge/ad-bloodhound-path bob
+   *(Ou execute diretamente via CLI: `/challenge/ad-bloodhound-path bob`).*
+4. **Capturar e Submeter a Flag:**
+   O binário confirmará a análise correta da rota do BloodHound e exibirá a flag no formato:
+   ```text
+   pwn.college{...}
    ```
-6. O sistema validará a análise da rota, exibirá o debriefing de arquitetura de segurança e liberará a flag.
-
----
-
-## Dicas e Comandos Práticos
-
-* **Coleta de Dados em Campo com SharpHound (Windows):**
-  ```powershell
-  # Coleta todos os dados de AD, sessões e ACLs compactados em arquivo zip:
-  .\SharpHound.exe --CollectionMethods All --Domain corp.cyberguard.local --ZipFileName ad_dump.zip
-  ```
-* **Consultas Úteis em Linguagem Cypher no Neo4j (Interface do BloodHound):**
-  ```cypher
-  // Encontrar o menor caminho de qualquer usuário não privilegiado até Domain Admins:
-  MATCH (u:User {admincount: 0}), (g:Group {name: "DOMAIN ADMINS@CORP.LOCAL"}),
-        p = shortestPath((u)-[*1..]->(g))
-  RETURN p
-  ```
-* **Identificando Usuários com Sessão Ativa em Servidores Críticos:**
-  A aresta `HasSession` indica que o usuário possui credenciais na memória RAM do computador (LSASS), permitindo roubo de token (*token stealing*) ou *mimikatz*.
-
----
-
-## Aplicação Prática no Mundo Real
-O BloodHound é a principal ferramenta utilizada por equipes de Red Team e auditores de segurança para demonstrar aos conselhos de administração como uma falha de configuração aparentemente menor (como um usuário de HelpDesk com permissões residuais de anos atrás) permite a tomada de controle total da empresa em menos de 15 minutos.
-
-A defesa contra esses ataques baseia-se na implementação do **Modelo de Camadas Administrativas (Enterprise Access Tiering)**:
-* **Tier 0:** Domain Controllers, contas de administradores de domínio e servidores de identidade. Nenhuma conta de Tier inferior pode ter qualquer direito de escrita sobre objetos Tier 0.
-* **Tier 1:** Servidores de aplicação corporativos.
-* **Tier 2:** Estações de trabalho de usuários comuns.
+   Copie a flag e registre a pontuação no portal.

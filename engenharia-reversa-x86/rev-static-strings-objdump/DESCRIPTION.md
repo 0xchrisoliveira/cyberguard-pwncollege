@@ -1,94 +1,125 @@
 # Análise Estática Fundamental (Strings & Objdump)
 
-## Briefing da Missão
-A divisão de Inteligência Cibernética da Cyberguard interceptou um artefato malicioso suspeito de operar como dropline e coletor de credenciais corporativas. O arquivo foi isolado em `/tmp/malware_sample.elf`.
+### 📖 Introdução Teórica
 
-Por questões de segurança operacional e risco biológico digital, o protocolo exige que o artefato **NÃO seja executado** inicialmente no ambiente de produção. Sua missão como especialista em engenharia reversa é aplicar métodos de **Análise Estática**, examinando as seções do arquivo ELF com ferramentas de linha de comando (`file`, `strings`, `readelf`, `objdump`), encontrar a chave de autenticação estática que o desenvolvedor deixou hardcoded e submetê-la ao validador da missão.
+A Engenharia Reversa de software é a disciplina dedicada a desconstruir um artefato compilado para compreender seus algoritmos internos, desvendar mecanismos de proteção ou identificar vulnerabilidades sem ter acesso prévio ao código-fonte original. No fluxo de análise de binários, o primeiro e mais seguro passo metodológico é a **Análise Estática**.
+
+#### O que é Análise Estática e por que ela é Segura?
+A Análise Estática consiste em examinar as estruturas internas, metadados, seções e instruções de máquina de um executável **sem colocá-lo em execução no processador**.
+* **Segurança Absoluta:** Ao receber um artefato suspeito (como um ransomware, trojan bancário ou wiper), executá-lo diretamente pode causar a destruição irreversível do laboratório. A análise estática trata o binário puramente como uma sequência passiva de bytes em disco, eliminando qualquer risco de infecção acidental.
+* **Visibilidade Integral:** Ferramentas de desmonte estático permitem visualizar 100% dos blocos de código e rotinas do programa — incluindo funções de depuração, backdoors e branches de erro que jamais seriam acionadas durante uma execução convencional.
+
+```
++-----------------------------------------------------------------------------------------+
+|                                ESTRUTURA DO FORMATO ELF                                 |
+|                         (Executable and Linkable Format - Linux)                        |
++-----------------------------------------------------------------------------------------+
+| CABEÇALHO ELF: Magic Bytes 7F 45 4C 46 ("\x7fELF"), Arquitetura (x86_64), Entry Point   |
++-------------+---------------------------------------------------------------------------+
+| SEÇÃO .text | Instruções de máquina executáveis (código assembly gerado pelo compilador)|
++-------------+---------------------------------------------------------------------------+
+| SEÇÃO       | Read-Only Data (Dados Somente Leitura):                                   |
+| .rodata     | - Strings literais de texto ("Digite sua senha: ")                        |
+|             | - Chaves criptográficas e tokens hardcoded ("REVERSE_STATIC_KEY_...")     |
++-------------+---------------------------------------------------------------------------+
+| SEÇÃO .data | Variáveis globais e estáticas com valores iniciais definidos              |
++-------------+---------------------------------------------------------------------------+
+| SEÇÃO .bss  | Variáveis não inicializadas (zeradas em memória no momento do carregamento|
++-----------------------------------------------------------------------------------------+
+```
+
+#### A Seção `.rodata` e o Erro das Chaves Hardcoded
+Em programas escritos em C/C++, qualquer texto delimitado por aspas duplas (como `"senha_secreta"`) é posicionado pelo compilador diretamente na seção `.rodata` (*Read-Only Data*). Quando desenvolvedores negligentes incorporam segredos estáticos diretamente no código (*hardcoding*), esses artefatos ficam gravados em texto claro no arquivo executável, permitindo que qualquer analista os extraia em segundos com ferramentas elementares de linha de comando.
 
 ---
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
+### 💻 Exemplos Práticos e Sintaxe
 
-No diagnóstico do ciclo 2026.2, **87,5% da equipe cometeu erros na distinção entre análise estática e dinâmica**, um dos conceitos basilares de engenharia reversa e análise de ameaças.
+A caixa de ferramentas fundamental da análise estática no Linux é composta por utilitários da suíte GNU Binutils:
 
-### Análise Estática vs. Análise Dinâmica
-
-| Critério | Análise Estática | Análise Dinâmica |
-| :--- | :--- | :--- |
-| **Execução do Código** | **Nunca executa o binário.** O arquivo é lido como um fluxo passivo de bytes. | **Executa o binário** em ambiente controlado (GDB, sandbox, VM com snapshot). |
-| **Segurança** | 100% segura contra detonações acidentais e infecções. | Requer isolamento rígido de rede e contenção perimetral. |
-| **Visibilidade** | Cobre todos os blocos de código e caminhos lógicos da aplicação. | Apenas observa o caminho percorrido naquela execução específica. |
-| **Desafios** | Dificuldade contra binários ofuscados, packers (UPX) ou código polimórfico. | Evasões de anti-debugging (`ptrace`, detecção de breakpoints). |
-| **Ferramentas Típicas** | `strings`, `file`, `readelf`, `objdump`, Ghidra, IDA Pro. | GDB, GEF, `ltrace`, `strace`, Frida, x64dbg. |
-
-### Estrutura de Seções do Formato ELF (Executable and Linkable Format)
-
+#### 1. Identificação do Tipo de Binário (`file`)
+O utilitário `file` examina os magic bytes no cabeçalho do arquivo para identificar sua arquitetura de CPU, se é de 32 ou 64 bits, e se os símbolos de depuração foram removidos (*stripped*):
+```bash
+file /tmp/malware_sample.elf
 ```
-+-------------------------------------------------------------+
-|                      CABEÇALHO ELF                          |
-|             (Magic Bytes: 7F 45 4C 46 = "\x7fELF")          |
-+-------------------------------------------------------------+
-|  .text      | Instruções de máquina da CPU (Código C/Asm)   |
-+-------------+-----------------------------------------------+
-|  .rodata    | Read-Only Data (Strings literais, constantes, |
-|             | chaves hardcoded como "REVERSE_STATIC_KEY_...")|
-+-------------+-----------------------------------------------+
-|  .data      | Variáveis globais inicializadas pelo dev      |
-+-------------+-----------------------------------------------+
-|  .bss       | Memória não inicializada (zerada pelo loader) |
-+-------------------------------------------------------------+
+*Saída típica:*
+```text
+/tmp/malware_sample.elf: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, not stripped
+```
+
+#### 2. Extração de Strings Imprimíveis (`strings`)
+O comando `strings` varre o arquivo em busca de sequências de 4 ou mais caracteres ASCII imprimíveis consecutivos terminados por byte nulo:
+```bash
+# Extrair todas as strings de todas as seções e filtrar por padrão:
+strings -a /tmp/malware_sample.elf | grep REVERSE
+
+# Exibir as strings acompanhadas de seu deslocamento (offset) em hexadecimal:
+strings -t x /tmp/malware_sample.elf
+```
+
+#### 3. Desmonte em Assembly de Sintaxe Intel (`objdump`)
+Para inspecionar o código de máquina desmontado em sintaxe legível Intel (em vez da notação AT&T com `%` e `$`), utilizamos o `objdump`:
+```bash
+# Desmontar todas as funções executáveis em sintaxe Intel:
+objdump -d -M intel /tmp/malware_sample.elf
+
+# Inspecionar especificamente o conteúdo da seção .rodata em hexadecimal e ASCII:
+objdump -s -j .rodata /tmp/malware_sample.elf
+```
+
+#### 4. Mapeamento das Seções do Arquivo (`readelf`)
+```bash
+# Listar todas as seções ELF, endereços de memória virtual e permissões (W/A/X):
+readelf -S /tmp/malware_sample.elf
 ```
 
 ---
 
-## Passo a Passo de Resolução
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-1. Execute o desafio para gerar o artefato e verificar os parâmetros:
+Siga os passos abaixo para conduzir a análise estática e extrair a chave do binário:
+
+1. **Inicie o desafio para disponibilizar a amostra:**
+   Execute `/challenge/rev-static-strings-objdump`:
    ```bash
    /challenge/rev-static-strings-objdump
    ```
-2. Inspecione o tipo do arquivo isolado:
+   *O ambiente gerará o binário simulado para análise em `/tmp/malware_sample.elf`.*
+
+2. **Inspecione a arquitetura do artefato com `file`:**
+   Confirme que se trata de um binário ELF de 64 bits:
    ```bash
    file /tmp/malware_sample.elf
    ```
-3. Extraia todas as sequências de texto imprimíveis da seção de dados com o utilitário `strings`:
+
+3. **Extraia as cadeias de texto da seção de dados com `strings`:**
+   Execute o utilitário `strings` filtrando palavras-chave de interesse:
    ```bash
    strings -a /tmp/malware_sample.elf | grep REVERSE
    ```
-4. Se desejar inspecionar o código de máquina desmontado em sintaxe Intel:
+   *Você também pode inspecionar diretamente o dump da seção `.rodata`:*
    ```bash
-   objdump -d -M intel /tmp/malware_sample.elf
+   objdump -s -j .rodata /tmp/malware_sample.elf
    ```
-5. Observe a chave identificada:
+
+4. **Identifique a chave estática:**
+   O terminal revelará a constante gravada na seção de dados:
    ```text
    REVERSE_STATIC_KEY_984
    ```
-6. Envie a chave ao binário do desafio:
+
+5. **Submeta a chave ao validador da missão:**
+   Envie a chave encontrada como parâmetro de execução do desafio:
    ```bash
    /challenge/rev-static-strings-objdump REVERSE_STATIC_KEY_984
    ```
-7. O debriefing técnico será exibido e a flag de validação será impressa.
+   *Ou insira-a no prompt interativo se invocado sem argumentos.*
 
----
-
-## Dicas e Comandos de Terminal
-
-- **Localizando o Offset Hexadecimal de Strings:**
-  Use `strings -t x` para saber o endereço exato do byte dentro do arquivo:
-  ```bash
-  strings -t x /tmp/malware_sample.elf
-  ```
-- **Lendo os Cabeçalhos de Seções com Readelf:**
-  ```bash
-  readelf -S /tmp/malware_sample.elf
-  ```
-- **Filtrando Diretamente com Grep Binário:**
-  ```bash
-  grep -ao "REVERSE_STATIC_[0-9A-Z_]*" /tmp/malware_sample.elf
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Em auditorias de segurança de aplicações móveis e IoT (Internet of Things), bem como na resposta a incidentes, analistas frequentemente encontram chaves de API, senhas de banco de dados e credenciais de nuvem (AWS Access Keys) gravadas diretamente no binário pelo desenvolvedor. A análise estática com `strings` e `objdump` é a primeira técnica adotada em qualquer rotina de triagem de segurança.
+6. **Capture e registre a flag:**
+   O binário homologará o resultado da análise estática e exibirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: CHAVE ESTÁTICA LOCALIZADA COM SUCESSO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação.

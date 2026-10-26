@@ -1,85 +1,126 @@
 # Triage Emergencial: Respeitando a RFC 3227
 
-## Briefing da Missão
-O Centro de Operações de Segurança (SOC) da Cyberguard emitiu um alerta de intrusão crítica: o servidor de banco de dados `sec-srv-01` está estabelecendo conexões anômalas para um endereço IP desconhecido na porta TCP 4444. Indicadores apontam para um túnel reverso ativo e atividade de um agente malicioso operando em tempo real.
+### 📖 Introdução Teórica
 
-Sua missão como operador do CSIRT (Computer Security Incident Response Team) é intervir no sistema comprometido e determinar a prioridade estrita de aquisição de evidências, garantindo que nenhum dado perecível seja destruído por reinicialização, ação do atacante ou falta de energia.
+Em computação forense e resposta a incidentes de segurança (DFIR - *Digital Forensics and Incident Response*), o primeiro contato com um sistema comprometido dita o sucesso ou o fracasso de toda a investigação pericial. Diante de um servidor sob ataque ativo, a reação instintiva de operadores destreinados costuma ser desligar imediatamente o equipamento da tomada ou iniciar a cópia de arquivos de log do disco rígido. Essa atitude catastrófica destrói as evidências mais ricas e definitivas do ataque.
 
----
+Para padronizar internacionalmente a metodologia pericial, o IETF publicou a norma **RFC 3227** (*Guidelines for Evidence Collection and Archiving*), que institui o princípio universal da **Ordem de Volatilidade**:
+> **"Colete sempre as evidências partindo da fonte mais volátil para a menos volátil."**
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
-
-No diagnóstico do ciclo 2026.2 da Cyberguard, **87,5% da equipe errou a ordem de prioridade na coleta de evidências forenses**, tendendo a priorizar arquivos estáticos gravados em disco rígido ou logs arquivados.
-
-Essa conduta representa um dos erros mais fatais na resposta a incidentes. A norma internacional **RFC 3227** (*Guidelines for Evidence Collection and Archiving*) determina que a aquisição forense deve seguir rigorosamente a **Ordem de Volatilidade**: colete primeiro os artefatos que desaparecem mais rápido.
-
-### Diagrama da Ordem de Volatilidade (RFC 3227)
+A volatilidade representa a velocidade com que uma evidência se degrada, é sobrescrita ou desaparece permanentemente caso o sistema perca alimentação elétrica, sofra reinicialização ou continue operando rotineiramente.
 
 ```
-[ MAIS VOLÁTIL - Desaparece em microssegundos/minutos ]
+[ MAIS VOLÁTIL - Perece em microssegundos / requer energia ]
         ▲
         │  1. Registradores da CPU e Memória Cache
-        │  2. Tabelas de Roteamento, Cache ARP, Tabela de Processos, Conexões TCP
-        │  3. Memória Principal (Memória RAM Física)
+        │  2. Tabelas de Roteamento, Cache ARP, Conexões TCP/UDP Ativas, Tabela de Processos
+        │  3. Memória Principal Física (RAM)
         │  4. Sistemas de Arquivos Temporários (/tmp, /dev/shm, swap, pagefile)
-        │  5. Discos Rígidos, SSDs e Logs Locais em Disco (/var/log)
-        │  6. Logs em Servidores Remotos (SIEM, syslog-ng) e Capturas de Rede
-        │  7. Mídias Físicas de Arquivamento (Fitas magnéticas, backups a frio)
+        │  5. Discos Não Voláteis (HDDs, SSDs, sistemas de arquivos, logs em /var/log)
+        │  6. Configuração e Topologia Física da Rede
+        │  7. Logs em Servidores Remotos (SIEM, syslog externo) e Tráfego Gravado
+        │  8. Mídias Físicas de Arquivamento e Fitas de Backup a Frio
         ▼
-[ MENOS VOLÁTIL - Persiste por meses ou anos sem energia ]
+[ MENOS VOLÁTIL - Persiste por meses ou anos sem alimentação elétrica ]
 ```
 
-### Por que a Memória RAM Tem Prioridade Absoluta Sobre o Disco?
+#### Por que a Memória RAM tem Prioridade Absoluta sobre o Disco?
+A memória dinâmica de acesso aleatório (DRAM) depende de capacitores microscópicos que precisam ser atualizados milhares de vezes por segundo (*refresh cycles*). No instante em que um servidor é desligado ou reiniciado, o fornecimento elétrico cessa e o conteúdo da RAM dissipa-se em frações de segundo.
 
-| Aspecto | Memória RAM (Volátil) | Disco Rígido / Logs (Não-Volátil) |
+Em contrapartida, os discos magnéticos e memórias flash (SSDs) são dispositivos de armazenamento **não voláteis**: os bits gravados em clusters e blocos persistem intactos mesmo sem energia elétrica.
+
+| Vetor de Análise | Memória RAM Física (Volátil) | Disco Rígido / Logs (Não Volátil) |
 | :--- | :--- | :--- |
-| **Persistência** | Destruída instantaneamente se o servidor perder energia ou sofrer reboot. | Permanece gravada mesmo com o servidor completamente desligado. |
-| **Fileless Malware** | Executa puramente na RAM (*Process Hollowing*, payloads reflexivos) sem gravar arquivo em disco. | Invisível no sistema de arquivos tradicional. |
-| **Credenciais** | Senhas em texto claro, tokens de sessão, hashes NTLM e tickets Kerberos residem na memória. | Senhas raramente são registradas em texto puro nos logs. |
-| **Chaves de Criptografia**| Chaves simétricas (AES-256) de ransomware ou tráfego TLS encontram-se em buffers de memória. | Uma vez reiniciada a máquina, a chave é irrecuperável. |
-| **Comando e Controle (C2)**| Sockets de rede abertos e descritores de arquivo de túneis reversos residem na memória do kernel. | Podem não constar em logs caso o atacante tenha desativado o log local. |
+| **Persistência** | Destruída instantaneamente se o host for desligado. | Permanece gravada com o host desligado. |
+| **Fileless Malware** | Executa estritamente no espaço de endereçamento (Process Hollowing, injeção de DLL reflexiva). | Não deixa nenhum executável gravado no sistema de arquivos. |
+| **Credenciais de Acesso** | Tokens Kerberos, senhas em texto puro, chaves de sessão e hashes residem em memória. | Senhas raramente são registradas em arquivos de log limpos. |
+| **Chaves de Criptografia** | Chaves simétricas ativas (ex: AES-256 de ransomware ou sessões TLS) vivem em buffers de processo. | Se a máquina for reiniciada, a chave de decifração é perdida para sempre. |
+| **Conexões de Rede (C2)** | Descritores de sockets de túneis reversos e endereços IP de C2 residem na memória do kernel. | Podem não constar em logs locais se o invasor os desativou ou limpou. |
+
+#### Relevância Ofensiva e Defensiva
+* **Defensiva (Blue Team / DFIR):** O perito forense deve capturar a imagem da RAM (*dump*) antes de qualquer interação que possa alterar o estado do sistema, garantindo a integridade da **Cadeia de Custódia** através do cálculo de hash criptográfico imediato (SHA-256).
+* **Ofensiva (Red Team):** Invasores avançados utilizam técnicas de malware em memória (*fileless*) justamente para evitar a detecção por antivírus tradicionais baseados em assinaturas de disco e garantir que suas pegadas desapareçam com um simples reboot.
 
 ---
 
-## Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. Execute o binário do desafio no terminal:
+A preservação forense da memória volátil envolve ferramentas dedicadas e procedimentos padronizados de integridade:
+
+#### 1. Coleta Forense de RAM no Linux (LiME - Linux Memory Extractor)
+O módulo de kernel LiME permite extrair a memória física de sistemas Linux com impacto mínimo no espaço de endereçamento:
+```bash
+# Inserir o módulo LiME indicando o destino do dump e o formato bruto (raw):
+sudo insmod lime-$(uname -r).ko "path=/tmp/ram_forense.lime format=raw"
+
+# Verificar se o despejo foi concluído com sucesso:
+ls -lh /tmp/ram_forense.lime
+```
+
+#### 2. Coleta Forense de RAM no Windows
+Utilizam-se executáveis portáteis que não exigem instalação prévia para não sobregravar clusters de memória:
+```cmd
+:: Extração física via WinPmem:
+C:\Forensics> winpmem.exe -o C:\Forensics\mem_dump.raw
+
+:: Extração via DumpIt:
+C:\Forensics> DumpIt.exe /OUTPUT C:\Forensics\memory.dmp
+```
+
+#### 3. Garantia da Cadeia de Custódia (Cálculo de Hash Imediato)
+Imediatamente após a geração da imagem forense, calcula-se o hash criptográfico para certificar judicialmente que a imagem não sofreu adulteração:
+```bash
+# Calcular e armazenar o hash SHA-256 da imagem da memória:
+sha256sum /tmp/ram_forense.lime > /tmp/ram_forense.lime.sha256
+
+# Inspecionar o hash gerado:
+cat /tmp/ram_forense.lime.sha256
+```
+
+#### 4. Inspeção Volátil de Conexões de Rede (Antes de Interromper o Sistema)
+```bash
+# Listar conexões ativas com processos e sockets associados:
+ss -tulpan
+```
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Siga rigorosamente as instruções abaixo dentro do container para demonstrar o domínio sobre a RFC 3227 e desbloquear a flag:
+
+1. **Invoque o binário do desafio:**
+   No terminal, execute o desafio de triagem forense:
    ```bash
    /challenge/dfir-volatility-order
    ```
-2. Caso precise de uma revisão conceitual completa dos princípios da RFC 3227, passe o argumento `--help`:
+
+2. **Revise a aula teórica integrada (Opcional):**
+   Caso deseje rever os parâmetros normativos da RFC 3227 diretamente no terminal:
    ```bash
    /challenge/dfir-volatility-order --help
    ```
-3. O desafio apresentará as quatro fontes de evidência disponíveis:
-   - A) Disco Rígido e Logs salvos (`/var/log/auth.log`)
-   - B) Memória RAM física volátil (processos vivos, chaves, sockets)
-   - C) Fitas de Backup externo e imagens de restauração
-   - D) Arquivos de configuração do sistema em `/etc/`
-4. Selecione a opção **`B`** (ou passe `B` diretamente como argumento).
-5. O debriefing técnico será emitido e a flag de validação será impressa.
 
----
+3. **Avalie o cenário operacional apresentado:**
+   O binário apresentará a seguinte questão:
+   > *"Diante de um servidor ativo sob ataque, qual evidência deve ser adquirida EM PRIMEIRO LUGAR conforme a RFC 3227?"*
+   * A) Disco Rígido e Logs salvos (/var/log/auth.log)
+   * **B) Memória RAM física volátil (processos vivos, chaves, sockets)**
+   * C) Fitas de Backup externo e imagens de restauração
+   * D) Arquivos de configuração do sistema em /etc/
 
-## Dicas e Comandos de Terminal
+4. **Forneça a resposta correta:**
+   Digite **`B`** (ou `RAM`) no prompt interativo e pressione Enter.
+   *Alternativamente, passe a resposta diretamente como argumento:*
+   ```bash
+   /challenge/dfir-volatility-order B
+   ```
 
-- **Módulo LiME (Linux Memory Extractor):**
-  Para extrair a RAM em um host Linux sem contaminar a memória do usuário:
-  ```bash
-  insmod lime-$(uname -r).ko "path=/tmp/ram_dump.lime format=raw"
-  ```
-- **Aquisição em Windows via WinPmem:**
-  ```cmd
-  winpmem.exe -o mem_corporativa.raw
-  ```
-- **Garantia de Integridade (Cadeia de Custódia):**
-  Gere imediatamente o hash criptográfico do dump para validação pericial:
-  ```bash
-  sha256sum /tmp/ram_dump.lime | tee ram_dump.lime.sha256
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Em incidentes modernos de ransomware corporativo, os atacantes costumam injetar scripts maliciosos em processos legítimos (`powershell.exe`, `svchost.exe` ou `systemd`) e configurar comandos de destruição imediata caso percebam a intervenção do administrador. Se a equipe de resposta simplesmente desligar o servidor ou rodar scripts de coleta de disco primeiro, a chave de descriptografia mantida em RAM será destruída, inviabilizando a recuperação dos dados sem o pagamento de resgate. Respeitar a RFC 3227 é a linha divisória entre conter o incidente com sucesso ou amargar a destruição de todo o ambiente.
+5. **Capture e submeta a flag:**
+   O sistema validará a resposta, confirmará a anexação da imagem da RAM à cadeia de custódia e imprimirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: RESPOSTA EXATA! OPERAÇÃO BEM-SUCEDIDA.
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a string completa `pwn.college{...}` e submeta-a para pontuar.

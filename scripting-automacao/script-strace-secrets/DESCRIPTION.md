@@ -1,30 +1,18 @@
 # Rastreamento de Chamadas de Sistema (Análise Dinâmica com Strace)
 
-## 1. Briefing da Missão
-Operador, a equipe de resposta a incidentes da Cyberguard recuperou um binário suspeito `/challenge/script-strace-secrets`. Ele não possui código-fonte disponível e encerra sua rotina operacional sem exibir os parâmetros internos que processa.
+### 📖 Introdução Teórica
 
-Sua missão tática é:
-1. Compreender o funcionamento das chamadas de sistema (syscalls) no Linux e a mecânica de interceptação do utilitário `strace`.
-2. Executar o binário sob o controle do `strace` filtrando chamadas de arquivos (`openat`, `read`).
-3. Descobrir qual arquivo secreto é acessado em tempo de execução e interceptar os bytes da chave lida.
-4. Submeter a chave capturada e resgatar a flag.
+Na arquitetura de segurança dos processadores modernos x86_64 e do kernel Linux, aplicações comuns de usuário executam em um anel de privilégio desprivilegiado conhecido como **Ring 3 (User Space / Espaço do Usuário)**. O hardware impede que tais programas acessem diretamente a memória de outros processos, interajam diretamente com o disco rígido ou enviem pacotes para interfaces físicas de rede.
 
----
-
-## 2. Teoria Aprofundada
-
-### 2.1 A Fronteira entre User Space e Kernel Space
-No modelo de segurança dos processadores x86_64 e do kernel Linux, aplicações comuns rodam em anel de privilégio desprivilegiado (**Ring 3 / User Space**). Elas são impedidas pelo hardware de interagir diretamente com periféricos, discos ou barramentos de memória.
-
-Toda vez que um programa precisa abrir um arquivo, ele carrega o número da chamada de sistema no registrador `RAX`, configura os argumentos nos registradores (`RDI`, `RSI`, `RDX`) e executa a instrução assembly `syscall`. O processador transita temporariamente para **Ring 0 (Kernel Space)** para cumprir a solicitação.
+Sempre que uma aplicação necessita interagir com o mundo externo (abrir um arquivo, ler dados do disco, criar um processo filho ou conectar-se à internet), ela é obrigada a solicitar a intervenção do kernel no **Ring 0 (Kernel Space / Supervisor)** através de uma **Chamada de Sistema (Syscall)**.
 
 ```
 +-----------------------------------------------------------+
-|            Aplicação (Ring 3 / User Space)                |
-|            Código Python / C do binário                   |
+|              Aplicação (Ring 3 / User Space)              |
+|              Código executável do binário                 |
 +-----------------------------------------------------------+
        │
-       │ Instrução Assembly: syscall (RAX=257 / openat)
+       │ Instrução Assembly: syscall (RAX = 257 / openat)
        ▼
 +-----------------------------------------------------------+
 |          strace (intercepta via chamada ptrace)           |
@@ -34,68 +22,101 @@ Toda vez que um programa precisa abrir um arquivo, ele carrega o número da cham
        ▼
 +-----------------------------------------------------------+
 |            Kernel Linux (Ring 0 / Supervisor)             |
-|            Acesso real ao sistema de arquivos             |
+|            Acesso real ao hardware e arquivos             |
 +-----------------------------------------------------------+
 ```
 
-### 2.2 Tabela de Chamadas de Sistema Críticas em Linux x86_64
+#### Como o `strace` Funciona Internamente
+O **`strace` (System Call Trace)** utiliza a chamada de sistema `ptrace(PTRACE_SYSCALL, ...)` do Linux. Essa syscall permite que o `strace` anexe um interceptador ao processo-alvo. Cada vez que a CPU encontra a instrução assembly `syscall`, a execução do binário é congelada antes e depois de transitar para o kernel, permitindo ao `strace` decodificar e imprimir na tela os argumentos exatos passados nos registradores (`RDI`, `RSI`, `RDX`, etc.) e o valor retornado em `RAX`.
 
-| Syscall | Número RAX | Propósito | O que o `strace` revela? |
-| :---: | :---: | :--- | :--- |
-| **`openat`** | `257` | Abre ou cria arquivos relativo a um diretório | Caminho completo do arquivo, flags de leitura/escrita |
-| **`read`** | `0` | Lê bytes a partir de um File Descriptor | Buffer de dados lidos (senhas, chaves, arquivos de config) |
-| **`write`** | `1` | Grava bytes em um File Descriptor | Dados enviados para o monitor, disco ou socket |
-| **`connect`**| `42` | Inicia conexão de rede TCP contra um IP/porta | Endereço IP do servidor de Comando e Controle (C2) |
-| **`execve`** | `59` | Substitui a imagem do processo por outro executável | Linha de comando com que novos processos foram criados |
+#### Análise Estática vs. Análise Dinâmica
+* **Análise Estática (`strings`, `objdump`, `Ghidra`):** Avalia os bytes do executável em repouso sem dispará-lo. Embora indispensável, é facilmente frustrada por técnicas de ofuscação, empacotadores (*packers*) ou strings cifradas que só são decodificadas em tempo de execução.
+* **Análise Dinâmica (`strace`, `ltrace`, `GDB`):** Observa o binário durante a execução. O programa não pode mentir para o kernel: para ler uma chave no disco, ele obrigatoriamente terá que passar o nome do arquivo para `openat()` e carregar os bytes do segredo via `read()`. O `strace` revela essas operações instantaneamente sem exigir engenharia reversa profunda.
 
-### 2.3 Raio-X do Diagnóstico da Cyberguard (Questão Q08)
-No relatório de desempenho do Ciclo 2026.2, **87,5% da equipe cometeu equívocos na distinção entre análise estática e análise dinâmica**:
-* **Análise Estática (`strings`, `objdump`, `ghidra`):** Examina a estrutura do binário sem executá-lo. É ineficaz se o binário decifrar segredos em memória ou estiver ofuscado.
-* **Análise Dinâmica (`strace`, `gdb`, `ltrace`):** Observa o binário durante a execução. O binário não pode mentir: para ler a chave no disco, ele é obrigado a pedir ao Kernel via `openat`/`read`, momento em que o `strace` expõe tudo!
+#### Relevância Ofensiva e Defensiva
+* **Segurança Ofensiva (Red Team / Engenharia Reversa):** Permite recuperar senhas, caminhos de arquivos de configuração camuflados e chaves criptográficas em segundos, além de identificar falhas lógicas em checagens de validação de arquivos.
+* **Segurança Defensiva (Blue Team / Triage de Malware no SOC):** Analistas de segurança executam malwares suspeitos dentro de sandboxes monitoradas por `strace` para descobrir imediatamente quais arquivos estão sendo criptografados por ransomware, quais chaves de persistência estão sendo gravadas e quais endereços IP de Comando & Controle (C2) estão sendo contactados.
 
 ---
 
-## 3. Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. **Tentativa inicial direta:**
+O uso cirúrgico do `strace` envolve filtros e controle de buffer de leitura:
+
+#### Parâmetros e Flags Fundamentais
+* `-e trace=<syscalls>`: Filtra apenas as chamadas de sistema especificadas (ex: `-e trace=openat,read`, `-e trace=network`, `-e trace=file`).
+* `-s <tamanho>`: Define o tamanho máximo de caracteres exibidos para buffers de strings (o padrão é truncar em apenas 32 caracteres; use `-s 256` para ler chaves e tokens inteiros).
+* `-f`: Segue processos filhos gerados via chamadas `fork` ou `clone`.
+* `-p <PID>`: Conecta o interceptador a um processo que já está rodando em segundo plano.
+* `-c`: Modo contagem/sumário; exibe uma tabela estatística consolidando quantas chamadas cada syscall efetuou e o tempo gasto.
+
+#### Tabela de Chamadas de Sistema Críticas em Linux x86_64
+| Syscall | Número RAX | Propósito no Kernel | O que o `strace` revela |
+| :---: | :---: | :--- | :--- |
+| **`openat`** | `257` | Abre ou cria arquivos relativo a um diretório | Caminho completo do arquivo e modo de abertura |
+| **`read`** | `0` | Lê bytes a partir de um File Descriptor | Conteúdo bruto de senhas, chaves e arquivos |
+| **`write`** | `1` | Grava bytes em um File Descriptor | Mensagens enviadas ao terminal, arquivo ou socket |
+| **`connect`**| `42` | Inicia conexão de rede TCP contra um IP/porta | Endereço IP e porta do servidor de destino |
+| **`execve`** | `59` | Executa um novo programa | Argumentos e binários derivados |
+
+#### Snippets Práticos e Saídas Observadas
+
+1. **Rastreamento de Chamadas de Abertura e Leitura de Arquivo:**
+   ```bash
+   $ strace -s 256 -e trace=openat,read /challenge/script-strace-secrets
+   ```
+
+2. **Linhas de Saída Típicas Emitidas pelo Kernel:**
+   ```text
+   openat(AT_FDCWD, "/tmp/.cyberguard_strace_secret.key", O_RDONLY) = 3
+   read(3, "strace_sys_secret_778", 256) = 21
+   ```
+   *O `openat` retornou o File Descriptor número 3, e o `read` seguinte leu 21 bytes correspondentes à chave secreta:* `strace_sys_secret_778`.
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Para interceptar a chave secreta com o strace e resgatar a flag:
+
+1. **Inspecione a execução normal do binário:**
+   Execute `/challenge/script-strace-secrets` diretamente:
    ```bash
    /challenge/script-strace-secrets
    ```
-   *O binário solicita a chave interceptada durante a execução.*
+   *O programa solicitará interativamente:*
+   ```text
+   [?] Digite a chave lida durante a chamada openat/read: 
+   ```
 
-2. **Execução instrumentada com o `strace`:**
-   Execute o binário filtrando chamadas de abertura e leitura de arquivos, garantindo que o buffer não seja truncado com `-s 256`:
+2. **Execute o binário sob o controle do `strace`:**
+   Dispare o binário filtrando chamadas de sistema `openat` e `read`, expandindo o buffer com `-s 256`:
    ```bash
    strace -s 256 -e trace=openat,read /challenge/script-strace-secrets
    ```
 
-3. **Análise das linhas emitidas pelo `strace`:**
-   Dentre as saídas do interpretador Python, localize a chamada específica do arquivo secreto:
+3. **Analise as chamadas interceptadas no terminal:**
+   Procure na saída gerada pelo kernel a leitura do arquivo secreto em `/tmp`:
    ```text
    openat(AT_FDCWD, "/tmp/.cyberguard_strace_secret.key", O_RDONLY) = 3
    read(3, "strace_sys_secret_778", 256) = 21
    ```
 
-4. **Submissão do segredo interceptado:**
-   Digite a chave `strace_sys_secret_778` no prompt ou execute:
+4. **Submeta a chave capturada:**
+   A chave lida diretamente pelo descritor de arquivo é `strace_sys_secret_778`.
+   Digite a chave no prompt e pressione `Enter`:
+   ```text
+   strace_sys_secret_778
+   ```
+   *Ou execute diretamente passando o segredo como argumento:*
    ```bash
    /challenge/script-strace-secrets strace_sys_secret_778
    ```
 
----
-
-## 4. Dicas e Comandos de Terminal
-
-| Comando | Descrição |
-| :--- | :--- |
-| `strace -c <comando>` | Gera um sumário estatístico com o número de chamadas e tempo gasto em cada syscall. |
-| `strace -p <PID>` | Anexa o sniffer dinâmico a um processo que já está rodando em segundo plano. |
-| `strace -f <comando>` | Segue subprocessos filhos criados via `fork` ou `clone`. |
-| `ltrace <comando>` | Intercepta chamadas de bibliotecas compartilhadas (libc), como `strcmp` e `malloc`. |
-
----
-
-## 5. Aplicação Prática no Mundo Real
-
-* **Triage e Análise de Malware em Sandbox:** Quando um artefato desconhecido (ransomware, trojan ou botnet) é recebido pelo SOC, o analista executa o binário sob o controle do `strace` em uma máquina virtual isolada para descobrir quais arquivos ele tenta criptografar e quais IPs ele tenta contactar.
-* **Troubleshooting de Aplicações em Produção:** Quando um serviço corporativo falha com a mensagem opaca "Configuration error", o `strace` revela imediatamente qual arquivo de configuração ele tentou abrir e encontrou permissão negada (`EACCES`) ou ausente (`ENOENT`).
+5. **Capture e submeta a flag:**
+   O verificador validará o segredo e exibirá a flag autorizada:
+   ```text
+   [+] Excelente analise com strace!
+   pwn.college{...}
+   ```
+   Copie a string no formato `pwn.college{...}` e insira no painel da plataforma.

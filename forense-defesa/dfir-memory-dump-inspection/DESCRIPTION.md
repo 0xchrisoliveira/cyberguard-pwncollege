@@ -1,91 +1,126 @@
 # Análise de Imagem de Memória RAM com Volatility
 
-## Briefing da Missão
-Após a intervenção emergencial em conformidade com a RFC 3227, o time de resposta a incidentes (CSIRT) da Cyberguard realizou a extração completa da memória física (RAM) do host atacado, gravando a imagem de memória bruta em `/tmp/cyberguard_ram_dump.raw`.
+### 📖 Introdução Teórica
 
-A inteligência de ameaças aponta que um malware furtivo (*fileless*) residia no espaço de endereçamento do sistema operacional, comunicando-se com um servidor de Comando e Controle (C2) e utilizando uma chave de cifragem simétrica `AES-256` gerada em tempo de execução. Como o binário nunca foi gravado no disco, a memória RAM é o único local onde essa chave existe.
+A análise forense de memória volátil é um dos ramos mais avançados e reveladores da cibersegurança defensiva. Enquanto a análise de discos rígidos e sistemas de arquivos busca artefatos persistentes gravados no passado, a inspeção da memória RAM (*memory forensics*) revela o estado exato em que o computador se encontrava no momento preciso da captura: processos ativos em execução, fios de execução (*threads*), conexões de rede abertas, credenciais de autenticação decifradas e códigos maliciosos invisíveis no disco.
 
-Sua missão é atuar como perito forense: inspecionar o arquivo de dump de memória, localizar a chave volátil ativa e submetê-la para decodificar as comunicações adversárias.
+#### O Espaço de Endereçamento e Estruturas do Kernel
+Em sistemas operacionais modernos, cada processo em execução recebe um espaço de memória virtual isolado, mapeado e gerenciado pelo hardware da MMU (*Memory Management Unit*):
+1. **Estrutura de Processos (`task_struct` no Linux / `EPROCESS` no Windows):** O kernel mantém listas encadeadas contendo metadados de cada processo — PID, PPID, proprietário, descritores de arquivo abertos e ponteiros de memória.
+2. **Árvore VAD (*Virtual Address Descriptor Tree*):** Estrutura em árvore que registra cada bloco de memória alocado para o processo e suas respectivas permissões de acesso: Leitura (`R`), Escrita (`W`) e Execução (`X`).
+3. **Páginas de Memória Volátil:** Buffers dinâmicos (*heap*) e quadros de pilha (*stack*) armazenam chaves criptográficas simétricas, senhas em texto puro e dados de comunicação enquanto os programas operam.
+
+```
++-----------------------------------------------------------------------------------------+
+|                               IMAGEM BRUTA DA MEMÓRIA RAM                               |
+|                              (/tmp/cyberguard_ram_dump.raw)                             |
++-----------------------------------------------------------------------------------------+
+|  Kernel Structures: task_struct (PID 1337, Comm: "rev_tunnel.elf")                      |
+|  Active Socket:     192.168.10.45:4444 -> 10.0.0.1:8443 (Túnel C2 Ativo)               |
+|  VAD Protection:    PAGE_EXECUTE_READWRITE (Alerta de Injeção Maliciosa RWX)            |
+|  Process Heap/Stack:                                                                    |
+|    Offset 0x00000420: "CRITICAL_VOLATILE_ARTIFACT: "                                    |
+|    Offset 0x0000043c: "MEM_KEY_AES_256_CYBERGUARD_LIVE"  <--- CHAVE SIMÉTRICA DO C2!    |
++-----------------------------------------------------------------------------------------+
+```
+
+#### O Framework Volatility
+O **Volatility** é o padrão pericial da indústria para análise forense de dumps de memória. O Volatility 3 não executa o binário capturado; ele interpreta de forma estática as estruturas binárias do kernel do sistema operacional a partir de tabelas de símbolos (*Intermediate Symbol Format - ISF*):
+* `linux.pslist` / `windows.pslist`: Percorre a lista encadeada de processos ativos.
+* `linux.pstree` / `windows.pstree`: Exibe a árvore hierárquica de relações pai-filho (`PPID -> PID`).
+* `linux.malfind` / `windows.malfind`: Varre a memória em busca de regiões com proteção atípica de Leitura, Escrita e Execução simultâneas (`RWX`), sintoma clássico de injeção de malware (*Process Hollowing*, *DLL Injection*).
+* `linux.netscan` / `windows.netscan`: Reconstitui os sockets de rede ativos e conexões TCP/UDP no instante da coleta.
+* `linux.bash` / `windows.cmdline`: Recupera comandos digitados no terminal pelo invasor que residem nos buffers de memória.
+
+#### Relevância Ofensiva e Defensiva
+* **Segurança Defensiva (DFIR / SOC):** Permite recuperar chaves de decifração de ransomwares antes que o processo termine, identificar canais de comando e controle (C2) ocultos e isolar artefatos de intrusão que jamais tocaram o disco rígido.
+* **Segurança Ofensiva (Red Team):** Compreender como os peritos extraem evidências da RAM orienta o desenvolvimento de técnicas evasivas, como ofuscação de buffers em memória e encerramento limpo de sessões.
 
 ---
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
+### 💻 Exemplos Práticos e Sintaxe
 
-A análise de memória volátil é um dos pilares mais sofisticados da computação forense. No teste diagnóstico da Cyberguard, o descompasso entre teoria de disco e análise de memória foi evidente.
+A investigação de imagens de memória combina ferramentas especializadas (Volatility) com filtros avançados de texto e inspeção hexadecimal no terminal:
 
-Quando um sistema operacional gerencia processos:
-1. Cada processo recebe um espaço de memória virtual mapeado pela MMU (*Memory Management Unit*) e estruturado pelo kernel em descritores como `task_struct` (no Linux) ou `EPROCESS` (no Windows).
-2. Variáveis dinâmicas, ponteiros de heap e buffers de comunicação residem nesses blocos de memória física.
-3. Se o malware opera como *fileless* (usando injeção em processos legítimos via `ptrace`, reflective loading ou process hollowing), o disco rígido não contém nenhum executável suspeito.
+#### 1. Varredura com Volatility 3
+```bash
+# Listar processos em execução na imagem de memória:
+vol -f /tmp/cyberguard_ram_dump.raw linux.pslist
 
-### O Framework Volatility 3
+# Localizar injeções de código e regiões RWX:
+vol -f /tmp/cyberguard_ram_dump.raw linux.malfind
 
-O **Volatility 3** é o padrão pericial global para dissecar dumps de memória física sem depender do sistema operacional hospedeiro. Ele interpreta as tabelas de símbolos do kernel e permite inspecionar:
-- `linux.pslist` / `windows.pslist`: Lista encadeada de processos ativos.
-- `linux.malfind` / `windows.malfind`: Varredura em busca de regiões de memória com proteções atípicas (ex: memória com permissão de escrita e execução simultânea `PAGE_EXECUTE_READWRITE`).
-- `linux.netscan` / `windows.netscan`: Sockets de rede abertos no instante exato do dump.
-- `linux.bash` / `windows.cmdline`: Linhas de comando digitadas no terminal.
+# Inspecionar sockets de rede abertos:
+vol -f /tmp/cyberguard_ram_dump.raw linux.netscan
 
-### Diagrama de Extração de Segredos em Memória
-
+# Recuperar linhas de comando digitadas:
+vol -f /tmp/cyberguard_ram_dump.raw linux.bash
 ```
-+-------------------------------------------------------------+
-|                  IMAGEM BRUTA DA MEMÓRIA RAM                |
-|                    (/tmp/cyberguard_ram_dump.raw)           |
-+-------------------------------------------------------------+
-|  Kernel Structures (task_struct, mm_struct, VAD Tree)      |
-|  Process: rev_tunnel.elf [PID 1337]                        |
-|  Stack & Heap Buffers:                                      |
-|    Offset 0x00000420: "CRITICAL_VOLATILE_ARTIFACT: "       |
-|    Offset 0x0000043c: "MEM_KEY_AES_256_CYBERGUARD_LIVE"    |  <-- ALVO FORENSE!
-+-------------------------------------------------------------+
+
+#### 2. Extração Rápida de Strings e Chaves em Dumps Brutos (Raw)
+Quando o perfil do kernel não está imediatamente disponível, utilitários GNU permitem localizar padrões textuais conhecidos:
+```bash
+# Extrair todas as cadeias de texto imprimíveis e filtrar termos de chave:
+strings -a /tmp/cyberguard_ram_dump.raw | grep -i MEM_KEY
+
+# Extrair padrões com regex direta sobre o binário:
+grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
+
+# Inspecionar o offset com contexto de bytes em hexadecimal (xxd):
+xxd -s 0x200 -l 128 /tmp/cyberguard_ram_dump.raw
+```
+
+#### 3. Saída Esperada no Terminal
+```text
+[KERNEL_TASK_STRUCT pid=1337 comm=kworker_crypt]
+PROCESS_NAME: rev_tunnel.elf
+SOCKET_ESTABLISHED: 192.168.10.45:4444 -> 10.0.0.1:8443
+ENVIRONMENT_BLOCK: USER=root PATH=/bin:/usr/bin
+CRITICAL_VOLATILE_ARTIFACT: MEM_KEY_AES_256_CYBERGUARD_LIVE
+VAD_PROTECTION: PAGE_EXECUTE_READWRITE
 ```
 
 ---
 
-## Passo a Passo de Resolução
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-1. Execute o binário do desafio para inicializar o ambiente de simulação e ler as instruções:
+Siga os passos abaixo para analisar a imagem de memória e validar a resolução:
+
+1. **Inicie o laboratório do desafio:**
+   Execute o executável `/challenge/dfir-memory-dump-inspection`:
    ```bash
    /challenge/dfir-memory-dump-inspection
    ```
-2. Utilize o utilitário `strings` ou `grep` para vasculhar o arquivo de despejo gerado em `/tmp/cyberguard_ram_dump.raw`:
+   *O desafio gerará a imagem simulada de memória em `/tmp/cyberguard_ram_dump.raw`.*
+
+2. **Inspecione a imagem de memória gerada em `/tmp`:**
+   Utilize o comando `strings` ou `grep` para vasculhar o arquivo de despejo de memória em busca do artefato criptográfico:
    ```bash
    strings /tmp/cyberguard_ram_dump.raw | grep MEM_KEY
    ```
-   *Alternativa com grep:*
+   *Alternativa com grep de bytes:*
    ```bash
    grep -ao "MEM_KEY_[A-Za-z0-9_]*" /tmp/cyberguard_ram_dump.raw
    ```
-3. Copie a chave identificada:
+
+3. **Identifique a chave volátil:**
+   A inspeção revelará o token de cifragem AES-256 do malware:
    ```text
    MEM_KEY_AES_256_CYBERGUARD_LIVE
    ```
-4. Submeta a chave ao executável do desafio:
+
+4. **Submeta a chave ao binário validador:**
+   Passe a chave identificada como argumento para o desafio:
    ```bash
    /challenge/dfir-memory-dump-inspection MEM_KEY_AES_256_CYBERGUARD_LIVE
    ```
-   *Ou digite-a no prompt interativo.*
-5. O debriefing técnico será exibido e a flag será liberada.
+   *Ou digite-a no prompt interativo caso execute sem argumentos.*
 
----
-
-## Dicas e Comandos de Terminal
-
-- **Localizando Artefatos ASCII e Unicode em Binários:**
-  O parâmetro `-a` força o `strings` a escanear todo o arquivo; `-t x` exibe o offset hexadecimal:
-  ```bash
-  strings -a -t x /tmp/cyberguard_ram_dump.raw | grep -E "(KEY|SECRET|PASSWORD)"
-  ```
-- **Examinando Processos Vivos Diretamente no Linux (`/proc`):**
-  Se você estiver investigando uma máquina ligada, as variáveis de ambiente de qualquer processo podem ser lidas em:
-  ```bash
-  strings /proc/$PID/environ
-  cat /proc/$PID/cmdline
-  ```
-
----
-
-## Aplicação Prática no Mundo Real
-
-Em ataques de grupos APT (Advanced Persistent Threats), os operadores raramente deixam artefatos fáceis em disco. Eles utilizam frameworks como Cobalt Strike, Sliver ou Havoc, injetando *beacons* reflexivos na memória de processos de sistema. Durante a resposta a incidentes, a extração de memória é a única técnica capaz de recuperar as chaves AES e os endereços IP dos servidores de comando e controle, permitindo isolar a infraestrutura do invasor e impedir a exfiltração de gigabytes de dados sensíveis da organização.
+5. **Capture a flag:**
+   O sistema validará o artefato recuperado e liberará a flag de conclusão:
+   ```text
+   [+] DEBRIEFING TÉCNICO: CHAVE AES-256 RECUPERADA DA MEMÓRIA VOLÁTIL!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a flag no formato `pwn.college{...}` para submissão.

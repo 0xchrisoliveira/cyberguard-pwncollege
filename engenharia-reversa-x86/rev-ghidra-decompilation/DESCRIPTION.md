@@ -1,82 +1,113 @@
 # Descompilação Avançada com Ghidra
 
-## Briefing da Missão
-A NSA (National Security Agency) tornou pública a suíte **Ghidra**, um dos ecossistemas de engenharia reversa e descompilação de software mais avançados do mundo. Em investigações de ciberespionagem e análise de exploits desconhecidos (*zero-days*), a descompilação permite transformar milhões de bytes ininteligíveis de código de máquina de volta em funções legíveis na linguagem C.
+### 📖 Introdução Teórica
 
-Sua missão neste desafio é compreender a mecânica por trás da descompilação no Ghidra, dominar a diferença estratégica entre Análise Estática e Análise Dinâmica e consolidar a teoria indispensável para o módulo seguinte de exploração binária.
+A Engenharia Reversa contemporânea foi profundamente transformada pela disponibilização pública da suíte **Ghidra**, desenvolvida pela Agência de Segurança Nacional dos Estados Unidos (NSA). Enquanto desmontadores tradicionais (*disassemblers* como o `objdump`) apenas traduzem opcodes hexadecimais em mnemônicos crus de assembly x86_64, descompiladores modernos reconstroem a lógica do programa de volta em pseudocódigo na linguagem C de alto nível.
+
+Para operar com excelência em auditorias de segurança ofensiva e análise de ameaças (Threat Intelligence), o analista deve dominar a mecânica da descompilação e a fronteira entre **Análise Estática** e **Análise Dinâmica**.
+
+#### Como Opera o Descompilador do Ghidra?
+A descompilação de código de máquina é um processo matemático rigoroso dividido em quatro estágios:
+1. **Desmontagem (Disassembly):** O Ghidra converte os bytes binários do cabeçalho ELF em mnemônicos da arquitetura alvo (x86_64, ARM, MIPS).
+2. **Emissão de P-Code (Linguagem Intermediária):** Cada instrução assembly é traduzida para P-Code, uma representação universal de registradores virtuais que descreve o fluxo de dados independentemente da arquitetura.
+3. **Estrutura SSA (*Static Single Assignment*):** O motor decompilador analisa o tempo de vida e o escopo de cada variável, detectando reutilizações de registradores e recuperando ponteiros de pilha (*stack variables*) e argumentos de função.
+4. **Reconstrução de Controle de Fluxo (CFG):** O algoritmo identifica padrões de ramificação e reconstrói estruturas condicionais limpas (`if/else`, laços `while`/`for` e estruturas `switch`), gerando um código em C surpreendentemente próximo ao código-fonte original escrito pelo desenvolvedor!
+
+```
+Código de Máquina (Bytes Hexadecimais)
+       │
+       ▼
+Assembly x86_64 (Desmontagem / Disassembly)
+       │
+       ▼
+Linguagem Intermediária (P-Code & Grafo SSA)
+       │
+       ▼
+Pseudocódigo em C Legível (Descompilação Ghidra)
+```
+
+#### Análise Estática vs. Análise Dinâmica: A Distinção Definitiva
+
+| Critério | Análise Estática (Ghidra / IDA Pro) | Análise Dinâmica (GDB / GEF / Sandboxes) |
+| :--- | :--- | :--- |
+| **Execução do Binário** | **NÃO executa o programa.** O arquivo é tratado como dado inerte. | **EXECUTA ativamente o programa** na CPU e memória. |
+| **Segurança Operacional**| 100% segura contra malwares agressivos (ransomwares, wipers). | Requer isolamento estrito de ambiente (VM com snapshots). |
+| **Abrangência de Código**| Cobre **100% das rotinas e branches**, inclusive código morto. | Cobre apenas as instruções executadas naquela sessão. |
+| **Visão da Memória** | Relativa aos offsets de seções gravadas no disco. | Absoluta, com valores reais e dinâmicos de registradores. |
+| **Mitigações/Desafios** | Dificuldade contra empacotadores (*packers*) e código polimórfico. | Dificuldade contra rotinas de anti-debugging (`ptrace`). |
 
 ---
 
-## Teoria Aprofundada & Relação com o Diagnóstico 2026.2
+### 💻 Exemplos Práticos e Sintaxe
 
-No diagnóstico do ciclo 2026.2, **87,5% da equipe errou a diferenciação entre Análise Estática e Análise Dinâmica** (Questão Q08). Esse gargalo impede que o operador saiba escolher a ferramenta certa para cada fase de um engajamento ofensivo ou pericial.
+A eficácia do Ghidra reside na conversão de montagens complexas de assembly em código legível para auditoria:
 
-### Matriz Comparativa: Estática vs. Dinâmica
+#### 1. Comparação Visual: Assembly vs Pseudocódigo C Reconstruído
+* **Assembly Puro (Difícil leitura e rastreamento de variáveis):**
+  ```assembly
+  mov    eax, DWORD PTR [rbp-0x4]
+  imul   eax, eax, 0x7
+  cmp    eax, 0x12d
+  jne    0x401185
+  call   0x401050 <print_flag>
+  ```
+* **Pseudocódigo Gerado pelo Ghidra (Compreensão imediata):**
+  ```c
+  undefined8 validate_access(int input_val) {
+      if (input_val * 7 == 301) {
+          print_flag();
+          return 0;
+      }
+      puts("Acesso Negado!");
+      return 1;
+  }
+  ```
 
-```
-+------------------------------------------------------------------------------------------+
-| CRITÉRIO            | ANÁLISE ESTÁTICA (Ghidra / IDA)    | ANÁLISE DINÂMICA (GDB / GEF)  |
-+---------------------+------------------------------------+-------------------------------+
-| O binário roda?     | NÃO. É examinado como dado inerte. | SIM. É executado pela CPU.    |
-| Risco de infecção   | ZERO. Seguro para malwares ativos. | ALTO se não estiver isolado.  |
-| Visibilidade        | 100% do código (todas as branches).| Apenas o fluxo executado.     |
-| Visão da memória    | Estática (endereços relativos).    | Dinâmica (valores reais).     |
-| Evasão por malware  | Dificuldade contra packers e XOR.  | Dificuldade contra Anti-Debug.|
-+------------------------------------------------------------------------------------------+
-```
-
-### Como o Descompilador do Ghidra Funciona?
-
-1. **Disassembly (Desmontagem):** O Ghidra converte os bytes binários em instruções Assembly x86_64.
-2. **Geração de P-Code:** Cada instrução assembly é traduzida em uma linguagem intermediária universal chamada P-Code (ex: `mov [rbp-4], eax` vira `STORE (register_space, rbp - 4, eax)`).
-3. **Construção do SSA (Static Single Assignment):** O motor matemático analisa o fluxo de vida de cada variável e registrador.
-4. **Reconstrução do Pseudocódigo em C:** O Ghidra identifica padrões de loops (`for`, `while`), estruturas condicionais (`if/else`) e chamadas de biblioteca, exibindo o código quase idêntico ao código-fonte original escrito pelo desenvolvedor!
-
-```
-Código de Máquina (Bytes)
-       │
-       ▼
-Assembly x86_64 (Disassembly)
-       │
-       ▼
-Linguagem Intermediária (P-Code)
-       │
-       ▼
-Pseudocódigo em C (Decompilação Ghidra)
-```
+#### 2. Atalhos e Boas Práticas Operacionais no Ghidra
+* `G` (*Go to Address*): Salta diretamente para um endereço de memória virtual ou símbolo exportado.
+* `L` (*Rename Variable*): Renomeia variáveis opacas geradas pelo descompilador (ex: transformar `local_18` em `buffer_senha`).
+* `T` (*Retype Variable*): Altera o tipo de dado da variável (ex: converter `undefined4` para `int*` ou struct customizada).
+* `X` (*Show References to*): Exibe todas as referências cruzadas (*XREFs*) que chamam ou leem uma determinada função ou string.
+* Janela `Symbol Tree` -> `Functions`: Lista todas as funções identificadas na seção `.text`.
 
 ---
 
-## Passo a Passo de Resolução
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
 
-1. Execute o executável do desafio:
+Siga os passos abaixo para consolidar os conceitos de descompilação e análise de binários:
+
+1. **Inicie o executável do desafio:**
+   No terminal, execute o binário `/challenge/rev-ghidra-decompilation`:
    ```bash
    /challenge/rev-ghidra-decompilation
    ```
-2. Caso deseje estudar a teoria detalhada sobre descompilação e boas práticas no Ghidra:
+
+2. **Consulte a aula didática (Opcional):**
+   Caso queira revisar as diretrizes de descompilação da NSA:
    ```bash
    /challenge/rev-ghidra-decompilation --help
    ```
-3. Leia a questão apresentada:
-   - Opção 1: Estática executa com parâmetros; dinâmica analisa apenas o assembly (Incorreto - inverte os conceitos).
-   - Opção 2: Estática examina o binário e pseudocódigo SEM executá-lo; dinâmica observa o comportamento durante a execução ativa (Correto!).
-   - Opção 3: Exclusividades de sistemas operacionais (Incorreto).
-   - Opção 4: Ambas executam código (Incorreto).
-4. Digite a alternativa **`2`** no terminal (ou envie `2` via parâmetro).
-5. O debriefing técnico será emitido e a flag de conclusão do Módulo 8 será liberada!
 
----
+3. **Avalie a pergunta conceitual:**
+   O binário apresentará a seguinte questão:
+   > *"Qual é a diferença fundamental entre Análise Estática e Análise Dinâmica?"*
+   * 1) A estática executa o binário com múltiplos parâmetros; a dinâmica lê apenas o assembly gravado no disco rígido sem carregar na memória
+   * **2) A estática examina o binário e seu pseudocódigo SEM executá-lo; a dinâmica observa e manipula o comportamento durante a execução ativa**
+   * 3) A estática é exclusiva para sistemas Windows; a dinâmica é restrita ao Linux
+   * 4) Ambas executam o código, diferindo apenas pelo uso ou não de interface gráfica
 
-## Dicas e Comandos de Operação no Ghidra
+4. **Envie a alternativa correta:**
+   Digite **`2`** no prompt interativo e pressione Enter.
+   *Ou envie diretamente via linha de comando:*
+   ```bash
+   /challenge/rev-ghidra-decompilation 2
+   ```
 
-Ao abrir um binário no Ghidra em ambientes reais:
-- **Atalho `G` (Go to):** Digite um endereço de memória (ex: `0x00401122`) ou o nome de um símbolo (`main`).
-- **Atalho `X` (References to / XREFs):** Revela todos os locais do binário que lêem ou escrevem naquela variável ou função.
-- **Atalho `L` (Rename Variable):** Renomeie uma variável descompilada genérica (ex: `iVar1` para `senha_valida`). O Ghidra atualiza automaticamente todo o pseudocódigo!
-- **Atalho `T` (Retype Variable):** Altere o tipo de dado de uma variável (ex: de `undefined4` para `int` ou `char*`).
-
----
-
-## Aplicação Prática no Mundo Real
-
-Na análise de ciberataques patrocinados por Estados-nação (APTs), os artefatos maliciosos têm milhares de linhas de código assembly. Ler assembly instrução por instrução consumiria semanas de trabalho pericial. A descompilação no Ghidra acelera esse processo em mais de 10 vezes, permitindo que os analistas identifiquem em poucos minutos os algoritmos de criptografia de C2, credenciais embutidas e falhas lógicas para neutralização de botnets.
+5. **Capture a flag de conclusão:**
+   O sistema confirmará o fechamento conceitual do Módulo 8 e emitirá a flag:
+   ```text
+   [+] DEBRIEFING TÉCNICO: DISTINÇÃO ESTÁTICA VS DINÂMICA FIXADA COM SUCESSO!
+   [FLAG DE VALIDAÇÃO CYBERGUARD]:
+   pwn.college{...}
+   ```
+   Copie a flag no formato `pwn.college{...}` e insira no sistema de pontuação da plataforma.

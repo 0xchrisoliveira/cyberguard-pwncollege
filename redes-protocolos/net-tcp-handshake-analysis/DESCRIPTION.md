@@ -1,19 +1,8 @@
-# Dissecando o Handshake TCP no Wireshark e Linha de Comando
+# Dissecando o Handshake TCP no Wireshark/Tshark (Anatomia do Three-Way Handshake)
 
-## 1. Briefing da Missão
-Operador, durante a auditoria forense de conexões maliciosas interceptadas pelo SOC da Cyberguard, é mandatório distinguir com precisão fluxos de conexões TCP estabelecidas com sucesso de varreduras incompletas (*half-open scans*) e tentativas de negação de serviço (*SYN floods*).
+### 📖 Introdução Teórica
 
-Sua missão tática é:
-1. Compreender a anatomia do aperto de mão de três vias do TCP (*Three-Way Handshake*).
-2. Compreender os estados dos sockets do kernel (`LISTEN`, `SYN_SENT`, `SYN_RECV`, `ESTABLISHED`).
-3. Interagir com o validador `/challenge/net-tcp-handshake-analysis`, comprovar o domínio do ciclo de vida das flags TCP e capturar a flag.
-
----
-
-## 2. Teoria Aprofundada
-
-### 2.1 O Modelo do Three-Way Handshake (RFC 793)
-O protocolo TCP (Transmission Control Protocol) é orientado a conexão. Diferente do UDP, nenhum byte de aplicação é transmitido antes que ambos os lados sincronizem seus números de sequência iniciais (*ISN — Initial Sequence Numbers*).
+Diferente do protocolo UDP (User Datagram Protocol), que opera sob o princípio do "melhor esforço" sem confirmação de entrega, o **TCP (Transmission Control Protocol — RFC 793)** é um protocolo estritamente orientado a conexão. Isso significa que nenhum byte de dados da Camada de Aplicação pode ser transmitido antes que o cliente e o servidor sincronizem seus parâmetros de canal através de um procedimento de três etapas conhecido como **Three-Way Handshake**.
 
 ```
    CLIENTE (Ex: 192.168.1.10)                       SERVIDOR (Ex: 192.168.1.50:80)
@@ -35,66 +24,105 @@ ESTABLISHED                                                      │
         │══════════ CONEXÃO ESTABELECIDA / TRANSFERÊNCIA ════════│
 ```
 
-### 2.2 Tabela de Flags de Controle TCP
+#### As Três Etapas Rigorosas do Handshake
+1. **SYN (Synchronize):** O cliente envia um pacote com a flag `SYN` ativada e um número de sequência inicial pseudoaleatório (*ISN = X*). Indica formalmente a intenção de abrir um canal de comunicação.
+2. **SYN-ACK (Synchronize-Acknowledgment):** O servidor responde com as flags `SYN` e `ACK` ativadas. Ele confirma o recebimento do pacote do cliente incrementando seu número de sequência (*Ack = X + 1*) e introduz seu próprio número de sequência inicial (*Seq = Y*).
+3. **ACK (Acknowledgment):** O cliente responde com a flag `ACK` ativada, confirmando o número de sequência do servidor (*Ack = Y + 1*). A partir deste instante, ambos os nós entram no estado `ESTABLISHED` e a troca de dados em texto claro ou criptografado tem início.
 
-| Flag TCP | Bit Hexadecimal | Função Primária | Cenário de Segurança |
+#### Tabela de Flags de Controle do Cabeçalho TCP
+| Flag TCP | Bit Hexadecimal | Propósito Operacional | Cenário em Cibersegurança |
 | :---: | :---: | :--- | :--- |
-| **SYN** | `0x02` | Sincroniza números de sequência para iniciar canal | Início de conexão / SYN Flood DoS |
-| **ACK** | `0x10` | Reconhece o recebimento ordenado de bytes anteriores | Confirmação de pacote / ACK scan |
-| **FIN** | `0x01` | Solicita término elegante da conexão | Fechamento de sessão de aplicação |
-| **RST** | `0x04` | Aborta a conexão imediatamente | Porta fechada / Encerramento do SYN scan |
-| **PSH** | `0x08` | Força envio imediato dos dados do buffer para a aplicação | Envio de comandos interativos (SSH/Telnet) |
-| **URG** | `0x20` | Marca o ponteiro de dados urgentes | Priorização de interrupções |
+| **SYN** | `0x02` | Sincroniza números de sequência para abrir canal | Início de conexões legítimas e ataques SYN Flood |
+| **ACK** | `0x10` | Reconhece o recebimento ordenado de pacotes | Confirmação contínua de entrega de segmentos |
+| **FIN** | `0x01` | Solicita o encerramento gracioso da conexão | Finalização ordenada de sessões TCP |
+| **RST** | `0x04` | Aborta a conexão imediatamente (*Reset*) | Portas fechadas ou encerramento de SYN scan |
+| **PSH** | `0x08` | Força envio imediato dos dados do buffer para a aplicação | Comandos interativos em terminais SSH e shells |
+| **URG** | `0x20` | Informa a presença de dados de processamento urgente | Priorização de interrupções de controle |
 
-### 2.3 Raio-X do Diagnóstico da Cyberguard (Questão Q02)
-Na avaliação diagnóstica de entrada do Ciclo 2026.2, **62,5% da equipe falhou na identificação do Three-Way Handshake**. Integrantes confundiram a posição do `ACK` ou assumiram que o cliente enviava `SYN-ACK`. 
-
-O mnemônico infalível é:
-* **Cliente:** Começa com **SYN** (solicita sincronismo).
-* **Servidor:** Responde com **SYN-ACK** (sincroniza o dele e reconhece o seu).
-* **Cliente:** Conclui com **ACK** (reconhece o do servidor).
+#### Relevância Ofensiva e Defensiva
+* **Segurança Ofensiva (Red Team):** 
+  - **SYN Scans (Stealth Scan):** Ao realizar um scan com `nmap -sS`, o atacante envia o pacote `SYN`, recebe o `SYN-ACK` e, em vez de responder com o `ACK` final, envia um `RST`. Isso determina que a porta está aberta sem concluir a conexão, evitando que serviços legados registrem a tentativa em seus arquivos de log.
+  - **SYN Flood (DDoS):** Atacantes enviam milhões de pacotes `SYN` com IPs de origem forjados (*spoofing*), saturando a tabela de estados (`SYN_RECV`) do alvo e causando negação de serviço.
+* **Segurança Defensiva (Blue Team / SOC):** Analistas utilizam filtros no Wireshark e Zeek para detectar discrepâncias em flags (como pacotes anômalos com flags `SYN+FIN`), monitorar o tempo de resposta do handshake e configurar contramedidas no kernel como **SYN Cookies** (`net.ipv4.tcp_syncookies = 1`).
 
 ---
 
-## 3. Passo a Passo de Resolução
+### 💻 Exemplos Práticos e Sintaxe
 
-1. **Invoque o modo de ajuda para revisar a teoria:**
+A inspeção e o diagnóstico do handshake TCP no Linux dependem dos utilitários de inspeção de sockets e sniffers:
+
+#### Comandos de Inspeção e Filtros
+* `ss -ant`: Exibe todas as conexões TCP numéricas (`-n`) ativas e em escuta (`-a`), indicando seu estado atual (`ESTAB`, `SYN-SENT`, `LISTEN`).
+* `tcpdump -nn "tcp[tcpflags] == tcp-syn"`: Filtra exclusivamente os pacotes de solicitação inicial de conexão (onde apenas o bit SYN está ativo).
+* `tcpdump -nn "tcp[tcpflags] & (tcp-syn|tcp-ack) == (tcp-syn|tcp-ack)"`: Filtra especificamente as respostas SYN-ACK dos servidores.
+* Filtros de Display no Wireshark:
+  * `tcp.flags.syn == 1 && tcp.flags.ack == 0`: Identifica pacotes SYN isolados (início).
+  * `tcp.flags.syn == 1 && tcp.flags.ack == 1`: Identifica pacotes SYN-ACK (resposta do servidor).
+  * `tcp.flags.reset == 1`: Identifica conexões rejeitadas ou abortadas com RST.
+
+#### Snippets de Terminal e Saídas Observadas
+
+1. **Visualizando Estados de Conexão no Linux com `ss`:**
    ```bash
-   /challenge/net-tcp-handshake-analysis -h
+   $ ss -ant
+   State      Recv-Q Send-Q  Local Address:Port   Peer Address:Port
+   LISTEN     0      128         127.0.0.1:80           0.0.0.0:*
+   ESTAB      0      0       192.168.1.10:45678    192.168.1.50:80
+   SYN-SENT   0      1       192.168.1.10:45680    192.168.1.50:443
    ```
-   *Leia o diagrama e a tabela de flags.*
 
-2. **Execute o binário do desafio:**
+2. **Interceptando o Handshake Completo via Tcpdump:**
+   ```text
+   12:00:00.100 IP 10.0.0.2.4000 > 10.0.0.1.80: Flags [S], seq 1000
+   12:00:00.105 IP 10.0.0.1.80 > 10.0.0.2.4000: Flags [S.], seq 2000, ack 1001
+   12:00:00.106 IP 10.0.0.2.4000 > 10.0.0.1.80: Flags [.], ack 2001
+   ```
+   *Note a notação compacta do tcpdump: `[S]` = SYN, `[S.]` = SYN-ACK, `[.]` = ACK puro.*
+
+---
+
+### 🎯 O que fazer para resolver o desafio (Passo a Passo)
+
+Para comprovar seu domínio teórico do protocolo TCP e liberar a flag:
+
+1. **Invoque o binário do desafio:**
+   Execute `/challenge/net-tcp-handshake-analysis` no terminal:
    ```bash
    /challenge/net-tcp-handshake-analysis
    ```
 
-3. **Selecione a alternativa correspondente:**
-   Quando solicitado:
+2. **Avalie o questionário interativo:**
+   O binário apresentará a seguinte questão:
    ```text
-   [?] Digite o número da alternativa correta (1, 2, 3 ou 4):
+   === DESAFIO DO THREE-WAY HANDSHAKE TCP ===
+   Qual e a sequencia exata dos 3 pacotes que iniciam uma conexao TCP?
+   1) SYN, ACK, SYN-ACK
+   2) SYN, SYN-ACK, ACK
+   3) ACK, SYN, SYN-ACK
+   Sua resposta (1, 2 ou 3): 
    ```
-   Digite `2` (correspondente a `SYN -> SYN-ACK -> ACK`) e pressione `Enter`.
+
+3. **Submeta a resposta correta:**
+   A única sequência canônica universal é:
+   - Pacote 1: **SYN** (Cliente -> Servidor)
+   - Pacote 2: **SYN-ACK** (Servidor -> Cliente)
+   - Pacote 3: **ACK** (Cliente -> Servidor)
+
+   Digite o número `2` e pressione `Enter`:
+   ```text
+   2
+   ```
 
 4. **Alternativa via argumento direto:**
+   Você também pode resolver passando a resposta como argumento:
    ```bash
    /challenge/net-tcp-handshake-analysis 2
    ```
 
----
-
-## 4. Dicas e Comandos de Terminal
-
-| Comando | Descrição |
-| :--- | :--- |
-| `ss -ant` | Exibe todas as conexões TCP numéricas e seus estados (`ESTAB`, `SYN-SENT`, `LISTEN`). |
-| `netstat -nat` | Comando legado equivalente ao `ss` para listagem de conexões ativas. |
-| `tcpdump -nn "tcp[tcpflags] == tcp-syn"` | Captura exclusivamente pacotes de início de conexão (SYN puro). |
-| `tcpdump -nn "tcp[tcpflags] & (tcp-rst) != 0"` | Filtra conexões que foram resetadas/abortadas bruscamente. |
-
----
-
-## 5. Aplicação Prática no Mundo Real
-
-* **Evasão e Detecção de Port Scans (Nmap Stealth):** O famoso scan `-sS` do Nmap envia o pacote `SYN`, recebe o `SYN-ACK` e imediatamente envia um `RST` em vez do `ACK` final. A porta é categorizada como aberta, mas o servidor nunca completa o handshake, impedindo que daemons de aplicação registrem a conexão em seus logs de auditoria.
-* **Mitigação de Ataques SYN Flood:** Servidores protegidos utilizam o recurso de *SYN Cookies* no kernel Linux (`sysctl -w net.ipv4.tcp_syncookies=1`). O servidor codifica o estado da conexão diretamente no número de sequência `ISN` sem alocar memória na tabela até que o `ACK` legítimo retorne.
+5. **Capture e submeta a flag:**
+   O sistema validará sua resposta e exibirá a flag do desafio:
+   ```text
+   [+] Exato! SYN (cliente -> servidor) -> SYN-ACK (servidor -> cliente) -> ACK (cliente -> servidor).
+   pwn.college{...}
+   ```
+   Copie a string no formato `pwn.college{...}` e insira no portal da Cyberguard.
