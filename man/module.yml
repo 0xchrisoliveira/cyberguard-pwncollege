@@ -1,0 +1,28 @@
+name: Dominando a Documentação
+resources:
+- name: Recursos Úteis
+  type: markdown
+  content: |
+    - [Repositório online de páginas man](https://man7.org/linux/man-pages/)
+
+- type: challenge
+  id: challenge-arg
+  name: Aprendendo com a Documentação
+- type: challenge
+  id: challenge-arg-arg
+  name: Aprendendo Usos Mais Complexos
+- type: challenge
+  id: man
+  name: Lendo Manuais
+- type: challenge
+  id: man-search
+  name: Pesquisando em Manuais
+- type: challenge
+  id: man-search-man
+  name: Pesquisando por Manuais
+- type: challenge
+  id: help
+  name: Programas com Ajuda Embutida
+- type: challenge
+  id: builtins
+  name: Ajuda para Comandos Builtin

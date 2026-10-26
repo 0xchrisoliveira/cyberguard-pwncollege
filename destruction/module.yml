@@ -1,0 +1,18 @@
+name: Destruição Ousada
+resources:
+- type: challenge
+  id: forkbomb
+  name: A Bomba Fork
+  privileged: true
+- type: challenge
+  id: disk-doomsday
+  name: O Juízo Final do Espaço em Disco
+- type: challenge
+  id: rm-rf-root
+  name: rm -rf /
+- type: challenge
+  id: rm-rf-root-read
+  name: A Vida Após o rm -rf /
+- type: challenge
+  id: rm-rf-root-search
+  name: Encontrando Sentido Após o rm -rf /

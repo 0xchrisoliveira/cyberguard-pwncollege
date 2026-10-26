@@ -1,0 +1,31 @@
+name: Variáveis da Shell
+resources:
+- name: Recursos e Leituras
+  type: markdown
+  content: |
+    - O Linux Documentation Project possui uma seção excelente sobre [variáveis da shell](https://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-5.html)
+
+- type: challenge
+  id: echo
+  name: Imprimindo variáveis
+- type: challenge
+  id: setvar
+  name: Definindo variáveis
+- type: challenge
+  id: setvar-multi
+  name: Variáveis com múltiplas palavras
+- type: challenge
+  id: export
+  name: Exportando variáveis
+- type: challenge
+  id: env
+  name: Imprimindo variáveis exportadas
+- type: challenge
+  id: command-substitution
+  name: Armazenando a saída de comandos
+- type: challenge
+  id: read
+  name: Lendo dados de entrada
+- type: challenge
+  id: readfile
+  name: Lendo arquivos para variáveis

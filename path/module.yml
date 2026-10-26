@@ -1,0 +1,21 @@
+name: Desvendando o PATH
+resources:
+- name: Resources
+  type: markdown
+  content: |
+    - [What is PATH?](https://www.linfo.org/path_env_var.html)
+- type: challenge
+  id: path
+  name: A Variável PATH
+- type: challenge
+  id: path-win
+  name: Definindo o PATH
+- type: challenge
+  id: which
+  name: Encontrando Comandos
+- type: challenge
+  id: path-win-yours
+  name: Adicionando Comandos
+- type: challenge
+  id: command-hijack
+  name: Interceptando Comandos

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fold -s <<< "Use grep to find pwn.college in /challenge/data.txt."

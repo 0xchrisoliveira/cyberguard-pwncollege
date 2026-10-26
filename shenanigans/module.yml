@@ -1,0 +1,20 @@
+name: Truques e Artimanhas
+resources:
+- type: challenge
+  id: bashrc-trojan
+  name: Backdoor no Bashrc
+- type: challenge
+  id: flag-checker-hijack
+  name: Interceptando Entradas
+- type: challenge
+  id: writable-home-dir
+  name: Diretórios Compartilhados em Excesso
+- type: challenge
+  id: writable-tmp-dir
+  name: Links Simbólicos Capciosos
+- type: challenge
+  id: process-sniffing
+  name: Espionando Argumentos de Processos
+- type: challenge
+  id: config-snooping
+  name: Espionando Configurações

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fold -s <<< "Redirect the word PWN into a file named COLLEGE."

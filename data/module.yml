@@ -1,0 +1,37 @@
+name: Manipulação de Dados
+resources:
+- name: Outros Programas para Aprender
+  type: markdown
+  content: |
+    Existem _inúmeros_ utilitários que mestres da shell usam para manipular fluxos de dados.
+    Cada utilitário realiza tarefas bastante específicas, normalmente seguindo a [Filosofia Unix](https://en.wikipedia.org/wiki/Unix_philosophy) de fazer apenas uma coisa e fazê-la muito bem.
+    Você pode encadear esses comandos para montar lógicas incrivelmente poderosas.
+    Alguns exemplos notáveis que recomendamos explorar quando concluir o Linux Luminarium:
+
+    - [awk](https://linux.die.net/man/1/awk) para processamento avançado de texto
+    - [cut](https://linux.die.net/man/1/cut) para extrair colunas e partes de linhas
+    - [less](https://linux.die.net/man/1/less) para leitura interativa de arquivos no terminal
+    - [more](https://linux.die.net/man/1/more) para ler arquivos por páginas
+    - [paste](https://linux.die.net/man/1/paste) para mesclar arquivos lado a lado
+    - [sed](https://linux.die.net/man/1/sed) para substituições e edições dinâmicas de texto
+    - [sort](https://linux.die.net/man/1/sort) para ordenar dados alfabeticamente ou numericamente
+    - [tail](https://linux.die.net/man/1/tail) para exibir as últimas linhas (o inverso do `head`)
+    - [uniq](https://linux.die.net/man/1/uniq) para filtrar linhas duplicadas consecutivas em um fluxo
+- type: challenge
+  id: tr
+  name: Substituindo caracteres com tr
+- type: challenge
+  id: tr-delete
+  name: Deletando caracteres com tr
+- type: challenge
+  id: tr-delete-newlines
+  name: Deletando quebras de linha
+- type: challenge
+  id: head
+  name: Extraindo as primeiras linhas com head
+- type: challenge
+  id: cut
+  name: Extraindo seções específicas de texto com cut
+- type: challenge
+  id: sort
+  name: Ordenando dados com sort

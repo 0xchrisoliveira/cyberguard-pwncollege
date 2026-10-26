@@ -1,0 +1,37 @@
+name: Globbing de Arquivos
+resources:
+- type: markdown
+  name: Leituras Adicionais
+  content: |
+    - A [seção sobre Shell Expansions](https://www.gnu.org/software/bash/manual/html_node/Shell-Expansions.html) do Manual de Referência do Bash pode ser muito útil.
+
+- type: challenge
+  id: asterisk
+  name: Correspondência com *
+- type: challenge
+  id: question
+  name: Correspondência com ?
+- type: challenge
+  id: bracket
+  name: Correspondência com []
+- type: challenge
+  id: bracket-absolute
+  name: Correspondência de caminhos com []
+- type: challenge
+  id: multiglob
+  name: Múltiplos globs
+- type: challenge
+  id: mixing
+  name: Misturando globs
+- type: challenge
+  id: unmatching
+  name: Globbing por exclusão
+- type: challenge
+  id: tab-completion
+  name: Autocompletar com Tab
+- type: challenge
+  id: tab-completion-options
+  name: Múltiplas opções no autocompletar
+- type: challenge
+  id: tab-completion-command
+  name: Autocompletar comandos com Tab

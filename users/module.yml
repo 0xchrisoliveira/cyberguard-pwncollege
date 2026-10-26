@@ -1,0 +1,14 @@
+name: Desvendando Usuários
+resources:
+- type: challenge
+  id: su
+  name: Tornando-se root com su
+- type: challenge
+  id: su-other
+  name: Outros usuários com su
+- type: challenge
+  id: su-crack
+  name: Quebrando senhas
+- type: challenge
+  id: sudo
+  name: Utilizando o sudo

@@ -1,0 +1,31 @@
+name: Explorando Caminhos
+resources:
+- name: O Sistema de Arquivos
+  type: lecture
+  video: b67Jq6IZ3U8
+  playlist: PL-ymxv0nOtqqRAz1x90vxNbhmSkeYxHVC
+  slides: 1rZYXk2waekELrSYIiBTk0z0XXx8e8ovvARrH0n6XeO8
+- type: challenge
+  id: root
+  name: A Raiz
+- type: challenge
+  id: absolute
+  name: Programas e caminhos absolutos
+- type: challenge
+  id: absolute-cwd
+  name: Posicione-se
+- type: challenge
+  id: absolute-cwd-2
+  name: Posicione-se em outro lugar
+- type: challenge
+  id: relative-naked
+  name: Caminhos relativos implícitos, a partir de /
+- type: challenge
+  id: relative-dot
+  name: Caminhos relativos explícitos, a partir de /
+- type: challenge
+  id: relative-dot-local
+  name: Caminho relativo implícito
+- type: challenge
+  id: home
+  name: Lar, doce lar

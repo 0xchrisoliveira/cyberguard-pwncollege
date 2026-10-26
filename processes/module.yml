@@ -1,0 +1,33 @@
+name: Processos e Jobs
+
+resources:
+- type: challenge
+  id: ps
+  name: Listando Processos
+- type: challenge
+  id: kill
+  name: Finalizando Processos
+- type: challenge
+  id: int
+  name: Interrompendo Processos
+- type: challenge
+  id: kill-decoy
+  name: Finalizando Processos Inconvenientes
+- type: challenge
+  id: suspend
+  name: Suspendendo Processos
+- type: challenge
+  id: resume
+  name: Retomando Processos
+- type: challenge
+  id: background
+  name: Enviando Processos para Segundo Plano
+- type: challenge
+  id: foreground
+  name: Trazendo Processos para Primeiro Plano
+- type: challenge
+  id: start-backgrounded
+  name: Iniciando Processos em Segundo Plano
+- type: challenge
+  id: exit-codes
+  name: Códigos de Saída de Processos

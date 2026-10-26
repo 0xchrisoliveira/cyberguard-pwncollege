@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cp /flag /home/hacker/flag
+chmod 644 /home/hacker/flag

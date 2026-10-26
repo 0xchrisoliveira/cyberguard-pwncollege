@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fold -s <<< "Use cat to read the flag at its absolute path: /flag."

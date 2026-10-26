@@ -1,8 +1,32 @@
-# 🛡️ Cyberguard Hub: Dojo pwn.college & Trilha de Hacking Ético
+# 🐧 Cyberguard: Linux Luminarium (pwn.college)
 
-Bem-vindo ao repositório central de treinamento em **Hacking Ético e Segurança Ofensiva/Defensiva da Cyberguard**, estruturado para a plataforma **[pwn.college](https://pwn.college)**.
+Bem-vindo ao repositório oficial do **Linux Luminarium** da **Cyberguard** na plataforma **[pwn.college](https://pwn.college)**!
 
-Este projeto foi construído após uma rigorosa avaliação diagnóstica individual dos 8 membros do time (Ciclo 2026.2), identificando as maiores dificuldades e carências técnicas da equipe para desenhar uma jornada de aprendizado progressiva, prática e 100% traduzida e adaptada para **Português do Brasil (PT-BR)**.
+Este Dojo traz a trilha oficial completa do **Linux Luminarium** do pwn.college (17 módulos e 128 desafios práticos), integralmente traduzida e adaptada para **Português do Brasil (PT-BR)**. O objetivo é fornecer uma base sólida, progressiva e prática na linha de comando e no sistema operacional Linux para toda a equipe.
+
+---
+
+## 🗺️ Trilha Completa de Módulos (128 Desafios)
+
+| # | Módulo | Título em Português | Desafios | Foco Principal |
+|---|---|---|:---:|---|
+| 1 | `hello` | Olá Hackers | 3 | Primeiro contato com a shell, prompt, comandos e argumentos. |
+| 2 | `paths` | Explorando Caminhos | 8 | Navegação no sistema de arquivos, caminhos absolutos e relativos, diretório home. |
+| 3 | `commands` | Compreendendo Comandos | 15 | Leitura de arquivos (`cat`), listagem (`ls`, flags ocultas), criação e remoção (`touch`, `mkdir`, `rm`). |
+| 4 | `man` | Digestão de Documentação | 7 | Leitura de manuais (`man`), seções, argumentos, flags `--help` e comandos embutidos (`help`). |
+| 5 | `globbing` | Globbing de Arquivos | 10 | Uso de wildcards (`*`, `?`, `[]`, `[!...]`) para expansão de arquivos no shell. |
+| 6 | `piping` | Praticando Redirecionamento & Pipes | 15 | Redirecionamento de `stdin`, `stdout` e `stderr` (`>`, `>>`, `<`, `2>`, `|`, `tee`). |
+| 7 | `variables` | Variáveis de Shell | 8 | Leitura, definição, exportação de variáveis de ambiente (`export`, `env`) e comandos de leitura (`read`). |
+| 8 | `data` | Manipulação de Dados | 6 | Processamento de streams e filtros de texto (`head`, `tail`, `grep`, `sort`, `uniq`, `tr`, `cut`). |
+| 9 | `processes` | Processos e Jobs | 10 | Listagem (`ps`), sinais (`SIGKILL`, `SIGTERM`), suspensão (`Ctrl+Z`), `fg`, `bg` e exit codes. |
+| 10 | `users` | Desvendando Usuários | 4 | Troca de identidade no Linux (`su`, `sudo`), permissões e senhas de sistema. |
+| 11 | `permissions` | Percebendo Permissões | 8 | Grupos (`chgrp`), proprietários (`chown`), permissões simbólicas/octais (`chmod`) e bit SUID. |
+| 12 | `chaining` | Encadeando Comandos | 12 | Operadores sequenciais e condicionais (`;`, `&&`, `||`), subshells e scripts em shell. |
+| 13 | `terminal-multiplexing` | Multiplexação de Terminal | 6 | Gerenciamento de sessões persistentes com `screen` e `tmux`. |
+| 14 | `path` | Explorando o PATH | 5 | Variável de ambiente `PATH`, resolução de executáveis e hijacking de comandos. |
+| 15 | `shenanigans` | Truques e Curiosidades | 6 | Casos especiais e comportamentos singulares do shell e do Linux. |
+| 16 | `destruction` | Destruição Ousada | 5 | Gestão de recursos críticos do sistema, fork bombs e o impacto de `rm -rf /`. |
+| 17 | `further-learning` | Aprendizado Contínuo | 0 | Recursos, leituras e próximos passos na jornada hacker. |
 
 ---
 
@@ -10,107 +34,43 @@ Este projeto foi construído após uma rigorosa avaliação diagnóstica individ
 
 ```bash
 pwncollegeCG/
-├── README.md                                  # Visão geral do repositório e índice do projeto
-├── dojo.yml                                   # Especificação oficial do Dojo pwn.college (9 módulos, 36 desafios)
-├── DESCRIPTION.md                             # Apresentação, regras e guia de uso dos containers pwn.college
-├── CREW_CYBERGUARD_SETUP.md                   # Manual de criação/adesão à Crew Cyberguard e trilhas por perfil
+├── dojo.yml                      # Configuração do Dojo no pwn.college (17 módulos)
+├── DESCRIPTION.md                # Apresentação do Dojo na plataforma pwn.college
+├── README.md                     # Documentação geral deste repositório
+├── common/                       # Templates Dockerfile e utilitários compartilhados
 │
-├── Relatorios/
-│   ├── relatorio-individual-2026.2.csv        # Dados brutos das 20 questões e notas dos 8 membros
-│   └── DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md   # Relatório analítico profundo com métricas, causas-raiz e personas
+├── hello/                        # Módulo 1 (3 desafios)
+├── paths/                        # Módulo 2 (8 desafios)
+├── commands/                     # Módulo 3 (15 desafios)
+├── man/                          # Módulo 4 (7 desafios)
+├── globbing/                     # Módulo 5 (10 desafios)
+├── piping/                       # Módulo 6 (15 desafios)
+├── variables/                    # Módulo 7 (8 desafios)
+├── data/                         # Módulo 8 (6 desafios)
+├── processes/                    # Módulo 9 (10 desafios)
+├── users/                        # Módulo 10 (4 desafios)
+├── permissions/                  # Módulo 11 (8 desafios)
+├── chaining/                     # Módulo 12 (12 desafios)
+├── terminal-multiplexing/        # Módulo 13 (6 desafios)
+├── path/                         # Módulo 14 (5 desafios)
+├── shenanigans/                  # Módulo 15 (6 desafios)
+├── destruction/                  # Módulo 16 (5 desafios)
+├── further-learning/             # Módulo 17 (Conclusão e recursos adicionais)
 │
-└── conteudo_ptbr/                             # Biblioteca didática completa em PT-BR para nivelamento
-    ├── 01_linux_essentials_permissoes.md      # FHS, cálculo octal (chmod 640), SUID e comandos essenciais
-    ├── 02_redes_tcp_handshake_portas.md       # Three-Way Handshake TCP, flags, portas, netcat, tcpdump e nmap
-    ├── 03_engenharia_reversa_x86_rip_gdb.md   # Registradores x86_64, RIP/EIP, Ghidra, GDB/GEF e análise estática vs dinâmica
-    ├── 04_exploracao_binaria_buffer_overflow.md# Stack frame, strcpy vulnerável, cálculo de offset e exploit em pwntools
-    ├── 05_web_pentest_sqli_ssrf.md           # SQL Injection, Prepared Statements (por que blacklist falha) e SSRF
-    ├── 06_forense_volatilidade_memoria.md     # RFC 3227 (Ordem de Volatilidade: RAM em 1º), Cadeia de Custódia e SIEM/MITRE
-    ├── 07_active_directory_kerberoasting.md  # Domain Controllers, protocolo Kerberos e ataque de Kerberoasting
-    └── 08_criptografia_e_ctf_basics.md       # Base64 vs Hashes, por que bcrypt/Argon2 para senhas e dicas de CTF
+└── Relatorios/                   # Histórico do diagnóstico da equipe (Ciclo 2026.2)
+    ├── relatorio-individual-2026.2.csv
+    └── DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md
 ```
 
 ---
 
-## 📊 1. Síntese do Diagnóstico da Equipe (Ciclo 2026.2)
+## 🚀 Como Treinar no Dojo
 
-A partir da avaliação diagnóstica individual dos 8 membros da Cyberguard, apurou-se uma taxa média de acerto global de **39,38% (7,88 / 20 questões)**, revelando uma nítida assimetria na equipe:
+1. Acesse o Dojo oficial da Cyberguard no pwn.college:
+   `https://pwn.college/dojo/cyberguard-ethical-hacking~10ef1c63`
+2. Escolha o módulo desejado na lista.
+3. Clique em **Start Challenge** para iniciar o container dedicado.
+4. Conecte-se via terminal web (ou SSH) e siga as orientações do `DESCRIPTION.md` de cada nível.
+5. Capture a flag (`/flag`) e submeta no formulário para pontuar no Scoreboard!
 
-```
-[ RANKING GERAL DE ACERTOS ]
-1. Giovanni Mastelaro Marin: 17/20 (85%) ── [Avançado]
-2. Arthur Gabriel Teotonio:  14/20 (70%) ── [Avançado]
-3. Silvio Henrique Mendes:   14/20 (70%) ── [Avançado]
-4. Lauren Marçulo:            9/20 (45%) ── [Intermediário / Vocação Blue Team]
-5. Joao Vitor Cordeiro:       4/20 (20%) ── [Base / Onboarding]
-6. Ismael Rodrigues G. Neto:  2/20 (10%) ── [Base / Onboarding]
-7. Matheus Hirose Rodrigues:  2/20 (10%) ── [Base / Onboarding]
-8. Luiz Paulo Tonini Guerra:  1/20 ( 5%) ── [Base / Onboarding]
-```
-
-### Principais Lacunas Identificadas (Média de 0 a 100):
-1. **Engenharia Reversa e Binários (5.0 / 100 - Crítico Absoluto):**
-   * **100% dos membros (8 de 8)** erraram a função do registrador **EIP/RIP** em x86/x64 (a maioria confundiu com flags ou admitiu desconhecimento).
-   * **87,5% dos membros (7 de 8)** não souberam diferenciar **análise estática de dinâmica**.
-2. **Forense Digital e Resposta a Incidentes (12.5 / 100 - Crítico):**
-   * **87,5% dos membros (7 de 8)** erraram a **Ordem de Volatilidade (RFC 3227)**, priorizando logs em disco antes da memória RAM.
-   * **75% dos membros (6 de 8)** desconheciam o conceito formal de **Cadeia de Custódia**.
-3. **Active Directory & Infraestrutura (22.5 / 100):**
-   * **75% dos membros (6 de 8)** erraram o funcionamento do ataque de **Kerberoasting**.
-   * **62,5% (5 de 8)** não souberam definir o papel do **Controlador de Domínio (DC)**.
-4. **Fundamentos (Linux & Redes - 37.1 / 100):**
-   * **62,5% (5 de 8)** erraram a permissão octal **`chmod 640`** (acreditando que liberava acesso geral ou desconheciam).
-   * **62,5% (5 de 8)** erraram a ordem do **Three-Way Handshake TCP** (`SYN` -> `SYN-ACK` -> `ACK`).
-5. **O Paradoxo de Programação (77.5 / 100):**
-   * **100% da equipe (8 de 8)** acertou o motivo pelo qual a função `strcpy` em C é perigosa (falta de checagem de limites de buffer), indicando que possuem a base conceitual de código perigoso, mas sem a vivência prática de como isso se traduz no mapa de memória da CPU (Stack Overflow e controle do RIP).
-
-> 📄 *Para o relatório completo com detalhamento estatístico, causa-raiz de cada questão e dossiê individual por membro, leia: [`Relatorios/DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md`](Relatorios/DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md).*
-
----
-
-## 🎯 2. Arquitetura da Trilha no pwn.college (`dojo.yml`)
-
-O Dojo **`cyberguard-ethical-hacking`** foi organizado de forma progressiva em **9 módulos temáticos (36 desafios)**:
-
-| Módulo | Foco Temático | Desafios Chave |
-| :--- | :--- | :--- |
-| **1. Fundamentos Linux** | Navegação, I/O, pipes, variáveis e cálculo octal | Permissões 640/755, bit SUID e escalação |
-| **2. Redes & Protocolos** | Pilha TCP/IP, Handshake TCP, portas e tráfego | Dissecando Handshake SYN/ACK, Netcat e nmap |
-| **3. Scripting Ofensivo** | Automação com Bash e Python | Sockets, pwntools básico, strace/ltrace |
-| **4. Web Pentest (OWASP)** | OWASP Top 10, SQLi e SSRF | Quebra de Blacklist vs Prepared Statements, SSRF |
-| **5. Criptografia & CTF** | Encodings (Base64), Hashes lentos (Argon2/bcrypt) | Decodificando Base64, quebra de hashes, salt |
-| **6. Forense & Blue Team** | Ordem de Volatilidade (RAM), Custódia e SIEM | Análise de dump de memória, Volatility, MITRE |
-| **7. Active Directory** | Domain Controllers, Kerberos e escalação AD | Kerberoasting prático e análise com BloodHound |
-| **8. Engenharia Reversa** | Arquitetura x86_64, RIP/EIP, Ghidra e GDB | Identificando RIP no GDB, estática vs dinâmica |
-| **9. Exploração Binária** | Buffer Overflow na Stack, estouro de strcpy | Offset com cyclic, RIP hijacking e shellcode |
-
----
-
-## 👥 3. Operação da Equipe & Placar Interno
-
-Nas versões recentes da plataforma pwn.college, o conceito de "Crews" foi incorporado e expandido nos **Dojos Customizados**:
-* O Dojo **`cyberguard-ethical-hacking`** possui seu próprio **Scoreboard (Placar Dedicado)**, onde apenas os membros da Cyberguard são ranqueados pelos desafios concluídos na nossa trilha.
-* A liderança técnica possui acesso ao painel **Admin** do Dojo para auditar o progresso individual, acompanhar métricas de resolução e identificar bloqueios em tempo real.
-* O arquivo [`CREW_CYBERGUARD_SETUP.md`](CREW_CYBERGUARD_SETUP.md) detalha o roteiro de estudos segmentado para cada cohort da equipe.
-
-1. **Cohort 1 — Fundacional & Onboarding Técnico**
-   * *Membros:* Luiz Paulo Tonini, Ismael Rodrigues, Matheus Hirose, Joao Vitor Cordeiro.
-   * *Objetivo:* Construir fluência diária no Linux (Módulo 1), redes (Módulo 2) e scripts básicos em Python (Módulo 3) antes de tentar desafios avançados.
-2. **Cohort 2 — Intermediário & Visão Híbrida**
-   * *Membro:* Lauren Marçulo.
-   * *Objetivo:* Alavancar sua alta proficiência defensiva (Blue Team/SIEM) desenvolvendo visão adversária ofensiva (Web Pentest, Redes e Reversa x86 básica).
-3. **Cohort 3 — Veteranos & Mentores de Alto Nível**
-   * *Membros:* Giovanni Marin, Arthur Stellato, Silvio Santos.
-   * *Objetivo:* Focar prioritariamente nos Módulos 6 (Forense/RAM), 7 (Active Directory) e 8/9 (Engenharia Reversa x86, Registrador RIP e Exploração Binária), além de conduzir sessões semanais de pareamento técnico com os novatos.
-
----
-
-## 🚀 Como Começar
-
-1. **Para os Membros:**
-   * Leia [`DESCRIPTION.md`](DESCRIPTION.md) para entender o ambiente de laboratório e as regras.
-   * Siga [`CREW_CYBERGUARD_SETUP.md`](CREW_CYBERGUARD_SETUP.md) para se cadastrar no pwn.college e ingressar na Crew **Cyberguard**.
-   * Estude os guias teóricos em [`conteudo_ptbr/`](conteudo_ptbr/) conforme avança pelos módulos do Dojo.
-2. **Para a Liderança Técnica:**
-   * Analise o relatório em [`Relatorios/DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md`](Relatorios/DIAGNOSTICO_DESEMPENHO_CYBERGUARD.md).
-   * Importe o [`dojo.yml`](dojo.yml) na plataforma pwn.college para ativar a trilha para o time.
+Bons estudos e boa jornada no terminal! 🛡️🐧

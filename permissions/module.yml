@@ -1,0 +1,51 @@
+name: Compreendendo Permissões
+resources:
+- name: Recursos
+  type: markdown
+  content: |
+    - [Calculadora Chmod](https://nettools.club/chmod_calc)
+
+- name: "Controle de Acesso: Introdução"
+  type: lecture
+  video: mdWa1SHkxmM
+  playlist: PL-ymxv0nOtqotjW-uK_YSj9pm5tTKf87J
+  slides: 1tBn2d4d7-kpaoAoEipts8ZqKhQsIsSvF
+- name: "Controle de Acesso: Modelagem de Controle de Acesso"
+  type: lecture
+  video: Nq93Xz6yn3o
+  playlist: PL-ymxv0nOtqotjW-uK_YSj9pm5tTKf87J
+  slides: 1xGkSmpJBt4IMg2aW2vSoY5b0qHqF2t4h
+- name: "Controle de Acesso: Implementação de Controle de Acesso"
+  type: lecture
+  video: OGhKjwJ7PKE
+  playlist: PL-ymxv0nOtqotjW-uK_YSj9pm5tTKf87J
+  slides: 1D9C4dtWdsub504eGyzr0JEpOmwH4X8UJ
+- name: "Controle de Acesso: Controle de Acesso POSIX"
+  type: lecture
+  video: OG5yXzn-cVs
+  playlist: PL-ymxv0nOtqotjW-uK_YSj9pm5tTKf87J
+  slides: 172XbD83EW8kZIHHZIbXVOmbDMYRm-VN1
+- type: challenge
+  id: chown
+  name: Alterando o Dono de Arquivos
+- type: challenge
+  id: chgrp
+  name: Grupos e Arquivos
+- type: challenge
+  id: chgrp-random
+  name: Diversão com Nomes de Grupos
+- type: challenge
+  id: chmod-flag
+  name: Alterando Permissões
+- type: challenge
+  id: execute
+  name: Arquivos Executáveis
+- type: challenge
+  id: chmod
+  name: Prática de Ajuste de Permissões
+- type: challenge
+  id: chmod-absolute
+  name: Prática de Definição de Permissões
+- type: challenge
+  id: setuid
+  name: O Bit SUID

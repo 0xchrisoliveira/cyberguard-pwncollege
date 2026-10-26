@@ -1,0 +1,20 @@
+name: Multiplexação de Terminais
+resources:
+- type: challenge
+  id: launch-screen
+  name: Iniciando o Screen
+- type: challenge
+  id: detach-attach
+  name: Desanexando e Reconectando
+- type: challenge
+  id: find-session
+  name: Encontrando Sessões
+- type: challenge
+  id: switch-windows
+  name: Alternando Janelas
+- type: challenge
+  id: detach-attach-tmux
+  name: Desanexando e Reconectando (tmux)
+- type: challenge
+  id: switch-windows-tmux
+  name: Alternando Janelas (tmux)

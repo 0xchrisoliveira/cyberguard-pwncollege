@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fold -s <<< "Set the SUID bit on /challenge/getroot, then run it and read /flag from the root shell."

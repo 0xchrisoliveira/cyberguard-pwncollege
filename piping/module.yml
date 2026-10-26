@@ -1,0 +1,53 @@
+name: Praticando Piping e Redirecionamento
+resources:
+- name: Recursos e Leituras
+  type: markdown
+  content: |
+    - Um [artigo aprofundado sobre redirecionamento de I/O em shells Linux](https://web.archive.org/web/20220629044814/http://bencane.com:80/2012/04/16/unix-shell-the-art-of-io-redirection/), muito útil para este módulo.
+    - Um excelente [guia visual sobre redirecionamento de I/O](http://www.rozmichelle.com/pipes-forks-dups/) no Linux.
+
+- type: challenge
+  id: echo
+  name: Redirecionando a saída padrão
+- type: challenge
+  id: stdout-myflag
+  name: Redirecionando mais saídas
+- type: challenge
+  id: append
+  name: Anexando saídas
+- type: challenge
+  id: stderr-myflag
+  name: Redirecionando erros
+- type: challenge
+  id: stdin
+  name: Redirecionando a entrada padrão
+- type: challenge
+  id: redir-then-grep
+  name: Filtrando resultados gravados com grep
+- type: challenge
+  id: pipe-grep
+  name: Filtrando saída em tempo real com pipe
+- type: challenge
+  id: stderr-grep
+  name: Filtrando erros com grep
+- type: challenge
+  id: grep-invert
+  name: Filtragem inversa com grep -v
+- type: challenge
+  id: sed
+  name: Filtrando e substituindo com sed
+- type: challenge
+  id: tee
+  name: Duplicando dados do pipe com tee
+- type: challenge
+  id: procsub-read
+  name: Substituição de processos para entrada
+- type: challenge
+  id: procsub-write
+  name: Escrevendo para múltiplos programas
+- type: challenge
+  id: dualpiper
+  name: Dividindo stderr e stdout
+- type: challenge
+  id: fifo
+  name: Pipes nomeados (FIFOs)

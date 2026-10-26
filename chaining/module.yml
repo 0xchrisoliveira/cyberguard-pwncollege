@@ -1,0 +1,38 @@
+name: Encadeando Comandos
+resources:
+- type: challenge
+  id: semicolon
+  name: Encadeando com Ponto e Vírgula
+- type: challenge
+  id: and
+  name: Construindo sobre o Sucesso
+- type: challenge
+  id: or
+  name: Tratando Falhas
+- type: challenge
+  id: script
+  name: Seu Primeiro Shell Script
+- type: challenge
+  id: script-pipe
+  name: Redirecionando a Saída de Scripts
+- type: challenge
+  id: execution
+  name: Shell Scripts Executáveis
+- type: challenge
+  id: shebang
+  name: Compreendendo Shebangs
+- type: challenge
+  id: script-args
+  name: Scripts com Argumentos
+- type: challenge
+  id: script-if
+  name: Scripts com Condicionais
+- type: challenge
+  id: script-else
+  name: Scripts com Casos Padrão
+- type: challenge
+  id: script-elif
+  name: Scripts com Múltiplas Condições
+- type: challenge
+  id: reading-scripts
+  name: Lendo Shell Scripts
