@@ -1,0 +1,11 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+dummy = "/tmp/suspicious.bin"
+with open(dummy, "wb") as f:
+    f.write(b"\x7fELF\x02\x01\x01\x00" + b"A"*100 + b"FLAG_HIDDEN_STEGO_cyberguard2026" + b"B"*50)
+resp = input("[?] Use strings /tmp/suspicious.bin e informe a FLAG_HIDDEN_STEGO: ").strip()
+if resp == "cyberguard2026":
+    print("[+] Esteganografia resolvida!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Incorreto. Dica: strings /tmp/suspicious.bin | grep FLAG_HIDDEN_STEGO")

@@ -1,0 +1,16 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os, time, random
+print("=== DESAFIO RAPIDO DE SOCKET E SCRIPTING ===")
+for i in range(1, 11):
+    a = random.randint(10, 99)
+    b = random.randint(10, 99)
+    start = time.time()
+    resp = input(f"[{i}/10] Quanto e {a} + {b}? ").strip()
+    if time.time() - start > 1.5:
+        print("[X] Tempo esgotado! Voce precisa automatizar com Python.")
+        sys.exit(1)
+    if resp != str(a + b):
+        print("[X] Resposta incorreta.")
+        sys.exit(1)
+print("[+] Incrivel! Automacao rapida bem-sucedida.")
+print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")

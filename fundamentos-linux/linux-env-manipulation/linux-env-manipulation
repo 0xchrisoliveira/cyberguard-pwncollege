@@ -1,0 +1,10 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+token = os.environ.get("CYBERGUARD_TOKEN", "")
+if token == "treinamento_2026":
+    print("[+] Variavel de ambiente CYBERGUARD_TOKEN identificada!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Variavel CYBERGUARD_TOKEN ausente ou incorreta.")
+    print("[*] Dica: export CYBERGUARD_TOKEN='treinamento_2026' antes de rodar.")
+    sys.exit(1)

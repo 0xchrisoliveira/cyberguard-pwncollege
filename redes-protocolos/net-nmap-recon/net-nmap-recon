@@ -1,0 +1,16 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os, socket
+target_port = 8085
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+try:
+    s.bind(("127.0.0.1", target_port))
+    s.listen(1)
+    print(f"[*] Um servico foi iniciado em 127.0.0.1 entre as portas 8080 e 8090.")
+    print(f"[*] Faca um scan com 'nmap -p 8080-8090 127.0.0.1' e conecte-se a porta correta.")
+    conn, addr = s.accept()
+    flag = open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}\n"
+    conn.sendall(f"[+] Porta localizada com sucesso! Flag: {flag}\n".encode())
+    conn.close()
+finally:
+    s.close()

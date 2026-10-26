@@ -3,6 +3,7 @@ name: "Cyberguard: Trilha Completa de Hacking Ético"
 type: public
 award:
   emoji: "🛡️"
+image: pwncollege/challenge-simple
 
 description: |
   Bem-vindo ao **Dojo Oficial de Treinamento da Cyberguard** na plataforma **pwn.college**.

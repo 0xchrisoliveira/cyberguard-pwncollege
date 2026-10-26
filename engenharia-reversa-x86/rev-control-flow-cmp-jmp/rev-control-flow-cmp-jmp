@@ -1,0 +1,9 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+# 301 / 7 = 43
+inp = input("[?] Digite o valor que satisfaz a comparacao CMP: ").strip()
+if inp == "43":
+    print("[+] Desvio condicional resolvido!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Condicao nao satisfeita.")

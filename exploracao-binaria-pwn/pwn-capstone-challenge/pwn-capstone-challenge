@@ -1,0 +1,11 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+lema = "Nenhum operador fica para trás"
+inp = input("[?] Digite o lema da Cyberguard: ").strip()
+if inp.lower() == lema.lower():
+    print("="*60)
+    print("PARABENS OPERADOR! Voce concluiu o Dojo da Cyberguard!")
+    print("="*60)
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print(f"[X] Dica: '{lema}'")

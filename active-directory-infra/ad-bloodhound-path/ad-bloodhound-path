@@ -1,0 +1,10 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+print("[*] Simulacao de grafo BloodHound:")
+print("[User: bob] -> MemberOf -> [Group: HelpDesk] -> GenericAll -> [Group: Domain Admins]")
+ans = input("[?] Qual usuario e o ponto inicial do caminho de escalacao para Domain Admin? ").strip().lower()
+if ans == "bob":
+    print("[+] Rota de ataque do BloodHound compreendida!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Incorreto. Analise os nos do grafo.")

@@ -1,0 +1,11 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+print("Qual a diferenca entre analise estatica e analise dinamica?")
+print("1) A estatica executa o binario com parametros; a dinamica analisa apenas o assembly no disco")
+print("2) A estatica examina o binario sem executa-lo; a dinamica observa seu comportamento durante a execucao em ambiente controlado")
+ans = input("Opcao: ").strip()
+if ans == "2":
+    print("[+] Correto!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Incorreto.")

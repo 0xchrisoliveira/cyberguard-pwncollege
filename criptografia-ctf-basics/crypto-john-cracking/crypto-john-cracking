@@ -1,0 +1,8 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+pwd = input("[?] Digite a senha que gerou o hash e10adc3949ba59abbe56e057f20f883e: ").strip()
+if pwd == "123456":
+    print("[+] Hash quebrado com sucesso!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Senha incorreta.")

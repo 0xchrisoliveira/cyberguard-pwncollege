@@ -1,0 +1,20 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os, socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+try:
+    s.bind(("127.0.0.1", 31337))
+    s.listen(1)
+    print("[*] Servidor escutando na porta 127.0.0.1:31337...")
+    print("[*] Conecte em outro terminal: nc 127.0.0.1 31337")
+    conn, addr = s.accept()
+    conn.sendall(b"Bem-vindo ao netcat raw socket da Cyberguard!\nEnvie 'PING': ")
+    data = conn.recv(1024).strip()
+    if data == b"PING":
+        flag = open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}\n"
+        conn.sendall(f"[+] PONG! Flag: {flag}\n".encode())
+    else:
+        conn.sendall(b"Entrada incorreta.\n")
+    conn.close()
+finally:
+    s.close()

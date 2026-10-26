@@ -1,0 +1,9 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+ans = input("[?] Digite a soma dos numeros pares de 2 a 100: ").strip()
+# soma de 2+4+...+100 = 2*(1+2+...+50) = 2*(50*51/2) = 2550
+if ans == "2550":
+    print("[+] Calculo correto via Bash!")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Incorreto. Dica: seq 2 2 100 | paste -sd+ - | bc")

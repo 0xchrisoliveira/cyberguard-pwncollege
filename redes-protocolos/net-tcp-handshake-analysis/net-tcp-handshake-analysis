@@ -1,0 +1,13 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+print("=== DESAFIO DO THREE-WAY HANDSHAKE TCP ===")
+print("Qual e a sequencia exata dos 3 pacotes que iniciam uma conexao TCP?")
+print("1) SYN, ACK, SYN-ACK")
+print("2) SYN, SYN-ACK, ACK")
+print("3) ACK, SYN, SYN-ACK")
+ans = input("Sua resposta (1, 2 ou 3): ").strip()
+if ans == "2":
+    print("[+] Exato! SYN (cliente -> servidor) -> SYN-ACK (servidor -> cliente) -> ACK (cliente -> servidor).")
+    print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
+else:
+    print("[X] Incorreto. Releia o guia de redes da Cyberguard!")

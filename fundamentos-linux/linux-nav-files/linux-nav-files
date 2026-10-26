@@ -1,0 +1,12 @@
+#!/usr/bin/exec-suid -- /usr/local/bin/python -I
+import sys, os
+target = "/challenge/.segredo_cyberguard"
+if not os.path.exists(target):
+    with open(target, "w") as f:
+        f.write("cyberguard_linux_fhs_2026")
+if len(sys.argv) < 2 or sys.argv[1].strip() != "cyberguard_linux_fhs_2026":
+    print("[X] Uso incorreto: /challenge/linux-nav-files <chave_secreta>")
+    print("[*] Dica: Inspecione arquivos ocultos no diretorio /challenge usando 'ls -la'")
+    sys.exit(1)
+print("[+] Chave validada com sucesso! Voce dominou navegacao e arquivos ocultos.")
+print(open("/flag").read() if os.path.exists("/flag") else "pwn.college{cyberguard_demo_flag}")
