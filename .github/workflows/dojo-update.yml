@@ -1,0 +1,20 @@
+name: Atualizacao Automatica do Dojo pwn.college
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  update-dojo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sincronizar com pwn.college
+        if: env.UPDATE_CODE != ''
+        uses: pwncollege/dojo-update@main
+        env:
+          UPDATE_CODE: ${{ secrets.UPDATE_CODE }}
+        with:
+          site: https://pwn.college
+          dojo: cyberguard-ethical-hacking
+          update_code: ${{ secrets.UPDATE_CODE }}
