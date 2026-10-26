@@ -86,9 +86,12 @@ O Dojo **`cyberguard-ethical-hacking`** foi organizado de forma progressiva em *
 
 ---
 
-## 👥 3. Configuração da Crew no pwn.college
+## 👥 3. Operação da Equipe & Placar Interno
 
-O arquivo [`CREW_CYBERGUARD_SETUP.md`](CREW_CYBERGUARD_SETUP.md) estabelece como a equipe deve operar unida no placar da plataforma. As trilhas recomendadas por grupo são:
+Nas versões recentes da plataforma pwn.college, o conceito de "Crews" foi incorporado e expandido nos **Dojos Customizados**:
+* O Dojo **`cyberguard-ethical-hacking`** possui seu próprio **Scoreboard (Placar Dedicado)**, onde apenas os membros da Cyberguard são ranqueados pelos desafios concluídos na nossa trilha.
+* A liderança técnica possui acesso ao painel **Admin** do Dojo para auditar o progresso individual, acompanhar métricas de resolução e identificar bloqueios em tempo real.
+* O arquivo [`CREW_CYBERGUARD_SETUP.md`](CREW_CYBERGUARD_SETUP.md) detalha o roteiro de estudos segmentado para cada cohort da equipe.
 
 1. **Cohort 1 — Fundacional & Onboarding Técnico**
    * *Membros:* Luiz Paulo Tonini, Ismael Rodrigues, Matheus Hirose, Joao Vitor Cordeiro.

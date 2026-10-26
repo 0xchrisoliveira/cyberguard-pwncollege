@@ -1,64 +1,43 @@
-# Guia Oficial da Crew Cyberguard no pwn.college
-## Configuração, Dinâmica de Time & Roteiro de Estudos Personalizado (Ciclo 2026.2)
+# Guia Oficial do Dojo e Treinamento Cyberguard no pwn.college
+## Configuração do Dojo, Acompanhamento da Equipe & Roteiro de Estudos (Ciclo 2026.2)
 
 ---
 
-## 1. O que é uma Crew no pwn.college?
+## 1. Dojos no pwn.college: A Nova Estrutura de Equipes
 
-No ecossistema do **pwn.college**, uma **Crew** (Equipe) é uma agremiação colaborativa oficial de membros que compartilham uma identidade comum, acompanham o progresso mútuo e somam esforços em um placar (*scoreboard*) unificado.
+Nas versões contemporâneas do **pwn.college**, o conceito tradicional de *"Crews"* foi unificado e potencializado dentro da arquitetura de **Dojos Customizados**. 
 
-Diferente de competições individuais onde cada um luta isoladamente, a Crew da **Cyberguard** foi concebida sob o lema:
-> *"Nenhum operador fica para trás. A força da nossa defesa e o impacto do nosso ataque são medidos pela solidez do nosso elo mais jovem."*
-
-### Benefícios de Participar da Crew:
-* **Placar Coletivo e Visibilidade:** Toda flag submetida por qualquer membro da Cyberguard pontua para a reputação geral do nosso time no ranking da plataforma.
-* **Acompanhamento de Evolução:** Os líderes técnicos e mentores conseguem visualizar quais desafios os membros estão enfrentando dificuldades em tempo real, permitindo intervenções didáticas cirúrgicas.
-* **Cultura de Mentoria:** Pareamento estruturado entre veteranos e iniciantes para acelerar a curva de aprendizado.
+Em vez de apenas um time em um placar global genérico, um **Dojo próprio** oferece um ambiente de treinamento completo e exclusivo:
+* **Placar Interno Dedicado (Scoreboard Exclusivo):** Todos os membros que acessam o Dojo da Cyberguard competem e colaboram em um ranking próprio do time, com métricas de desafios resolvidos por módulo.
+* **Painel Administrativo da Liderança (`Admin`):** Os líderes técnicos da Cyberguard têm visão analítica do progresso dos integrantes desafio a desafio, podendo identificar exatamente onde cada membro travou.
+* **Currículo Sob Medida:** O conteúdo é carregado diretamente do repositório GitHub do time, permitindo que as explicações teóricas e desafios estejam em Português (PT-BR) e alinhados às necessidades da equipe.
 
 ---
 
-## 2. Passo a Passo: Entrando na Crew Cyberguard
-
-Siga o procedimento abaixo para vincular sua conta à nossa equipe oficial:
+## 2. Passo a Passo: Ativação e Entrada no Dojo da Cyberguard
 
 ```
-[ PASSO 1 ]             [ PASSO 2 ]             [ PASSO 3 ]             [ PASSO 4 ]
-Criar Conta /       ->  Configurar Perfil   ->  Acessar Menu        ->  Entrar na Crew
-Login pwn.college       & Chave SSH             "Crews"                 "Cyberguard"
+[ PASSO 1 ]                    [ PASSO 2 ]                  [ PASSO 3 ]                  [ PASSO 4 ]
+Liderança cria o Dojo       -> Membros criam conta      -> Membros acessam a URL     -> Progresso automático
+via GitHub Repo                no pwn.college               do Dojo da Cyberguard        no Scoreboard do time
 ```
 
-### Passo 1: Cadastro e Autenticação
-1. Acesse o portal oficial da plataforma: [pwn.college](https://pwn.college).
-2. Clique em **Register** (ou faça Login caso já possua conta via GitHub ou credenciais próprias).
-3. **Padrão de Nome de Usuário (Username):** Recomendamos utilizar o formato `nome.sobrenome` ou o seu handle conhecido dentro da Cyberguard para facilitar a identificação pelos mentores.
+### Para a Liderança (Criação e Gestão do Dojo):
+1. Faça login em [pwn.college](https://pwn.college).
+2. Acesse: **[https://pwn.college/dojos/create](https://pwn.college/dojos/create)** (ou clique em **Dojos** > **Create Dojo**).
+3. No campo **Repository**, informe a URL pública do nosso repositório:
+   ```text
+   https://github.com/0xchrisoliveira/cyberguard-pwncollege
+   ```
+4. Clique em **Create Dojo**. O pwn.college importará o `dojo.yml` e gerará o Dojo oficial da Cyberguard.
+5. Copie a URL gerada (ex: `https://pwn.college/cyberguard-ethical-hacking`) e compartilhe com o time.
 
-### Passo 2: Configuração de Perfil e Chave SSH
-1. No canto superior direito, clique em seu avatar e vá em **Settings**.
-2. Preencha seu nome e certifique-se de que o perfil está visível para a plataforma.
-3. Cole sua chave pública SSH no campo **"SSH Public Key"** (consulte a seção de SSH do `DESCRIPTION.md`). Isso habilitará seu acesso direto via terminal local aos containers dos desafios.
-
-### Passo 3: Localizando a Aba de Crews
-1. Na barra superior de navegação da plataforma, clique em **Crews** (ou acesse a URL direta `/crews`).
-2. Você verá a listagem de equipes registradas e o ranking geral.
-
-### Passo 4: Vinculando-se à Crew Oficial
-* **Caso a Crew já esteja criada pelo Capitão:**
-  1. Digite `Cyberguard` na barra de pesquisa da página de Crews.
-  2. Clique sobre o nome da nossa equipe.
-  3. Clique no botão **"Join Crew"** (Entrar na Crew).
-  4. Caso seja solicitado o token de convite privado da Cyberguard, insira a chave distribuída no nosso canal interno fechado do Discord/WhatsApp.
-* **Instrução para a Liderança (Criação Inicial):**
-  1. Se a crew ainda não foi inicializada na instância, o Capitão do time (Giovanni Marin ou Arthur Stellato) deve clicar em **"Create Crew"**.
-  2. Nome: `Cyberguard`
-  3. Descrição: `Cyberguard Security Team — Pesquisa, Defesa e Operações Ofensivas`
-  4. Definir a política de adesão com chave secreta para garantir que apenas membros autorizados ingressem.
-
----
-
-## 3. Sincronização de Progresso e Placar
-
-* **Registro Automático:** Não é necessária nenhuma ação manual para sincronizar o placar. Toda vez que você resolver um desafio no Dojo `cyberguard-ethical-hacking` e submeter uma flag válida, o sistema da plataforma atualiza instantaneamente o seu total de pontos e soma-o ao placar global da Cyberguard.
-* **Transparência de Flags:** O painel da Crew exibe quais módulos foram concluídos por cada membro, criando um mapa de calor (*heatmap*) de competências da equipe.
+### Para os Membros do Time:
+1. Acesse [pwn.college](https://pwn.college) e crie sua conta (ou faça login com GitHub).
+2. Recomendamos usar seu nome ou handle habitual da Cyberguard como nome de usuário.
+3. No canto superior direito, acesse **Settings** e cadastre sua chave pública SSH no campo **"SSH Public Key"** (para poder conectar via terminal se desejar).
+4. Acesse a URL do Dojo da Cyberguard fornecida pela liderança e inicie pelo **Módulo 1**.
+5. Não é necessária nenhuma ação manual para sincronização: toda flag submetida atualiza imediatamente o placar do time!
 
 ---
 
